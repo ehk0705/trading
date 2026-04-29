@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Créer des stratégies TradingView avec Pine Script</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      background: #0f172a;
+      color: #e5e7eb;
+    }
+
+    header {
+      background: linear-gradient(135deg, #111827, #1e3a8a);
+      padding: 35px 20px;
+      text-align: center;
+      border-bottom: 3px solid #facc15;
+    }
+
+    header h1 {
+      font-size: 2rem;
+      color: #facc15;
+      margin-bottom: 10px;
+    }
+
+    header p {
+      max-width: 850px;
+      margin: auto;
+      color: #d1d5db;
+      font-size: 1rem;
+    }
+
+    nav {
+      background: #020617;
+      padding: 12px;
+      text-align: center;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      border-bottom: 1px solid #334155;
+    }
+
+    nav a {
+      color: #facc15;
+      text-decoration: none;
+      margin: 0 10px;
+      font-weight: bold;
+      font-size: 0.95rem;
+    }
+
+    nav a:hover {
+      color: #ffffff;
+    }
+
+    main {
+      max-width: 1100px;
+      margin: auto;
+      padding: 25px 15px;
+    }
+
+    section {
+      background: #111827;
+      margin-bottom: 25px;
+      padding: 22px;
+      border-radius: 12px;
+      border: 1px solid #334155;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.35);
+    }
+
+    h2 {
+      color: #facc15;
+      margin-bottom: 15px;
+      font-size: 1.4rem;
+      border-bottom: 1px solid #374151;
+      padding-bottom: 8px;
+    }
+
+    h3 {
+      color: #93c5fd;
+      margin-top: 15px;
+      margin-bottom: 10px;
+    }
+
+    p {
+      margin-bottom: 12px;
+    }
+
+    ul {
+      margin-left: 22px;
+      margin-bottom: 12px;
+    }
+
+    li {
+      margin-bottom: 8px;
+    }
+
+    .important {
+      background: #1e293b;
+      border-left: 5px solid #facc15;
+      padding: 14px;
+      border-radius: 8px;
+      margin: 15px 0;
+    }
+
+    .warning {
+      background: #450a0a;
+      border-left: 5px solid #ef4444;
+      padding: 14px;
+      border-radius: 8px;
+      margin: 15px 0;
+      color: #fee2e2;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 18px;
+      margin-top: 15px;
+    }
+
+    .card {
+      background: #020617;
+      padding: 18px;
+      border-radius: 10px;
+      border: 1px solid #334155;
+    }
+
+    .card h3 {
+      color: #facc15;
+      margin-bottom: 10px;
+    }
+
+    pre {
+      background: #020617;
+      color: #d1fae5;
+      padding: 18px;
+      border-radius: 10px;
+      overflow-x: auto;
+      border: 1px solid #334155;
+      font-size: 0.9rem;
+      margin-top: 15px;
+    }
+
+    code {
+      font-family: Consolas, monospace;
+    }
+
+    .btn {
+      display: inline-block;
+      background: #facc15;
+      color: #111827;
+      padding: 12px 18px;
+      border-radius: 8px;
+      font-weight: bold;
+      text-decoration: none;
+      margin-top: 10px;
+    }
+
+    .btn:hover {
+      background: #fde047;
+    }
+
+    footer {
+      text-align: center;
+      padding: 22px;
+      background: #020617;
+      color: #9ca3af;
+      border-top: 1px solid #334155;
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 600px) {
+      header h1 {
+        font-size: 1.5rem;
+      }
+
+      nav a {
+        display: inline-block;
+        margin: 6px;
+        font-size: 0.85rem;
+      }
+
+      section {
+        padding: 17px;
+      }
+
+      pre {
+        font-size: 0.78rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <h1>Créer des stratégies pour TradingView</h1>
+  <p>
+    Page pédagogique pour comprendre comment créer, tester et améliorer des scripts de stratégies
+    avec Pine Script dans TradingView.
+  </p>
+</header>
+
+<nav>
+  <a href="#intro">Introduction</a>
+  <a href="#difference">Indicateur ou stratégie</a>
+  <a href="#elements">Éléments clés</a>
+  <a href="#exemples">Exemples</a>
+  <a href="#script">Script Pine</a>
+  <a href="#methode">Méthode</a>
+  <a href="#risques">Risques</a>
+</nav>
+
+<main>
+
+  <section id="intro">
+    <h2>1. Introduction</h2>
+
+    <p>
+      TradingView permet d’analyser les marchés financiers avec des graphiques, des indicateurs
+      techniques et des scripts personnalisés.
+    </p>
+
+    <p>
+      Pour créer ses propres règles d’achat et de vente, on utilise le langage
+      <strong>Pine Script</strong>. Ce langage permet de programmer des indicateurs,
+      des alertes et des stratégies de trading.
+    </p>
+
+    <div class="important">
+      Une stratégie TradingView ne sert pas seulement à afficher un signal.
+      Elle permet aussi de tester automatiquement une méthode sur les données passées.
+    </div>
+  </section>
+
+  <section id="difference">
+    <h2>2. Différence entre indicateur et stratégie</h2>
+
+    <div class="grid">
+      <div class="card">
+        <h3>Indicateur</h3>
+        <p>
+          Un indicateur affiche une information sur le graphique.
+        </p>
+        <ul>
+          <li>RSI</li>
+          <li>MACD</li>
+          <li>Moyennes mobiles</li>
+          <li>Bandes de Bollinger</li>
+          <li>Supertrend</li>
+        </ul>
+        <p>
+          Il aide à lire le marché, mais il ne simule pas automatiquement des achats ou des ventes.
+        </p>
+      </div>
+
+      <div class="card">
+        <h3>Stratégie</h3>
+        <p>
+          Une stratégie contient des règles précises.
+        </p>
+        <ul>
+          <li>Condition d’achat</li>
+          <li>Condition de vente</li>
+          <li>Stop loss</li>
+          <li>Take profit</li>
+          <li>Gestion du risque</li>
+        </ul>
+        <p>
+          Elle permet de faire un backtest pour mesurer les résultats d’une méthode.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section id="elements">
+    <h2>3. Éléments essentiels d’une stratégie</h2>
+
+    <p>
+      Une bonne stratégie doit être construite avec des règles simples, testables et compréhensibles.
+    </p>
+
+    <ul>
+      <li><strong>Actif :</strong> Bitcoin, Ethereum, or, Nasdaq, Apple, etc.</li>
+      <li><strong>Unité de temps :</strong> 1 minute, 15 minutes, 1 heure, 1 jour.</li>
+      <li><strong>Signal d’entrée :</strong> moment où la stratégie ouvre une position.</li>
+      <li><strong>Signal de sortie :</strong> moment où la stratégie ferme la position.</li>
+      <li><strong>Stop loss :</strong> limite de perte acceptée.</li>
+      <li><strong>Take profit :</strong> objectif de gain.</li>
+      <li><strong>Filtre de tendance :</strong> éviter d’acheter contre la tendance principale.</li>
+      <li><strong>Gestion du capital :</strong> ne jamais risquer trop sur une seule position.</li>
+    </ul>
+  </section>
+
+  <section id="exemples">
+    <h2>4. Exemples de stratégies possibles</h2>
+
+    <div class="grid">
+      <div class="card">
+        <h3>Stratégie RSI</h3>
+        <p>
+          Achat lorsque le RSI sort d’une zone de survente.
+          Vente lorsque le RSI entre en zone de surachat.
+        </p>
+      </div>
+
+      <div class="card">
+        <h3>Stratégie MACD</h3>
+        <p>
+          Achat lorsque la ligne MACD croise à la hausse sa ligne de signal.
+          Vente lorsque le croisement inverse apparaît.
+        </p>
+      </div>
+
+      <div class="card">
+        <h3>Stratégie EMA</h3>
+        <p>
+          Achat lorsque une moyenne mobile courte passe au-dessus d’une moyenne mobile longue.
+          Vente dans le cas inverse.
+        </p>
+      </div>
+
+      <div class="card">
+        <h3>Stratégie Supertrend</h3>
+        <p>
+          Achat lorsque le Supertrend passe en tendance haussière.
+          Vente lorsqu’il passe en tendance baissière.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section id="script">
+    <h2>5. Exemple simple de stratégie Pine Script</h2>
+
+    <p>
+      Voici un exemple de stratégie basée sur deux moyennes mobiles exponentielles.
+      Elle achète quand la moyenne courte croise au-dessus de la moyenne longue.
+      Elle vend quand le croisement inverse apparaît.
+    </p>
+
+<pre><code>//@version=5
+strategy("Stratégie simple EMA", overlay=true)
+
+// Paramètres
+emaCourte = input.int(20, title="EMA courte")
+emaLongue = input.int(50, title="EMA longue")
+
+// Calcul des moyennes mobiles
+ema20 = ta.ema(close, emaCourte)
+ema50 = ta.ema(close, emaLongue)
+
+// Affichage sur le graphique
+plot(ema20, color=color.green, title="EMA courte")
+plot(ema50, color=color.red, title="EMA longue")
+
+// Conditions d'achat et de vente
+achat = ta.crossover(ema20, ema50)
+vente = ta.crossunder(ema20, ema50)
+
+// Exécution des ordres
+if achat
+    strategy.entry("Achat", strategy.long)
+
+if vente
+    strategy.close("Achat")
+</code></pre>
+
+    <div class="important">
+      Ce script est volontairement simple. Il sert de base pédagogique.
+      Il ne doit pas être utilisé seul pour trader avec de l’argent réel.
+    </div>
+  </section>
+
+  <section id="methode">
+    <h2>6. Méthode pour créer une stratégie</h2>
+
+    <h3>Étape 1 : définir l’idée</h3>
+    <p>
+      Il faut commencer par une règle claire :
+      acheter quand tel signal apparaît, vendre quand tel autre signal apparaît.
+    </p>
+
+    <h3>Étape 2 : choisir les indicateurs</h3>
+    <p>
+      Par exemple : RSI, MACD, EMA, volume, Supertrend ou zones de support et résistance.
+    </p>
+
+    <h3>Étape 3 : écrire le script Pine</h3>
+    <p>
+      Le script doit traduire les règles de trading en conditions logiques.
+    </p>
+
+    <h3>Étape 4 : tester la stratégie</h3>
+    <p>
+      TradingView permet de faire un backtest pour voir les performances passées.
+    </p>
+
+    <h3>Étape 5 : corriger et améliorer</h3>
+    <p>
+      Une stratégie doit être testée sur plusieurs actifs, plusieurs périodes et plusieurs conditions de marché.
+    </p>
+  </section>
+
+  <section id="risques">
+    <h2>7. Attention aux risques</h2>
+
+    <div class="warning">
+      Le trading comporte un risque élevé de perte. Une stratégie rentable dans le passé
+      peut devenir mauvaise dans le futur. Aucun script ne garantit un gain.
+    </div>
+
+    <p>
+      Une stratégie sérieuse doit toujours intégrer :
+    </p>
+
+    <ul>
+      <li>une limite de perte ;</li>
+      <li>une taille de position raisonnable ;</li>
+      <li>un objectif clair ;</li>
+      <li>un test sur plusieurs périodes ;</li>
+      <li>une validation avant toute utilisation réelle.</li>
+    </ul>
+
+    <a href="https://www.tradingview.com/pine-script-docs/" target="_blank" class="btn">
+      Documentation Pine Script
+    </a>
+  </section>
+
+</main>
+
+<footer>
+  <p>
+    Page pédagogique consacrée à la création de stratégies TradingView avec Pine Script.
+  </p>
+  <p>
+    Auteur : Hocine Korichi, ingénieur. Avril 2026.
+  </p>
+</footer>
+
+</body>
+</html>
