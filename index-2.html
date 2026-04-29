@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trading Station v2.0</title>
+    <link rel="stylesheet" href="style/style-trading.css">
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+</head>
+<body>
+<header class="top-bar">
+    <div class="logo">TRADING STATION <span>v2.0</span></div>
+
+    <div class="search-area">
+        <label for="asset-selector">ACTIF :</label>
+        <select id="asset-selector">
+            <optgroup label="Cryptomonnaies">
+                <option value="BINANCE:BTCUSDT">Bitcoin / USDT</option>
+                <option value="BINANCE:ETHUSDT">Ethereum / USDT</option>
+                <option value="BINANCE:SOLUSDT">Solana / USDT</option>
+            </optgroup>
+            <optgroup label="Métaux & Indices">
+                <option value="OANDA:XAUUSD">Or (XAUUSD)</option>
+                <option value="SP:SPX">S&P 500</option>
+                <option value="TVC:DXY">Dollar Index (DXY)</option>
+            </optgroup>
+        </select>
+
+        <label for="indicator-selector">INDICATEUR :</label>
+        <select id="indicator-selector">
+            <optgroup label="STRATÉGIES CUSTOM">
+                <option value="CUSTOM:BTC_CYCLE">INDICATEUR BTC | CYCLE | INDEX</option>
+                <option value="CUSTOM:ELITE_V2">INDICATOR ELITE V2 (ALARM)</option>
+            </optgroup>
+            <optgroup label="Standards">
+                <option value="RSI">RSI</option>
+                <option value="MACD">MACD</option>
+                <option value="BOLLINGER">Bandes de Bollinger</option>
+            </optgroup>
+        </select>
+    </div>
+</header>
+
+<main class="main-layout">
+    <section class="chart-section">
+        <div id="tv_chart_container"></div>
+    </section>
+    
+    <aside class="analysis-sidebar">
+        <div class="card">
+            <h3>STATUT MOTEUR</h3>
+            <div id="signal-box" class="signal-display neutral">ANALYSE EN COURS...</div>
+        </div>
+        <div class="card" id="info-custom" style="display:none;">
+            <h3 style="color: #f0b90b;">NOTE INDICATEUR</h3>
+            <p id="custom-text" style="font-size: 0.85rem; line-height: 1.4;"></p>
+        </div>
+    </aside>
+</main>
+
+<script src="js/moteur-analyse.js"></script>
+<script src="js/data-feed.js"></script>
+<script src="js/main-app.js"></script>
+</body>
+</html>

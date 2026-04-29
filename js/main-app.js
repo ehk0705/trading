@@ -1,11 +1,39 @@
 const App = {
     init: function() {
-        this.updateChart("BINANCE:BTCUSDT");
-        this.setupSelector();
+        this.updateChart();
+        
+        // Écouteurs sur les deux menus
+        document.getElementById('asset-selector').addEventListener('change', () => this.updateChart());
+        document.getElementById('indicator-selector').addEventListener('change', () => this.updateChart());
+        
         this.startEngine();
     },
 
-    updateChart: function(symbol) {
+    updateChart: function() {
+        const symbol = document.getElementById('asset-selector').value;
+        const indicator = document.getElementById('indicator-selector').value;
+        const infoCard = document.getElementById('info-custom');
+        const infoText = document.getElementById('custom-text');
+
+        let studies = [];
+        infoCard.style.display = "none";
+
+        // 1. Gestion des indicateurs standards
+        if (indicator === "RSI") studies.push("RSI@tv-basicstudies");
+        if (indicator === "MACD") studies.push("MACD@tv-basicstudies");
+        if (indicator === "BOLLINGER") studies.push("BB@tv-basicstudies");
+
+        // 2. Gestion des indicateurs CUSTOM
+        if (indicator.includes("CUSTOM")) {
+            infoCard.style.display = "block";
+            if (indicator === "CUSTOM:BTC_CYCLE") {
+                infoText.innerText = "Analyse de cycle chargée. Consultez votre accès Whop pour les niveaux de résistance historiques.";
+            } else {
+                infoText.innerText = "Mode Elite V2 (Alarm) actif. Utilisez les outils de dessin pour marquer les zones de liquidité détectées.";
+            }
+        }
+
+        // 3. Reconstruction du graphique
         document.getElementById('tv_chart_container').innerHTML = "";
         new TradingView.widget({
             "autosize": true,
@@ -16,26 +44,19 @@ const App = {
             "locale": "fr",
             "toolbar_bg": "#1e2329",
             "allow_symbol_change": true,
-            "withdateranges": true,
-            "container_id": "tv_chart_container"
+            "container_id": "tv_chart_container",
+            "studies": studies
         });
-    },
-
-    setupSelector: function() {
-        const selector = document.getElementById('asset-selector');
-        if(selector) {
-            selector.addEventListener('change', (e) => this.updateChart(e.target.value));
-        }
     },
 
     startEngine: function() {
         const box = document.getElementById('signal-box');
         setInterval(() => {
             if (typeof TradingEngine !== 'undefined') {
-                const rsi = Math.floor(Math.random() * 50) + 25;
-                const decision = TradingEngine.analyze(rsi, 65000, 62000);
-                box.innerText = decision.signal;
-                box.className = "signal-display " + decision.style;
+                const rsi = Math.floor(Math.random() * 40) + 30;
+                const res = TradingEngine.analyze(rsi, 60000, 58000);
+                box.innerText = res.signal;
+                box.className = "signal-display " + res.style;
             }
         }, 2000);
     }

@@ -114,3 +114,35 @@ body { background: var(--bg); color: var(--text); font-family: sans-serif; margi
 .neutral { background: #2b3139; color: #707a8a; }
 .buy-bg { background: rgba(14, 203, 129, 0.2); color: #0ecb81; border: 1px solid #0ecb81; }
 .sell-bg { background: rgba(246, 70, 93, 0.2); color: #f6465d; border: 1px solid #f6465d; }
+
+.search-area {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+select {
+    background: #2b3139;
+    color: white;
+    border: 1px solid #f0b90b;
+    padding: 8px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    min-width: 200px;
+}
+
+label {
+    font-weight: bold;
+    color: #707a8a;
+    font-size: 0.8rem;
+}
+
+#info-custom {
+    border-left: 3px solid #f0b90b;
+    animation: fadeIn 0.5s;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; } to { opacity: 1; }
+}
