@@ -9,38 +9,45 @@
 </head>
 <body>
 <header class="top-bar">
-    <div class="logo">TRADING STATION <span>v2.0</span></div>
+    <div class="brand-group">
+        <div class="logo">TRADING STATION <span>v2.0</span></div>
+        <div class="credits">Développé par Hocine Korichi, à l'aide de Vibe Coding</div>
+    </div>
 
     <div class="search-area">
-        <label for="asset-selector">ACTIF :</label>
-        <select id="asset-selector">
-            <optgroup label="Cryptomonnaies">
-                <option value="BINANCE:BTCUSDT">Bitcoin / USDT</option>
-                <option value="BINANCE:ETHUSDT">Ethereum / USDT</option>
-                <option value="BINANCE:SOLUSDT">Solana / USDT</option>
-            </optgroup>
-            <optgroup label="Métaux & Indices">
-                <option value="OANDA:XAUUSD">Or (XAUUSD)</option>
-                <option value="SP:SPX">S&P 500</option>
-                <option value="TVC:DXY">Dollar Index (DXY)</option>
-            </optgroup>
-        </select>
+        <div class="input-group">
+            <label for="asset-selector">ACTIF :</label>
+            <select id="asset-selector">
+                <optgroup label="Cryptomonnaies">
+                    <option value="BINANCE:BTCUSDT">Bitcoin / USDT</option>
+                    <option value="BINANCE:ETHUSDT">Ethereum / USDT</option>
+                    <option value="BINANCE:SOLUSDT">Solana / USDT</option>
+                </optgroup>
+                <optgroup label="Métaux & Indices">
+                    <option value="OANDA:XAUUSD">Or (XAUUSD)</option>
+                    <option value="SP:SPX">S&P 500</option>
+                    <option value="TVC:DXY">Dollar Index (DXY)</option>
+                </optgroup>
+            </select>
+        </div>
 
-        <label for="indicator-selector">INDICATEUR :</label>
-        <select id="indicator-selector">
-            <optgroup label="STRATÉGIES CUSTOM">
-                <option value="CUSTOM:BTC_CYCLE">INDICATEUR BTC | CYCLE | INDEX</option>
-                <option value="CUSTOM:ELITE_V2">INDICATOR ELITE V2 (ALARM)</option>
-            </optgroup>
-            <optgroup label="INDICATEURS TECHNIQUES">
-                <option value="RSI">RSI (Relative Strength Index)</option>
-                <option value="MACD">MACD</option>
-                <option value="EMA">EMA (Moyenne Mobile Exponentielle)</option>
-                <option value="SMA">SMA (Moyenne Mobile Simple)</option>
-                <option value="SUPERTREND">Supertrend</option>
-                <option value="BOLLINGER">Bandes de Bollinger</option>
-            </optgroup>
-        </select>
+        <div class="input-group">
+            <label for="indicator-selector">INDICATEUR :</label>
+            <select id="indicator-selector">
+                <optgroup label="STRATÉGIES CUSTOM">
+                    <option value="CUSTOM:BTC_CYCLE">INDICATEUR BTC | CYCLE | INDEX</option>
+                    <option value="CUSTOM:ELITE_V2">INDICATOR ELITE V2 (ALARM)</option>
+                </optgroup>
+                <optgroup label="INDICATEURS TECHNIQUES">
+                    <option value="RSI">RSI</option>
+                    <option value="MACD">MACD</option>
+                    <option value="EMA">EMA</option>
+                    <option value="SMA">SMA</option>
+                    <option value="SUPERTREND">Supertrend</option>
+                    <option value="BOLLINGER">Bandes de Bollinger</option>
+                </optgroup>
+            </select>
+        </div>
     </div>
 </header>
 
@@ -49,16 +56,27 @@
         <div id="tv_chart_container"></div>
     </section>
     
-    <aside class="analysis-sidebar">
-        <div class="card">
-            <h3>STATUT MOTEUR</h3>
-            <div id="signal-box" class="signal-display neutral">ANALYSE EN COURS...</div>
-        </div>
-        <div class="card" id="info-custom" style="display:none;">
-            <h3 style="color: #f0b90b;">NOTE INDICATEUR</h3>
-            <p id="custom-text" style="font-size: 0.85rem; line-height: 1.4;"></p>
-        </div>
-    </aside>
+<aside class="analysis-sidebar">
+    <div class="card">
+        <h3>STATUT MOTEUR</h3>
+        <div id="signal-box" class="signal-display neutral">ANALYSE EN COURS...</div>
+    </div>
+    
+    <div class="card" id="info-custom" style="display:none;">
+        <h3 style="color: #f0b90b;">NOTE INDICATEUR</h3>
+        <p id="custom-text"></p>
+        
+        <a href="https://www.tradingview.com/chart/" target="_blank" class="btn-pine">
+            CRÉER UNE STRATÉGIE (PINE EDITOR)
+        </a>
+    </div>
+
+    <div class="card">
+        <h3>INFOS SYSTÈME</h3>
+        <p>Moteur : Connecté</p>
+        <p>Flux : Temps Réel</p>
+    </div>
+</aside>
 </main>
 
 <script src="js/moteur-analyse.js"></script>
