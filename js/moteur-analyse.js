@@ -1,19 +1,15 @@
+// js/moteur-analyse.js
 const TradingEngine = {
     analyze: function(rsi, price, ma200) {
+        console.log("Analyse en cours avec RSI:", rsi); // Pour vérifier dans la console
         let score = 0;
         
-        // Logique RSI
-        if (rsi < 30) score += 2; // Survente forte
-        else if (rsi < 40) score += 1; // Survente légère
-        else if (rsi > 70) score -= 2; // Surachat
+        if (rsi < 35) score += 2;
+        else if (rsi > 65) score -= 2;
         
-        // Logique Tendance
-        if (price > ma200) score += 1; // Haussier
-        else score -= 1; // Baissier
+        if (price > ma200) score += 1;
 
-        // Synthèse du signal
         if (score >= 2) return { signal: "ACHAT FORT", style: "buy-bg" };
-        if (score >= 1) return { signal: "ACHAT PRUDENT", style: "buy-bg" };
         if (score <= -1) return { signal: "VENTE / PRUDENCE", style: "sell-bg" };
         return { signal: "NEUTRE / ATTENTE", style: "neutral" };
     }
