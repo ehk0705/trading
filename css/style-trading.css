@@ -1,0 +1,17 @@
+:root {
+    --bg: #0b0e11; --card: #1e2329; --accent: #f0b90b;
+    --text: #eaecef; --buy: #0ecb81; --sell: #f6465d; --border: #30363d;
+}
+body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; padding: 
+20px; }
+.grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+.card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 
+15px; }
+.signal { padding: 10px; border-radius: 4px; text-align: center; font-weight: bold; margin-top: 
+10px; }
+.buy-bg { background: rgba(14, 203, 129, 0.2); color: var(--buy); border: 1px solid var(-
+buy); }
+.sell-bg { background: rgba(246, 70, 93, 0.2); color: var(--sell); border: 1px solid var(-
+sell); }
+table { width: 100%; border-collapse: collapse; font-size: 0.9em; }
+th, td { padding: 10px; border-bottom: 1px solid var(--border); text-align: left; 

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Trading Hub</title>
+    <link rel="stylesheet" href="css/style-trading.css">
+    <script src="https://s3.tradingview.com/tv.js"></script>
+</head>
+<body>
+    <h1>Tableau de Bord Trading</h1>
+    <div class="grid">
+        <div class="card">
+            <div id="tv_chart"></div>
+        </div>
+        <div class="card">
+            <h3>Signaux en temps réel</h3>
+            <div id="signal-box" class="signal">Analyse en cours...</div>
+            <hr style="border:0; border-top:1px solid #30363d; margin:15px 0;">
+            <p>Actif : <span id="asset-name">Bitcoin</span></p>
+        </div>
+    </div>
+    <script src="js/moteur-analyse.js"></script>
+    <script>
+        new TradingView.widget({
+            "width": "100%", "height": 450, "symbol": "BINANCE:BTCUSDT",
+            "interval": "60", "theme": "dark", "container_id": "tv_chart"
+        });
+        // Simulation d'update (à lier à une API comme Binance)
+        const res = TradingEngine.analyze(32, 65000, 60000);
+        document.getElementById('signal-box').innerText = res.signal;
+        document.getElementById('signal-box').className = "signal " + res.style;
+    </script
+</body>
+</html>
