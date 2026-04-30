@@ -146,3 +146,119 @@ label {
 @keyframes fadeIn {
     from { opacity: 0; } to { opacity: 1; }
 }
+
+.guide-section {
+    margin-top: 50px;
+    padding: 30px;
+    background: #f7f9fc;
+    border-radius: 18px;
+    border: 1px solid #dce3ef;
+}
+
+.guide-section h2 {
+    color: #12325c;
+    margin-bottom: 15px;
+}
+
+.guide-intro {
+    font-size: 1.05rem;
+    line-height: 1.7;
+    background: #ffffff;
+    padding: 18px;
+    border-left: 5px solid #2962ff;
+    border-radius: 10px;
+    margin-bottom: 25px;
+}
+
+.guide-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 22px;
+    margin-top: 25px;
+}
+
+.guide-card {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e2e8f0;
+}
+
+.guide-card h3 {
+    color: #1f3b73;
+    margin-bottom: 10px;
+}
+
+.guide-card p,
+.guide-card li {
+    line-height: 1.6;
+}
+
+.guide-card img {
+    width: 100%;
+    max-height: 230px;
+    object-fit: cover;
+    border-radius: 14px;
+    margin-bottom: 15px;
+    border: 1px solid #d5dce8;
+}
+
+.guide-warning {
+    margin-top: 25px;
+    padding: 20px;
+    background: #fff3cd;
+    border-left: 6px solid #f0b429;
+    border-radius: 12px;
+    line-height: 1.6;
+}
+
+.guide-success {
+    margin-top: 25px;
+    padding: 20px;
+    background: #e8f5e9;
+    border-left: 6px solid #2e7d32;
+    border-radius: 12px;
+    line-height: 1.6;
+}
+
+.copy-zone {
+    background: #111827;
+    color: #e5e7eb;
+    padding: 18px;
+    border-radius: 12px;
+    overflow-x: auto;
+    font-size: 0.9rem;
+    margin-top: 15px;
+}
+
+.btn-guide {
+    display: inline-block;
+    margin: 10px 10px 10px 0;
+    padding: 12px 18px;
+    border-radius: 10px;
+    background: #2962ff;
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-guide:hover {
+    background: #0039cb;
+}
+
+@media (max-width: 768px) {
+    .guide-section {
+        padding: 20px;
+    }
+
+    .guide-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .guide-card img {
+        max-height: 190px;
+    }
+}

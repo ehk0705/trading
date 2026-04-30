@@ -95,7 +95,8 @@
       margin-bottom: 12px;
     }
 
-    ul {
+    ul,
+    ol {
       margin-left: 22px;
       margin-bottom: 12px;
     }
@@ -155,7 +156,8 @@
       font-family: Consolas, monospace;
     }
 
-    .btn {
+    .btn,
+    .btn-guide {
       display: inline-block;
       background: #facc15;
       color: #111827;
@@ -164,10 +166,79 @@
       font-weight: bold;
       text-decoration: none;
       margin-top: 10px;
+      border: none;
+      cursor: pointer;
     }
 
-    .btn:hover {
+    .btn:hover,
+    .btn-guide:hover {
       background: #fde047;
+    }
+
+    .guide-section {
+      margin-top: 35px;
+      background: #111827;
+    }
+
+    .guide-intro {
+      background: #1e293b;
+      border-left: 5px solid #38bdf8;
+      padding: 14px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+
+    .guide-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 18px;
+      margin-top: 15px;
+    }
+
+    .guide-card {
+      background: #020617;
+      padding: 18px;
+      border-radius: 10px;
+      border: 1px solid #334155;
+    }
+
+    .guide-card img {
+      width: 100%;
+      max-height: 220px;
+      object-fit: cover;
+      border-radius: 10px;
+      border: 1px solid #334155;
+      margin-bottom: 12px;
+    }
+
+    .copy-zone {
+      background: #020617;
+      color: #d1fae5;
+      padding: 14px;
+      border-radius: 10px;
+      overflow-x: auto;
+      border: 1px solid #334155;
+      font-size: 0.88rem;
+      margin-top: 12px;
+      margin-bottom: 12px;
+      white-space: pre-wrap;
+    }
+
+    .guide-success {
+      margin-top: 25px;
+      padding: 18px;
+      background: #052e16;
+      border-left: 5px solid #22c55e;
+      border-radius: 10px;
+    }
+
+    .guide-warning {
+      margin-top: 25px;
+      padding: 18px;
+      background: #450a0a;
+      border-left: 5px solid #ef4444;
+      border-radius: 10px;
+      color: #fee2e2;
     }
 
     footer {
@@ -194,7 +265,8 @@
         padding: 17px;
       }
 
-      pre {
+      pre,
+      .copy-zone {
         font-size: 0.78rem;
       }
     }
@@ -219,6 +291,7 @@
   <a href="#script">Script Pine</a>
   <a href="#methode">Méthode</a>
   <a href="#risques">Risques</a>
+  <a href="#guide-utilisation">Guide d’utilisation</a>
 </nav>
 
 <main>
@@ -437,6 +510,145 @@ if vente
     </a>
   </section>
 
+  <section id="guide-utilisation" class="guide-section">
+    <h2>8. Guide d’utilisation : ouvrir TradingView avec un script Pine Script</h2>
+
+    <p class="guide-intro">
+      Cette section explique comment utiliser une page HTML pour préparer un script Pine Script,
+      le copier, puis l’ouvrir dans TradingView. Il faut retenir une limite importante :
+      TradingView permet d’ouvrir un graphique avec un actif donné, mais ne permet pas
+      d’injecter automatiquement un script Pine Script dans le Pine Editor par une simple adresse URL.
+    </p>
+
+    <div class="guide-grid">
+
+      <div class="guide-card">
+        <img src="img/tradingview-chart.jfif" alt="Graphique TradingView avec un actif sélectionné">
+
+        <h3>1. Ouvrir TradingView avec un actif</h3>
+
+        <p>
+          Il est possible d’ouvrir TradingView directement avec un symbole, par exemple Bitcoin,
+          Ethereum, l’or, le Nasdaq ou une action comme Apple.
+        </p>
+
+        <div class="copy-zone">
+https://www.tradingview.com/chart/?symbol=BINANCE:BTCUSDT
+        </div>
+
+        <p>
+          Cette méthode ouvre le graphique de l’actif choisi, mais elle ne charge pas automatiquement
+          un script Pine Script personnalisé.
+        </p>
+
+        <a class="btn-guide"
+           href="https://www.tradingview.com/chart/?symbol=BINANCE:BTCUSDT"
+           target="_blank">
+          Ouvrir Bitcoin dans TradingView
+        </a>
+      </div>
+
+      <div class="guide-card">
+        <img src="img/pine-editor.jfif" alt="Éditeur Pine Script dans TradingView">
+
+        <h3>2. Limite importante</h3>
+
+        <p>
+          On ne peut pas appeler TradingView avec un paramètre contenant directement le code Pine Script.
+          Une adresse comme celle-ci ne fonctionne pas :
+        </p>
+
+        <div class="copy-zone">
+https://www.tradingview.com/chart/?script=mon_script_pine
+        </div>
+
+        <p>
+          Le Pine Editor doit être ouvert dans TradingView.
+          Le script doit ensuite être collé manuellement dans l’éditeur.
+        </p>
+      </div>
+
+      <div class="guide-card">
+        <img src="img/copier-script.jfif" alt="Copie d’un script Pine Script depuis une page HTML">
+
+        <h3>3. Méthode recommandée</h3>
+
+        <p>
+          La bonne méthode consiste à afficher le script dans ta page HTML,
+          ajouter un bouton pour le copier, puis ouvrir TradingView dans un nouvel onglet.
+        </p>
+
+        <ol>
+          <li>Lire ou générer le script Pine Script.</li>
+          <li>Cliquer sur « Copier le script ».</li>
+          <li>Ouvrir TradingView.</li>
+          <li>Ouvrir le Pine Editor.</li>
+          <li>Coller le script.</li>
+          <li>Cliquer sur « Ajouter au graphique ».</li>
+        </ol>
+      </div>
+
+      <div class="guide-card">
+        <img src="img/backtest-strategy.jfif" alt="Test d’une stratégie dans TradingView">
+
+        <h3>4. Tester la stratégie</h3>
+
+        <p>
+          Une fois le script ajouté au graphique, TradingView permet de tester la stratégie
+          sur les données passées. Ce test s’appelle un backtest.
+        </p>
+
+        <p>
+          Le backtest aide à observer les entrées, les sorties, les gains, les pertes
+          et le comportement général de la stratégie.
+        </p>
+      </div>
+
+    </div>
+
+    <div class="guide-success">
+      <h3>Exemple pratique intégré</h3>
+
+      <p>
+        Le bouton ci-dessous copie un exemple simple de script Pine Script basé sur le RSI.
+        Après la copie, ouvre TradingView, puis colle le code dans Pine Editor.
+      </p>
+
+      <button class="btn-guide" onclick="copierScriptPine()">
+        Copier le script Pine Script
+      </button>
+
+      <a class="btn-guide"
+         href="https://www.tradingview.com/chart/?symbol=BINANCE:BTCUSDT"
+         target="_blank">
+        Ouvrir TradingView
+      </a>
+
+<pre id="script-pine-guide" class="copy-zone">
+//@version=5
+indicator("Exemple RSI pédagogique", overlay=false)
+
+rsi = ta.rsi(close, 14)
+
+plot(rsi, title="RSI", color=color.blue)
+
+hline(70, "Zone de surachat")
+hline(30, "Zone de survente")
+hline(50, "Zone neutre")
+</pre>
+    </div>
+
+    <div class="guide-warning">
+      <h3>Attention</h3>
+
+      <p>
+        Ce script est fourni uniquement à des fins pédagogiques.
+        Il ne constitue pas un conseil financier. Une stratégie doit toujours être testée,
+        corrigée et validée avant toute utilisation réelle.
+      </p>
+    </div>
+  </section>
+
 </main>
 
 <footer>
@@ -447,6 +659,20 @@ if vente
     Auteur : Hocine Korichi, ingénieur. Avril 2026.
   </p>
 </footer>
+
+<script>
+function copierScriptPine() {
+  const script = document.getElementById("script-pine-guide").innerText;
+
+  navigator.clipboard.writeText(script)
+    .then(function () {
+      alert("Script Pine Script copié. Collez-le maintenant dans Pine Editor sur TradingView.");
+    })
+    .catch(function () {
+      alert("La copie automatique a échoué. Sélectionnez le script manuellement.");
+    });
+}
+</script>
 
 </body>
 </html>
