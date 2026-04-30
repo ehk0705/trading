@@ -12,7 +12,7 @@
         .top-bar {
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            justify-content: center;
             gap: 12px;
             flex-wrap: wrap;
             padding: 8px 12px;
@@ -21,21 +21,17 @@
         .brand-group {
             display: flex;
             flex-direction: column;
+            align-items: center;
             gap: 3px;
             min-width: 0;
-        }
-
-        .brand-top {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            flex-wrap: nowrap;
+            width: 100%;
         }
 
         .logo {
             font-size: 16px;
             font-weight: 900;
             white-space: nowrap;
+            text-align: center;
         }
 
         .logo span {
@@ -47,59 +43,70 @@
             line-height: 1.2;
             opacity: 0.85;
             white-space: nowrap;
+            text-align: center;
         }
 
         .search-area {
             display: flex;
             align-items: center;
-            justify-content: flex-end;
+            justify-content: center;
             gap: 10px;
-            flex-wrap: nowrap;
+            flex-wrap: wrap;
+            width: 100%;
         }
 
         .input-group {
             display: flex;
             align-items: center;
-            gap: 5px;
+            justify-content: center;
+            gap: 6px;
             white-space: nowrap;
         }
 
-        .input-group label {
-            font-size: 11px;
+        .input-group label,
+        .search-area label {
+            font-size: 12px;
             font-weight: bold;
             color: cyan;
+            margin: 0;
+            white-space: nowrap;
         }
 
-        .input-group select {
-            height: 28px;
-            max-width: 170px;
-            font-size: 11px;
-            padding: 3px 6px;
+        .input-group select,
+        .search-area select {
+            height: 34px;
+            max-width: 180px;
+            font-size: 12px;
+            padding: 4px 8px;
             border-radius: 6px;
+            box-sizing: border-box;
         }
 
         .btn-tradingview,
-        .btn-pine-action {
+        .btn-pine-action,
+        .btn-pine,
+        .btn-copy,
+        .search-area button {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 4px;
+            gap: 5px;
 
-            height: 28px;
-            padding: 4px 9px;
+            height: 34px;
+            padding: 0 10px;
             border-radius: 999px;
 
             border: 1px solid rgba(255, 255, 255, 0.25);
 
             font-weight: 800;
-            font-size: 10px;
+            font-size: 11px;
             letter-spacing: 0.1px;
 
             cursor: pointer;
             white-space: nowrap;
             text-decoration: none;
-
             line-height: 1;
+
             transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
         }
 
@@ -115,13 +122,17 @@
             box-shadow: 0 6px 14px rgba(250, 204, 21, 0.35);
         }
 
-        .btn-pine-action {
+        .btn-pine-action,
+        .btn-pine,
+        .btn-copy {
             background: linear-gradient(135deg, #06b6d4, #0891b2);
             color: #ffffff;
             box-shadow: 0 4px 10px rgba(6, 182, 212, 0.22);
         }
 
-        .btn-pine-action:hover {
+        .btn-pine-action:hover,
+        .btn-pine:hover,
+        .btn-copy:hover {
             background: linear-gradient(135deg, #22d3ee, #06b6d4);
             transform: translateY(-1px);
             box-shadow: 0 6px 14px rgba(6, 182, 212, 0.30);
@@ -162,6 +173,7 @@
 
         .pine-actions {
             display: flex;
+            justify-content: center;
             flex-wrap: wrap;
             gap: 8px;
             margin: 12px 0;
@@ -199,16 +211,12 @@
 
         @media (max-width: 950px) {
             .top-bar {
-                align-items: flex-start;
-            }
-
-            .brand-top {
-                flex-wrap: wrap;
+                align-items: center;
             }
 
             .search-area {
                 width: 100%;
-                justify-content: flex-start;
+                justify-content: center;
                 flex-wrap: wrap;
             }
         }
@@ -216,14 +224,11 @@
         @media (max-width: 600px) {
             .top-bar {
                 padding: 8px;
-            }
-
-            .brand-top {
-                gap: 5px;
+                gap: 8px;
             }
 
             .logo {
-                font-size: 14px;
+                font-size: 15px;
             }
 
             .credits {
@@ -231,24 +236,39 @@
                 white-space: normal;
             }
 
+            .search-area {
+                gap: 6px;
+            }
+
+            .input-group {
+                gap: 5px;
+            }
+
+            .input-group label,
+            .search-area label {
+                font-size: 10px;
+            }
+
+            .input-group select,
+            .search-area select {
+                height: 30px;
+                max-width: 135px;
+                font-size: 10px;
+                padding: 3px 5px;
+            }
+
             .btn-tradingview,
-            .btn-pine-action {
-                height: 26px;
-                padding: 4px 7px;
+            .btn-pine-action,
+            .btn-pine,
+            .btn-copy,
+            .search-area button {
+                height: 30px;
+                padding: 0 7px;
                 font-size: 9px;
             }
 
             .tv-icon {
                 font-size: 11px;
-            }
-
-            .input-group select {
-                max-width: 150px;
-                font-size: 10px;
-            }
-
-            .input-group label {
-                font-size: 10px;
             }
 
             .pine-generator-section {
@@ -261,6 +281,33 @@
                 font-size: 11px;
             }
         }
+
+        @media (max-width: 380px) {
+            .search-area {
+                gap: 5px;
+            }
+
+            .input-group label,
+            .search-area label {
+                font-size: 9px;
+            }
+
+            .input-group select,
+            .search-area select {
+                max-width: 115px;
+                font-size: 9px;
+            }
+
+            .btn-tradingview,
+            .btn-pine-action,
+            .btn-pine,
+            .btn-copy,
+            .search-area button {
+                height: 28px;
+                padding: 0 6px;
+                font-size: 8.5px;
+            }
+        }
     </style>
 </head>
 
@@ -269,30 +316,26 @@
 <header class="top-bar">
 
     <div class="brand-group">
-
-        <div class="brand-top">
-            <div class="logo">TRADING STATION <span>v2.0</span></div>
-
-            <button class="btn-pine-action" onclick="afficherScriptPine()">
-                <span class="tv-icon">🧩</span>
-                <span>Générer Pine</span>
-            </button>
-
-            <button class="btn-pine-action" onclick="copierScriptPine()">
-                <span class="tv-icon">📋</span>
-                <span>Copier Pine</span>
-            </button>
-            <button class="btn-tradingview" onclick="ouvrirTradingViewAvecIndicateur()">
-                <span class="tv-icon">📈</span>
-                <span>TradingView</span>
-            </button>			
-        </div>
-
-        <div class="credits">Développé par Hocine Korichi, à l'aide de Vibe Coding</div>
-
+        <!--<div class="logo">TRADING STATION <span>v2.0</span></div>-->
+        <!--<div class="credits">Développé par Hocine Korichi, à l'aide de Vibe Coding</div>-->
     </div>
 
     <div class="search-area">
+
+        <button class="btn-pine-action" onclick="afficherScriptPine()">
+            <span class="tv-icon">🧩</span>
+            <span>Générer Pine</span>
+        </button>
+
+        <button class="btn-pine-action" onclick="copierScriptPine()">
+            <span class="tv-icon">📋</span>
+            <span>Copier Pine</span>
+        </button>
+
+        <button class="btn-tradingview" onclick="ouvrirTradingViewAvecIndicateur()">
+            <span class="tv-icon">📈</span>
+            <span>TradingView</span>
+        </button>
 
         <div class="input-group">
             <label for="asset-selector">ACTIF :</label>
@@ -333,6 +376,22 @@
                     <option value="SUPERTREND">Supertrend</option>
                     <option value="BOLLINGER">Bandes de Bollinger</option>
                 </optgroup>
+            </select>
+        </div>
+
+        <div class="input-group">
+            <label for="interval-selector">INTERVALLE :</label>
+
+            <select id="interval-selector">
+                <option value="1">1 minute</option>
+                <option value="5">5 minutes</option>
+                <option value="15" selected>15 minutes</option>
+                <option value="30">30 minutes</option>
+                <option value="60">1 heure</option>
+                <option value="240">4 heures</option>
+                <option value="D">1 jour</option>
+                <option value="W">1 semaine</option>
+                <option value="M">1 mois</option>
             </select>
         </div>
 
@@ -396,6 +455,7 @@
     <ol class="pine-steps">
         <li>Choisir un actif.</li>
         <li>Choisir un indicateur ou une stratégie.</li>
+        <li>Choisir un intervalle.</li>
         <li>Cliquer sur « Générer Pine ».</li>
         <li>Copier le code généré.</li>
         <li>Ouvrir TradingView.</li>
@@ -424,22 +484,48 @@
 </section>
 
 <script>
+function lireParametresSelectionnes() {
+    const selectActif = document.getElementById("asset-selector");
+    const selectIndicateur = document.getElementById("indicator-selector");
+    const selectIntervalle = document.getElementById("interval-selector");
+
+    if (!selectActif || !selectIndicateur || !selectIntervalle) {
+        return null;
+    }
+
+    return {
+        symbole: selectActif.value,
+        indicateur: selectIndicateur.value,
+        intervalle: selectIntervalle.value,
+        libelleActif: selectActif.options[selectActif.selectedIndex].text,
+        libelleIndicateur: selectIndicateur.options[selectIndicateur.selectedIndex].text,
+        libelleIntervalle: selectIntervalle.options[selectIntervalle.selectedIndex].text
+    };
+}
+
 function ouvrirTradingViewAvecIndicateur() {
     afficherScriptPine();
     copierScriptPine();
 
-    const selectActif = document.getElementById("asset-selector");
+    const params = lireParametresSelectionnes();
 
-    if (!selectActif || !selectActif.value) {
+    if (!params || !params.symbole) {
         alert("Aucun actif sélectionné.");
         return;
     }
 
-    const symbole = selectActif.value;
-    const urlTradingView = "https://www.tradingview.com/chart/?symbol=" + encodeURIComponent(symbole);
+    const urlTradingView =
+        "https://www.tradingview.com/chart/?symbol=" +
+        encodeURIComponent(params.symbole) +
+        "&interval=" +
+        encodeURIComponent(params.intervalle);
 
     alert(
         "TradingView va s’ouvrir.\n\n" +
+        "Paramètres envoyés :\n" +
+        "Actif : " + params.libelleActif + "\n" +
+        "Indicateur : " + params.libelleIndicateur + "\n" +
+        "Intervalle : " + params.libelleIntervalle + "\n\n" +
         "Ensuite :\n" +
         "1. Ouvre Pine Editor.\n" +
         "2. Colle le script copié.\n" +
@@ -450,25 +536,32 @@ function ouvrirTradingViewAvecIndicateur() {
 }
 
 function afficherScriptPine() {
-    const selectActif = document.getElementById("asset-selector");
-    const selectIndicateur = document.getElementById("indicator-selector");
+    const params = lireParametresSelectionnes();
     const zoneScript = document.getElementById("pine-script-output");
 
-    if (!selectActif || !selectIndicateur || !zoneScript) {
-        alert("Élément de formulaire introuvable.");
+    if (!params || !zoneScript) {
+        alert("Erreur : un élément de formulaire est introuvable.");
         return;
     }
 
-    const symbole = selectActif.value;
-    const indicateur = selectIndicateur.value;
-    const scriptPine = genererScriptPine(indicateur, symbole);
+    const scriptPine = genererScriptPine(
+        params.indicateur,
+        params.symbole,
+        params.intervalle,
+        params.libelleActif,
+        params.libelleIndicateur,
+        params.libelleIntervalle
+    );
 
     if (!scriptPine) {
         zoneScript.value =
 `// Aucun script automatique disponible pour cet indicateur personnalisé.
 
-// Actif sélectionné : ${symbole}
-// Indicateur sélectionné : ${indicateur}
+// Actif sélectionné : ${params.symbole}
+// Libellé actif : ${params.libelleActif}
+// Indicateur sélectionné : ${params.indicateur}
+// Libellé indicateur : ${params.libelleIndicateur}
+// Intervalle sélectionné : ${params.intervalle} (${params.libelleIntervalle})
 
 // TradingView ne permet pas d’injecter directement un indicateur personnalisé
 // dans Pine Editor depuis une page HTML externe.
@@ -478,10 +571,27 @@ function afficherScriptPine() {
 // 2. ouvrir Pine Editor,
 // 3. coller manuellement le code Pine Script,
 // 4. cliquer sur Ajouter au graphique.`;
+
+        alert(
+            "Aucun Pine Script automatique disponible pour cet indicateur personnalisé.\n\n" +
+            "Actif : " + params.libelleActif + "\n" +
+            "Indicateur : " + params.libelleIndicateur + "\n" +
+            "Intervalle : " + params.libelleIntervalle + "\n\n" +
+            "Un message explicatif a été affiché dans la zone Pine Script."
+        );
+
         return;
     }
 
     zoneScript.value = scriptPine;
+
+    alert(
+        "Pine Script généré avec succès.\n\n" +
+        "Actif : " + params.libelleActif + "\n" +
+        "Indicateur : " + params.libelleIndicateur + "\n" +
+        "Intervalle : " + params.libelleIntervalle + "\n\n" +
+        "Le code est maintenant visible dans la zone « PINE SCRIPT GÉNÉRÉ »."
+    );
 }
 
 function copierScriptPine() {
@@ -502,25 +612,47 @@ function copierScriptPine() {
 }
 
 function ouvrirTradingViewSimple() {
-    const selectActif = document.getElementById("asset-selector");
+    const params = lireParametresSelectionnes();
 
-    if (!selectActif || !selectActif.value) {
+    if (!params || !params.symbole) {
         alert("Aucun actif sélectionné.");
         return;
     }
 
-    const symbole = selectActif.value;
-    const urlTradingView = "https://www.tradingview.com/chart/?symbol=" + encodeURIComponent(symbole);
+    const urlTradingView =
+        "https://www.tradingview.com/chart/?symbol=" +
+        encodeURIComponent(params.symbole) +
+        "&interval=" +
+        encodeURIComponent(params.intervalle);
 
     window.open(urlTradingView, "_blank");
 }
 
-function genererScriptPine(indicateur, symbole) {
+function genererEntetePine(actif, indicateur, intervalle, libelleActif, libelleIndicateur, libelleIntervalle) {
+    return `// Actif sélectionné : ${actif}
+// Libellé actif : ${libelleActif}
+// Indicateur sélectionné : ${indicateur}
+// Libellé indicateur : ${libelleIndicateur}
+// Intervalle conseillé : ${intervalle} (${libelleIntervalle})`;
+}
+
+function genererScriptPine(indicateur, symbole, intervalle, libelleActif, libelleIndicateur, libelleIntervalle) {
     const actif = symbole || "Actif sélectionné";
+    const intervalleChoisi = intervalle || "15";
+    const entete = genererEntetePine(
+        actif,
+        indicateur,
+        intervalleChoisi,
+        libelleActif,
+        libelleIndicateur,
+        libelleIntervalle
+    );
 
     if (indicateur === "RSI") {
         return `//@version=5
-indicator("RSI pédagogique - ${actif}", overlay=false)
+${entete}
+
+indicator("RSI pédagogique - ${actif} - ${intervalleChoisi}", overlay=false)
 
 periodeRsi = input.int(14, title="Période RSI")
 niveauSurachat = input.int(70, title="Niveau de surachat")
@@ -542,7 +674,9 @@ plotshape(signalVente, title="Signal vente", style=shape.triangledown, location=
 
     if (indicateur === "MACD") {
         return `//@version=5
-indicator("MACD pédagogique - ${actif}", overlay=false)
+${entete}
+
+indicator("MACD pédagogique - ${actif} - ${intervalleChoisi}", overlay=false)
 
 rapide = input.int(12, title="EMA rapide")
 lente = input.int(26, title="EMA lente")
@@ -563,7 +697,9 @@ plotshape(signalVente, title="Signal vente", style=shape.triangledown, location=
 
     if (indicateur === "EMA") {
         return `//@version=5
-indicator("EMA 20 / EMA 50 - ${actif}", overlay=true)
+${entete}
+
+indicator("EMA 20 / EMA 50 - ${actif} - ${intervalleChoisi}", overlay=true)
 
 periodeCourte = input.int(20, title="EMA courte")
 periodeLongue = input.int(50, title="EMA longue")
@@ -583,7 +719,9 @@ plotshape(signalVente, title="Signal vente", style=shape.labeldown, location=loc
 
     if (indicateur === "SMA") {
         return `//@version=5
-indicator("SMA 50 / SMA 200 - ${actif}", overlay=true)
+${entete}
+
+indicator("SMA 50 / SMA 200 - ${actif} - ${intervalleChoisi}", overlay=true)
 
 periodeCourte = input.int(50, title="SMA courte")
 periodeLongue = input.int(200, title="SMA longue")
@@ -603,7 +741,9 @@ plotshape(signalVente, title="Croisement baissier", style=shape.labeldown, locat
 
     if (indicateur === "SUPERTREND") {
         return `//@version=5
-indicator("Supertrend pédagogique - ${actif}", overlay=true)
+${entete}
+
+indicator("Supertrend pédagogique - ${actif} - ${intervalleChoisi}", overlay=true)
 
 facteur = input.float(3.0, title="Facteur")
 periodeAtr = input.int(10, title="Période ATR")
@@ -623,7 +763,9 @@ plotshape(signalVente, title="Signal vente", style=shape.labeldown, location=loc
 
     if (indicateur === "BOLLINGER") {
         return `//@version=5
-indicator("Bandes de Bollinger - ${actif}", overlay=true)
+${entete}
+
+indicator("Bandes de Bollinger - ${actif} - ${intervalleChoisi}", overlay=true)
 
 periode = input.int(20, title="Période")
 multiplicateur = input.float(2.0, title="Multiplicateur")
