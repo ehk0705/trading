@@ -353,9 +353,9 @@
 
     <div class="brand-group">
         <div class="logo">TRADING STATION <span>v2.0</span></div>
-		<div class="credits" style="color: white; font-weight: bold;">
-			Développé par Hocine Korichi, à l'aide du Vibe Coding
-		</div>
+        <div class="credits" style="color: white; font-weight: bold;">
+            Développé par Hocine Korichi, à l'aide du Vibe Coding
+        </div>
     </div>
 
     <div class="search-area">
@@ -651,15 +651,71 @@ function lireParametresSelectionnes() {
     };
 }
 
+let ouvertureTradingViewEnCours = false;
+
 function ouvrirTradingViewAvecIndicateur() {
-    afficherScriptPine();
-    copierScriptPine();
+    if (ouvertureTradingViewEnCours) {
+        return;
+    }
+
+    ouvertureTradingViewEnCours = true;
+
+    setTimeout(function () {
+        ouvertureTradingViewEnCours = false;
+    }, 1200);
 
     const params = lireParametresSelectionnes();
+    const zoneScript = document.getElementById("pine-script-output");
 
     if (!params || !params.symbole) {
         alert("Aucun actif sélectionné.");
         return;
+    }
+
+    if (!zoneScript) {
+        alert("Erreur : la zone Pine Script est introuvable.");
+        return;
+    }
+
+    const scriptPine = genererScriptPine(params);
+
+    if (scriptPine) {
+        zoneScript.value = scriptPine;
+    } else {
+        zoneScript.value =
+`// Aucun script automatique disponible pour cet indicateur personnalisé.
+
+// Actif sélectionné : ${params.symbole}
+// Libellé actif : ${params.libelleActif}
+// Indicateur sélectionné : ${params.indicateur}
+// Libellé indicateur : ${params.libelleIndicateur}
+// Intervalle sélectionné : ${params.intervalle} (${params.libelleIntervalle})
+// Stratégie : ${params.libelleStrategie}
+// Capital initial : ${params.capitalInitial}
+// Risque par position : ${params.risqueParPosition}%
+// Stop loss : ${params.stopLoss}%
+// Take profit : ${params.takeProfit}%
+// Levier : ${params.levier}
+// Source du prix : ${params.libelleSourcePrix}
+// Période RSI : ${params.periodeRSI}
+// Période EMA : ${params.periodeEMA}
+// Sens de trading : ${params.libelleSensTrading}
+// Alertes : ${params.alertesActivees ? "activées" : "désactivées"}
+
+// TradingView ne permet pas d’injecter directement un indicateur personnalisé
+// dans Pine Editor depuis une page HTML externe.
+
+// Solution :
+// 1. ouvrir TradingView,
+// 2. ouvrir Pine Editor,
+// 3. coller manuellement le code Pine Script,
+// 4. cliquer sur Ajouter au graphique.`;
+    }
+
+    if (navigator.clipboard && zoneScript.value.trim()) {
+        navigator.clipboard.writeText(zoneScript.value).catch(function () {
+            console.warn("Copie automatique impossible. Copie manuelle nécessaire.");
+        });
     }
 
     const urlTradingView =
@@ -670,6 +726,8 @@ function ouvrirTradingViewAvecIndicateur() {
 
     alert(
         "TradingView va s’ouvrir.\n\n" +
+        "Le Pine Script a été préparé dans la zone prévue.\n" +
+        "La copie automatique est tentée si le navigateur l’autorise.\n\n" +
         "Paramètres sélectionnés :\n" +
         "Actif : " + params.libelleActif + "\n" +
         "Indicateur : " + params.libelleIndicateur + "\n" +
@@ -687,7 +745,7 @@ function ouvrirTradingViewAvecIndicateur() {
         "Alertes : " + (params.alertesActivees ? "activées" : "désactivées") + "\n\n" +
         "Ensuite :\n" +
         "1. Ouvre Pine Editor.\n" +
-        "2. Colle le script copié.\n" +
+        "2. Colle le script si la copie automatique n’a pas fonctionné.\n" +
         "3. Clique sur Ajouter au graphique."
     );
 
