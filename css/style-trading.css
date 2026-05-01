@@ -1,4 +1,9 @@
 <style>
+    body {
+        background: #020617;
+        color: #e5e7eb;
+    }
+
     .top-bar {
         display: flex;
         align-items: center;
@@ -10,6 +15,7 @@
         position: relative;
         z-index: 10;
         overflow: visible;
+        background: #0f172a;
     }
 
     .brand-group {
@@ -52,11 +58,13 @@
         padding: 1px 0 0 0;
 
         overflow: visible;
+        color: #ffffff;
     }
 
     .logo span {
         font-size: 6.5px;
         line-height: 1.15;
+        color: #22d3ee;
     }
 
     .credits {
@@ -116,6 +124,9 @@
         padding: 1px 5px;
         border-radius: 5px;
         box-sizing: border-box;
+        background: #020617;
+        color: #ffffff;
+        border: 1px solid rgba(148, 163, 184, 0.55);
     }
 
     .btn-tradingview,
@@ -128,14 +139,14 @@
         justify-content: center;
         gap: 3px;
 
-        height: 24px;
-        padding: 0 6px;
+        height: 21px;
+        padding: 0 5px;
         border-radius: 999px;
 
         border: 1px solid rgba(255, 255, 255, 0.25);
 
         font-weight: 800;
-        font-size: 8px;
+        font-size: 7.5px;
         letter-spacing: 0.1px;
 
         cursor: pointer;
@@ -169,34 +180,43 @@
     }
 
     .tv-icon {
-        font-size: 9px;
+        font-size: 8px;
         line-height: 1;
     }
 
     /* Graphique descendu */
     .main-layout {
-        margin-top: 24px;
+        margin-top: 32px;
         position: relative;
         z-index: 1;
+        background: #020617;
     }
 
     .chart-section {
         clear: both;
-        margin-top: 20px;
+        margin-top: 26px;
         width: 100%;
         position: relative;
         z-index: 1;
+        background: #020617;
     }
 
     .analysis-sidebar {
         width: 100%;
+        background: #020617;
+    }
+
+    .card {
+        background: rgba(15, 23, 42, 0.95);
+        border: 1px solid rgba(34, 211, 238, 0.25);
+        color: #e5e7eb;
     }
 
     .pine-generator-section {
         margin: 10px;
         padding: 12px;
         border-radius: 14px;
-        background: rgba(15, 23, 42, 0.92);
+        background: rgba(15, 23, 42, 0.95);
         border: 1px solid rgba(34, 211, 238, 0.35);
         color: #e5e7eb;
     }
@@ -267,6 +287,7 @@
             gap: 4px;
             margin-bottom: 5px;
             overflow: visible;
+            background: #0f172a;
         }
 
         .brand-group {
@@ -322,11 +343,13 @@
         }
 
         .main-layout {
-            margin-top: 26px;
+            margin-top: 34px;
+            background: #020617;
         }
 
         .chart-section {
-            margin-top: 22px;
+            margin-top: 28px;
+            background: #020617;
         }
     }
 
@@ -337,6 +360,7 @@
             gap: 3px;
             margin-bottom: 5px;
             overflow: visible;
+            background: #0f172a;
         }
 
         .brand-group {
@@ -417,30 +441,33 @@
         .btn-pine,
         .btn-copy,
         .search-area button {
-            height: 23px;
-            padding: 0 5px;
-            font-size: 7.5px;
-            gap: 3px;
+            height: 20px;
+            padding: 0 4px;
+            font-size: 7px;
+            gap: 2px;
         }
 
         .tv-icon {
-            font-size: 8px;
+            font-size: 7.5px;
         }
 
         .main-layout {
             display: flex;
             flex-direction: column;
-            margin-top: 28px;
+            margin-top: 34px;
+            background: #020617;
         }
 
         .chart-section {
             clear: both;
             width: 100%;
-            margin-top: 24px;
+            margin-top: 30px;
+            background: #020617;
         }
 
         .analysis-sidebar {
             width: 100%;
+            background: #020617;
         }
 
         .pine-generator-section {
@@ -476,6 +503,7 @@
             padding: 2px 4px 3px 4px;
             gap: 2px;
             overflow: visible;
+            background: #0f172a;
         }
 
         .brand-group {
@@ -532,21 +560,83 @@
         .btn-pine,
         .btn-copy,
         .search-area button {
-            height: 22px;
+            height: 19px;
             padding: 0 4px;
-            font-size: 7px;
+            font-size: 6.8px;
+            gap: 2px;
         }
 
         .tv-icon {
-            font-size: 7.5px;
+            font-size: 7px;
         }
 
         .main-layout {
-            margin-top: 30px;
+            margin-top: 36px;
+            background: #020617;
         }
 
         .chart-section {
-            margin-top: 26px;
+            margin-top: 32px;
+            background: #020617;
         }
     }
 </style>
+/* Correction forte : empêcher le graphique d'empiéter sur les boutons */
+.top-bar {
+    position: relative !important;
+    z-index: 1000 !important;
+    margin-bottom: 20px !important;
+}
+
+.search-area {
+    position: relative !important;
+    z-index: 1001 !important;
+    margin-bottom: 18px !important;
+}
+
+.main-layout {
+    position: relative !important;
+    z-index: 1 !important;
+    margin-top: 70px !important;
+    padding-top: 10px !important;
+    clear: both !important;
+}
+
+.chart-section {
+    position: relative !important;
+    z-index: 1 !important;
+    margin-top: 40px !important;
+    padding-top: 10px !important;
+    clear: both !important;
+}
+
+#tv_chart_container {
+    position: relative !important;
+    z-index: 1 !important;
+    margin-top: 20px !important;
+}
+
+@media (max-width: 600px) {
+    .top-bar {
+        margin-bottom: 24px !important;
+    }
+
+    .search-area {
+        margin-bottom: 22px !important;
+    }
+
+    .main-layout {
+        margin-top: 90px !important;
+        padding-top: 12px !important;
+    }
+
+    .chart-section {
+        margin-top: 50px !important;
+        padding-top: 12px !important;
+    }
+
+    #tv_chart_container {
+        margin-top: 24px !important;
+    }
+}
+
