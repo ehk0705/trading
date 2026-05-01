@@ -73,13 +73,24 @@
         }
 
         .input-group select,
-        .search-area select {
+        .input-group input,
+        .search-area select,
+        .search-area input {
             height: 34px;
             max-width: 180px;
             font-size: 12px;
             padding: 4px 8px;
             border-radius: 6px;
             box-sizing: border-box;
+        }
+
+        .input-group input[type="number"] {
+            max-width: 85px;
+        }
+
+        .input-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
         }
 
         .btn-tradingview,
@@ -91,22 +102,17 @@
             align-items: center;
             justify-content: center;
             gap: 5px;
-
             height: 34px;
             padding: 0 10px;
             border-radius: 999px;
-
             border: 1px solid rgba(255, 255, 255, 0.25);
-
             font-weight: 800;
             font-size: 11px;
             letter-spacing: 0.1px;
-
             cursor: pointer;
             white-space: nowrap;
             text-decoration: none;
             line-height: 1;
-
             transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
         }
 
@@ -141,6 +147,28 @@
         .tv-icon {
             font-size: 12px;
             line-height: 1;
+        }
+
+        .parametres-avances {
+            width: 100%;
+            margin-top: 6px;
+            padding: 10px;
+            border-radius: 12px;
+            background: rgba(15, 23, 42, 0.92);
+            border: 1px solid rgba(34, 211, 238, 0.25);
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .parametres-title {
+            width: 100%;
+            text-align: center;
+            color: #22d3ee;
+            font-size: 13px;
+            font-weight: 800;
+            margin-bottom: 2px;
         }
 
         .pine-generator-section {
@@ -183,18 +211,14 @@
             width: 100%;
             min-height: 230px;
             resize: vertical;
-
             background: #020617;
             color: #d9f99d;
-
             border: 1px solid rgba(132, 204, 22, 0.45);
             border-radius: 12px;
-
             padding: 12px;
             font-family: Consolas, Monaco, monospace;
             font-size: 12px;
             line-height: 1.4;
-
             box-sizing: border-box;
         }
 
@@ -250,11 +274,17 @@
             }
 
             .input-group select,
-            .search-area select {
+            .input-group input,
+            .search-area select,
+            .search-area input {
                 height: 30px;
                 max-width: 135px;
                 font-size: 10px;
                 padding: 3px 5px;
+            }
+
+            .input-group input[type="number"] {
+                max-width: 72px;
             }
 
             .btn-tradingview,
@@ -293,9 +323,15 @@
             }
 
             .input-group select,
-            .search-area select {
+            .input-group input,
+            .search-area select,
+            .search-area input {
                 max-width: 115px;
                 font-size: 9px;
+            }
+
+            .input-group input[type="number"] {
+                max-width: 65px;
             }
 
             .btn-tradingview,
@@ -316,8 +352,8 @@
 <header class="top-bar">
 
     <div class="brand-group">
-        <!--<div class="logo">TRADING STATION <span>v2.0</span></div>-->
-        <!--<div class="credits">Développé par Hocine Korichi, à l'aide de Vibe Coding</div>-->
+        <div class="logo">TRADING STATION <span>v2.0</span></div>
+        <div class="credits">Développé par Hocine Korichi, à l'aide du Vibe Coding</div>
     </div>
 
     <div class="search-area">
@@ -395,6 +431,82 @@
             </select>
         </div>
 
+        <div class="parametres-avances">
+
+            <div class="parametres-title">PARAMÈTRES AVANCÉS POUR LA STRATÉGIE PINE SCRIPT</div>
+
+            <div class="input-group">
+                <label for="strategy-selector">STRATÉGIE :</label>
+                <select id="strategy-selector">
+                    <option value="trend">Suivi de tendance</option>
+                    <option value="scalping">Scalping</option>
+                    <option value="swing">Swing trading</option>
+                    <option value="breakout">Cassure de niveau</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label for="capital-input">CAPITAL :</label>
+                <input id="capital-input" type="number" value="1000" min="1">
+            </div>
+
+            <div class="input-group">
+                <label for="risk-input">RISQUE % :</label>
+                <input id="risk-input" type="number" value="1" min="0.1" step="0.1">
+            </div>
+
+            <div class="input-group">
+                <label for="stoploss-input">STOP % :</label>
+                <input id="stoploss-input" type="number" value="2" min="0.1" step="0.1">
+            </div>
+
+            <div class="input-group">
+                <label for="takeprofit-input">GAIN % :</label>
+                <input id="takeprofit-input" type="number" value="4" min="0.1" step="0.1">
+            </div>
+
+            <div class="input-group">
+                <label for="leverage-input">LEVIER :</label>
+                <input id="leverage-input" type="number" value="1" min="1" step="1">
+            </div>
+
+            <div class="input-group">
+                <label for="price-source-selector">SOURCE :</label>
+                <select id="price-source-selector">
+                    <option value="close">Clôture</option>
+                    <option value="open">Ouverture</option>
+                    <option value="hl2">Moyenne haut/bas</option>
+                    <option value="hlc3">Moyenne haut/bas/clôture</option>
+                    <option value="ohlc4">Moyenne OHLC</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label for="rsi-period-input">RSI :</label>
+                <input id="rsi-period-input" type="number" value="14" min="2">
+            </div>
+
+            <div class="input-group">
+                <label for="ema-period-input">EMA :</label>
+                <input id="ema-period-input" type="number" value="50" min="2">
+            </div>
+
+            <div class="input-group">
+                <label for="trade-direction-selector">SENS :</label>
+                <select id="trade-direction-selector">
+                    <option value="both">Achat et vente</option>
+                    <option value="long">Achat seulement</option>
+                    <option value="short">Vente seulement</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label for="alerts-checkbox">ALERTES :</label>
+                <input id="alerts-checkbox" type="checkbox" checked>
+            </div>
+
+        </div>
+
     </div>
 
 </header>
@@ -424,7 +536,7 @@
         <div class="card">
             <h3 style="color:#22d3ee;">PINE SCRIPT GÉNÉRÉ</h3>
 
-            <textarea id="pine-script-output" class="pine-script-box" readonly>Clique sur « Générer Pine » pour afficher ici le code correspondant à ton choix.</textarea>
+            <textarea id="pine-script-output" class="pine-script-box" readonly>Clique sur « Générer Pine » pour afficher ici le code correspondant à tes choix.</textarea>
 
             <p style="font-size:12px; color:#fde68a; line-height:1.5;">
                 TradingView ne permet pas de remplir automatiquement Pine Editor.
@@ -456,6 +568,7 @@
         <li>Choisir un actif.</li>
         <li>Choisir un indicateur ou une stratégie.</li>
         <li>Choisir un intervalle.</li>
+        <li>Régler les paramètres avancés : capital, risque, stop loss, take profit, levier, source du prix.</li>
         <li>Cliquer sur « Générer Pine ».</li>
         <li>Copier le code généré.</li>
         <li>Ouvrir TradingView.</li>
@@ -489,6 +602,18 @@ function lireParametresSelectionnes() {
     const selectIndicateur = document.getElementById("indicator-selector");
     const selectIntervalle = document.getElementById("interval-selector");
 
+    const selectStrategie = document.getElementById("strategy-selector");
+    const inputCapital = document.getElementById("capital-input");
+    const inputRisque = document.getElementById("risk-input");
+    const inputStopLoss = document.getElementById("stoploss-input");
+    const inputTakeProfit = document.getElementById("takeprofit-input");
+    const inputLevier = document.getElementById("leverage-input");
+    const selectSourcePrix = document.getElementById("price-source-selector");
+    const inputPeriodeRSI = document.getElementById("rsi-period-input");
+    const inputPeriodeEMA = document.getElementById("ema-period-input");
+    const selectSensTrading = document.getElementById("trade-direction-selector");
+    const checkboxAlertes = document.getElementById("alerts-checkbox");
+
     if (!selectActif || !selectIndicateur || !selectIntervalle) {
         return null;
     }
@@ -497,9 +622,30 @@ function lireParametresSelectionnes() {
         symbole: selectActif.value,
         indicateur: selectIndicateur.value,
         intervalle: selectIntervalle.value,
+
         libelleActif: selectActif.options[selectActif.selectedIndex].text,
         libelleIndicateur: selectIndicateur.options[selectIndicateur.selectedIndex].text,
-        libelleIntervalle: selectIntervalle.options[selectIntervalle.selectedIndex].text
+        libelleIntervalle: selectIntervalle.options[selectIntervalle.selectedIndex].text,
+
+        strategie: selectStrategie ? selectStrategie.value : "trend",
+        libelleStrategie: selectStrategie ? selectStrategie.options[selectStrategie.selectedIndex].text : "Suivi de tendance",
+
+        capitalInitial: inputCapital ? inputCapital.value : "1000",
+        risqueParPosition: inputRisque ? inputRisque.value : "1",
+        stopLoss: inputStopLoss ? inputStopLoss.value : "2",
+        takeProfit: inputTakeProfit ? inputTakeProfit.value : "4",
+        levier: inputLevier ? inputLevier.value : "1",
+
+        sourcePrix: selectSourcePrix ? selectSourcePrix.value : "close",
+        libelleSourcePrix: selectSourcePrix ? selectSourcePrix.options[selectSourcePrix.selectedIndex].text : "Clôture",
+
+        periodeRSI: inputPeriodeRSI ? inputPeriodeRSI.value : "14",
+        periodeEMA: inputPeriodeEMA ? inputPeriodeEMA.value : "50",
+
+        sensTrading: selectSensTrading ? selectSensTrading.value : "both",
+        libelleSensTrading: selectSensTrading ? selectSensTrading.options[selectSensTrading.selectedIndex].text : "Achat et vente",
+
+        alertesActivees: checkboxAlertes ? checkboxAlertes.checked : false
     };
 }
 
@@ -522,10 +668,21 @@ function ouvrirTradingViewAvecIndicateur() {
 
     alert(
         "TradingView va s’ouvrir.\n\n" +
-        "Paramètres envoyés :\n" +
+        "Paramètres sélectionnés :\n" +
         "Actif : " + params.libelleActif + "\n" +
         "Indicateur : " + params.libelleIndicateur + "\n" +
-        "Intervalle : " + params.libelleIntervalle + "\n\n" +
+        "Intervalle : " + params.libelleIntervalle + "\n" +
+        "Stratégie : " + params.libelleStrategie + "\n" +
+        "Capital initial : " + params.capitalInitial + "\n" +
+        "Risque par position : " + params.risqueParPosition + "%\n" +
+        "Stop loss : " + params.stopLoss + "%\n" +
+        "Take profit : " + params.takeProfit + "%\n" +
+        "Levier : " + params.levier + "\n" +
+        "Source du prix : " + params.libelleSourcePrix + "\n" +
+        "Période RSI : " + params.periodeRSI + "\n" +
+        "Période EMA : " + params.periodeEMA + "\n" +
+        "Sens de trading : " + params.libelleSensTrading + "\n" +
+        "Alertes : " + (params.alertesActivees ? "activées" : "désactivées") + "\n\n" +
         "Ensuite :\n" +
         "1. Ouvre Pine Editor.\n" +
         "2. Colle le script copié.\n" +
@@ -544,14 +701,7 @@ function afficherScriptPine() {
         return;
     }
 
-    const scriptPine = genererScriptPine(
-        params.indicateur,
-        params.symbole,
-        params.intervalle,
-        params.libelleActif,
-        params.libelleIndicateur,
-        params.libelleIntervalle
-    );
+    const scriptPine = genererScriptPine(params);
 
     if (!scriptPine) {
         zoneScript.value =
@@ -562,6 +712,17 @@ function afficherScriptPine() {
 // Indicateur sélectionné : ${params.indicateur}
 // Libellé indicateur : ${params.libelleIndicateur}
 // Intervalle sélectionné : ${params.intervalle} (${params.libelleIntervalle})
+// Stratégie : ${params.libelleStrategie}
+// Capital initial : ${params.capitalInitial}
+// Risque par position : ${params.risqueParPosition}%
+// Stop loss : ${params.stopLoss}%
+// Take profit : ${params.takeProfit}%
+// Levier : ${params.levier}
+// Source du prix : ${params.libelleSourcePrix}
+// Période RSI : ${params.periodeRSI}
+// Période EMA : ${params.periodeEMA}
+// Sens de trading : ${params.libelleSensTrading}
+// Alertes : ${params.alertesActivees ? "activées" : "désactivées"}
 
 // TradingView ne permet pas d’injecter directement un indicateur personnalisé
 // dans Pine Editor depuis une page HTML externe.
@@ -574,9 +735,6 @@ function afficherScriptPine() {
 
         alert(
             "Aucun Pine Script automatique disponible pour cet indicateur personnalisé.\n\n" +
-            "Actif : " + params.libelleActif + "\n" +
-            "Indicateur : " + params.libelleIndicateur + "\n" +
-            "Intervalle : " + params.libelleIntervalle + "\n\n" +
             "Un message explicatif a été affiché dans la zone Pine Script."
         );
 
@@ -589,7 +747,11 @@ function afficherScriptPine() {
         "Pine Script généré avec succès.\n\n" +
         "Actif : " + params.libelleActif + "\n" +
         "Indicateur : " + params.libelleIndicateur + "\n" +
-        "Intervalle : " + params.libelleIntervalle + "\n\n" +
+        "Intervalle : " + params.libelleIntervalle + "\n" +
+        "Stratégie : " + params.libelleStrategie + "\n" +
+        "Risque : " + params.risqueParPosition + "%\n" +
+        "Stop loss : " + params.stopLoss + "%\n" +
+        "Take profit : " + params.takeProfit + "%\n\n" +
         "Le code est maintenant visible dans la zone « PINE SCRIPT GÉNÉRÉ »."
     );
 }
@@ -628,61 +790,147 @@ function ouvrirTradingViewSimple() {
     window.open(urlTradingView, "_blank");
 }
 
-function genererEntetePine(actif, indicateur, intervalle, libelleActif, libelleIndicateur, libelleIntervalle) {
-    return `// Actif sélectionné : ${actif}
-// Libellé actif : ${libelleActif}
-// Indicateur sélectionné : ${indicateur}
-// Libellé indicateur : ${libelleIndicateur}
-// Intervalle conseillé : ${intervalle} (${libelleIntervalle})`;
+function nettoyerNombre(valeur, defaut) {
+    const nombre = parseFloat(valeur);
+    if (isNaN(nombre) || nombre <= 0) {
+        return defaut;
+    }
+    return nombre;
 }
 
-function genererScriptPine(indicateur, symbole, intervalle, libelleActif, libelleIndicateur, libelleIntervalle) {
-    const actif = symbole || "Actif sélectionné";
-    const intervalleChoisi = intervalle || "15";
-    const entete = genererEntetePine(
-        actif,
-        indicateur,
-        intervalleChoisi,
-        libelleActif,
-        libelleIndicateur,
-        libelleIntervalle
-    );
+function genererSourcePrix(source) {
+    if (source === "open") return "open";
+    if (source === "hl2") return "hl2";
+    if (source === "hlc3") return "hlc3";
+    if (source === "ohlc4") return "ohlc4";
+    return "close";
+}
 
-    if (indicateur === "RSI") {
+function genererEntetePine(params) {
+    return `// Actif sélectionné : ${params.symbole}
+// Libellé actif : ${params.libelleActif}
+// Indicateur sélectionné : ${params.indicateur}
+// Libellé indicateur : ${params.libelleIndicateur}
+// Intervalle conseillé : ${params.intervalle} (${params.libelleIntervalle})
+// Stratégie : ${params.libelleStrategie}
+// Capital initial : ${params.capitalInitial}
+// Risque par position : ${params.risqueParPosition}%
+// Stop loss : ${params.stopLoss}%
+// Take profit : ${params.takeProfit}%
+// Levier : ${params.levier}
+// Source du prix : ${params.libelleSourcePrix}
+// Période RSI : ${params.periodeRSI}
+// Période EMA : ${params.periodeEMA}
+// Sens de trading : ${params.libelleSensTrading}
+// Alertes : ${params.alertesActivees ? "activées" : "désactivées"}`;
+}
+
+function genererBlocGestionRisque() {
+    return `
+stopLossPct = input.float(stopLossDefaut, title="Stop loss en %", minval=0.1, step=0.1)
+takeProfitPct = input.float(takeProfitDefaut, title="Take profit en %", minval=0.1, step=0.1)
+
+longStop = strategy.position_avg_price * (1 - stopLossPct / 100)
+longTake = strategy.position_avg_price * (1 + takeProfitPct / 100)
+
+shortStop = strategy.position_avg_price * (1 + stopLossPct / 100)
+shortTake = strategy.position_avg_price * (1 - takeProfitPct / 100)
+
+if strategy.position_size > 0
+    strategy.exit("Sortie achat", "Achat", stop=longStop, limit=longTake)
+
+if strategy.position_size < 0
+    strategy.exit("Sortie vente", "Vente", stop=shortStop, limit=shortTake)`;
+}
+
+function genererBlocAlertes(params) {
+    if (!params.alertesActivees) {
+        return "";
+    }
+
+    return `
+alertcondition(signalAchat, title="Signal achat", message="Signal achat détecté")
+alertcondition(signalVente, title="Signal vente", message="Signal vente détecté")`;
+}
+
+function genererScriptPine(params) {
+    const actif = params.symbole || "Actif sélectionné";
+    const intervalleChoisi = params.intervalle || "15";
+    const entete = genererEntetePine(params);
+
+    const capital = nettoyerNombre(params.capitalInitial, 1000);
+    const risque = nettoyerNombre(params.risqueParPosition, 1);
+    const stopLoss = nettoyerNombre(params.stopLoss, 2);
+    const takeProfit = nettoyerNombre(params.takeProfit, 4);
+    const rsi = nettoyerNombre(params.periodeRSI, 14);
+    const ema = nettoyerNombre(params.periodeEMA, 50);
+    const sourcePrix = genererSourcePrix(params.sourcePrix);
+
+    const autoriserAchat = params.sensTrading === "both" || params.sensTrading === "long";
+    const autoriserVente = params.sensTrading === "both" || params.sensTrading === "short";
+
+    const blocSensTrading = `
+autoriserAchat = ${autoriserAchat}
+autoriserVente = ${autoriserVente}`;
+
+    const blocGestionRisque = genererBlocGestionRisque();
+    const blocAlertes = genererBlocAlertes(params);
+
+    if (params.indicateur === "RSI") {
         return `//@version=5
 ${entete}
 
-indicator("RSI pédagogique - ${actif} - ${intervalleChoisi}", overlay=false)
+strategy("Stratégie RSI - ${actif} - ${intervalleChoisi}", overlay=false, initial_capital=${capital}, default_qty_type=strategy.percent_of_equity, default_qty_value=${risque})
 
-periodeRsi = input.int(14, title="Période RSI")
+sourcePrix = ${sourcePrix}
+periodeRsi = input.int(${rsi}, title="Période RSI")
 niveauSurachat = input.int(70, title="Niveau de surachat")
 niveauSurvente = input.int(30, title="Niveau de survente")
+stopLossDefaut = ${stopLoss}
+takeProfitDefaut = ${takeProfit}
 
-rsi = ta.rsi(close, periodeRsi)
+${blocSensTrading}
 
-plot(rsi, title="RSI", color=color.blue)
+rsiValeur = ta.rsi(sourcePrix, periodeRsi)
+
+plot(rsiValeur, title="RSI", color=color.blue)
 hline(niveauSurachat, "Zone de surachat", color=color.red)
 hline(niveauSurvente, "Zone de survente", color=color.green)
 hline(50, "Zone neutre", color=color.gray)
 
-signalAchat = ta.crossover(rsi, niveauSurvente)
-signalVente = ta.crossunder(rsi, niveauSurachat)
+signalAchat = ta.crossover(rsiValeur, niveauSurvente)
+signalVente = ta.crossunder(rsiValeur, niveauSurachat)
+
+if signalAchat and autoriserAchat
+    strategy.entry("Achat", strategy.long)
+
+if signalVente and autoriserVente
+    strategy.entry("Vente", strategy.short)
+
+${blocGestionRisque}
 
 plotshape(signalAchat, title="Signal achat", style=shape.triangleup, location=location.bottom, color=color.green, size=size.small)
-plotshape(signalVente, title="Signal vente", style=shape.triangledown, location=location.top, color=color.red, size=size.small)`;
+plotshape(signalVente, title="Signal vente", style=shape.triangledown, location=location.top, color=color.red, size=size.small)
+
+${blocAlertes}`;
     }
 
-    if (indicateur === "MACD") {
+    if (params.indicateur === "MACD") {
         return `//@version=5
 ${entete}
 
-indicator("MACD pédagogique - ${actif} - ${intervalleChoisi}", overlay=false)
+strategy("Stratégie MACD - ${actif} - ${intervalleChoisi}", overlay=false, initial_capital=${capital}, default_qty_type=strategy.percent_of_equity, default_qty_value=${risque})
 
+sourcePrix = ${sourcePrix}
 rapide = input.int(12, title="EMA rapide")
 lente = input.int(26, title="EMA lente")
 signal = input.int(9, title="Signal")
+stopLossDefaut = ${stopLoss}
+takeProfitDefaut = ${takeProfit}
 
-[macdLine, signalLine, histLine] = ta.macd(close, rapide, lente, signal)
+${blocSensTrading}
+
+[macdLine, signalLine, histLine] = ta.macd(sourcePrix, rapide, lente, signal)
 
 plot(macdLine, title="MACD", color=color.blue)
 plot(signalLine, title="Signal", color=color.orange)
@@ -691,21 +939,36 @@ plot(histLine, title="Histogramme", style=plot.style_columns, color=histLine >= 
 signalAchat = ta.crossover(macdLine, signalLine)
 signalVente = ta.crossunder(macdLine, signalLine)
 
+if signalAchat and autoriserAchat
+    strategy.entry("Achat", strategy.long)
+
+if signalVente and autoriserVente
+    strategy.entry("Vente", strategy.short)
+
+${blocGestionRisque}
+
 plotshape(signalAchat, title="Signal achat", style=shape.triangleup, location=location.bottom, color=color.green, size=size.small)
-plotshape(signalVente, title="Signal vente", style=shape.triangledown, location=location.top, color=color.red, size=size.small)`;
+plotshape(signalVente, title="Signal vente", style=shape.triangledown, location=location.top, color=color.red, size=size.small)
+
+${blocAlertes}`;
     }
 
-    if (indicateur === "EMA") {
+    if (params.indicateur === "EMA") {
         return `//@version=5
 ${entete}
 
-indicator("EMA 20 / EMA 50 - ${actif} - ${intervalleChoisi}", overlay=true)
+strategy("Stratégie EMA - ${actif} - ${intervalleChoisi}", overlay=true, initial_capital=${capital}, default_qty_type=strategy.percent_of_equity, default_qty_value=${risque})
 
+sourcePrix = ${sourcePrix}
 periodeCourte = input.int(20, title="EMA courte")
-periodeLongue = input.int(50, title="EMA longue")
+periodeLongue = input.int(${ema}, title="EMA longue")
+stopLossDefaut = ${stopLoss}
+takeProfitDefaut = ${takeProfit}
 
-emaCourte = ta.ema(close, periodeCourte)
-emaLongue = ta.ema(close, periodeLongue)
+${blocSensTrading}
+
+emaCourte = ta.ema(sourcePrix, periodeCourte)
+emaLongue = ta.ema(sourcePrix, periodeLongue)
 
 plot(emaCourte, title="EMA courte", color=color.green, linewidth=2)
 plot(emaLongue, title="EMA longue", color=color.red, linewidth=2)
@@ -713,21 +976,36 @@ plot(emaLongue, title="EMA longue", color=color.red, linewidth=2)
 signalAchat = ta.crossover(emaCourte, emaLongue)
 signalVente = ta.crossunder(emaCourte, emaLongue)
 
+if signalAchat and autoriserAchat
+    strategy.entry("Achat", strategy.long)
+
+if signalVente and autoriserVente
+    strategy.entry("Vente", strategy.short)
+
+${blocGestionRisque}
+
 plotshape(signalAchat, title="Signal achat", style=shape.labelup, location=location.belowbar, color=color.green, text="ACHAT")
-plotshape(signalVente, title="Signal vente", style=shape.labeldown, location=location.abovebar, color=color.red, text="VENTE")`;
+plotshape(signalVente, title="Signal vente", style=shape.labeldown, location=location.abovebar, color=color.red, text="VENTE")
+
+${blocAlertes}`;
     }
 
-    if (indicateur === "SMA") {
+    if (params.indicateur === "SMA") {
         return `//@version=5
 ${entete}
 
-indicator("SMA 50 / SMA 200 - ${actif} - ${intervalleChoisi}", overlay=true)
+strategy("Stratégie SMA - ${actif} - ${intervalleChoisi}", overlay=true, initial_capital=${capital}, default_qty_type=strategy.percent_of_equity, default_qty_value=${risque})
 
+sourcePrix = ${sourcePrix}
 periodeCourte = input.int(50, title="SMA courte")
 periodeLongue = input.int(200, title="SMA longue")
+stopLossDefaut = ${stopLoss}
+takeProfitDefaut = ${takeProfit}
 
-smaCourte = ta.sma(close, periodeCourte)
-smaLongue = ta.sma(close, periodeLongue)
+${blocSensTrading}
+
+smaCourte = ta.sma(sourcePrix, periodeCourte)
+smaLongue = ta.sma(sourcePrix, periodeLongue)
 
 plot(smaCourte, title="SMA courte", color=color.blue, linewidth=2)
 plot(smaLongue, title="SMA longue", color=color.orange, linewidth=2)
@@ -735,18 +1013,32 @@ plot(smaLongue, title="SMA longue", color=color.orange, linewidth=2)
 signalAchat = ta.crossover(smaCourte, smaLongue)
 signalVente = ta.crossunder(smaCourte, smaLongue)
 
+if signalAchat and autoriserAchat
+    strategy.entry("Achat", strategy.long)
+
+if signalVente and autoriserVente
+    strategy.entry("Vente", strategy.short)
+
+${blocGestionRisque}
+
 plotshape(signalAchat, title="Croisement haussier", style=shape.labelup, location=location.belowbar, color=color.green, text="ACHAT")
-plotshape(signalVente, title="Croisement baissier", style=shape.labeldown, location=location.abovebar, color=color.red, text="VENTE")`;
+plotshape(signalVente, title="Croisement baissier", style=shape.labeldown, location=location.abovebar, color=color.red, text="VENTE")
+
+${blocAlertes}`;
     }
 
-    if (indicateur === "SUPERTREND") {
+    if (params.indicateur === "SUPERTREND") {
         return `//@version=5
 ${entete}
 
-indicator("Supertrend pédagogique - ${actif} - ${intervalleChoisi}", overlay=true)
+strategy("Stratégie Supertrend - ${actif} - ${intervalleChoisi}", overlay=true, initial_capital=${capital}, default_qty_type=strategy.percent_of_equity, default_qty_value=${risque})
 
 facteur = input.float(3.0, title="Facteur")
 periodeAtr = input.int(10, title="Période ATR")
+stopLossDefaut = ${stopLoss}
+takeProfitDefaut = ${takeProfit}
+
+${blocSensTrading}
 
 [supertrend, direction] = ta.supertrend(facteur, periodeAtr)
 
@@ -757,21 +1049,36 @@ plot(supertrend, title="Supertrend", color=couleur, linewidth=2)
 signalAchat = direction < 0 and direction[1] > 0
 signalVente = direction > 0 and direction[1] < 0
 
+if signalAchat and autoriserAchat
+    strategy.entry("Achat", strategy.long)
+
+if signalVente and autoriserVente
+    strategy.entry("Vente", strategy.short)
+
+${blocGestionRisque}
+
 plotshape(signalAchat, title="Signal achat", style=shape.labelup, location=location.belowbar, color=color.green, text="ACHAT")
-plotshape(signalVente, title="Signal vente", style=shape.labeldown, location=location.abovebar, color=color.red, text="VENTE")`;
+plotshape(signalVente, title="Signal vente", style=shape.labeldown, location=location.abovebar, color=color.red, text="VENTE")
+
+${blocAlertes}`;
     }
 
-    if (indicateur === "BOLLINGER") {
+    if (params.indicateur === "BOLLINGER") {
         return `//@version=5
 ${entete}
 
-indicator("Bandes de Bollinger - ${actif} - ${intervalleChoisi}", overlay=true)
+strategy("Stratégie Bollinger - ${actif} - ${intervalleChoisi}", overlay=true, initial_capital=${capital}, default_qty_type=strategy.percent_of_equity, default_qty_value=${risque})
 
+sourcePrix = ${sourcePrix}
 periode = input.int(20, title="Période")
 multiplicateur = input.float(2.0, title="Multiplicateur")
+stopLossDefaut = ${stopLoss}
+takeProfitDefaut = ${takeProfit}
 
-base = ta.sma(close, periode)
-ecart = multiplicateur * ta.stdev(close, periode)
+${blocSensTrading}
+
+base = ta.sma(sourcePrix, periode)
+ecart = multiplicateur * ta.stdev(sourcePrix, periode)
 
 bandeHaute = base + ecart
 bandeBasse = base - ecart
@@ -783,8 +1090,18 @@ plot(bandeBasse, title="Bande basse", color=color.orange)
 signalAchat = close < bandeBasse
 signalVente = close > bandeHaute
 
+if signalAchat and autoriserAchat
+    strategy.entry("Achat", strategy.long)
+
+if signalVente and autoriserVente
+    strategy.entry("Vente", strategy.short)
+
+${blocGestionRisque}
+
 plotshape(signalAchat, title="Prix sous bande basse", style=shape.labelup, location=location.belowbar, color=color.green, text="ACHAT ?")
-plotshape(signalVente, title="Prix au-dessus bande haute", style=shape.labeldown, location=location.abovebar, color=color.red, text="VENTE ?")`;
+plotshape(signalVente, title="Prix au-dessus bande haute", style=shape.labeldown, location=location.abovebar, color=color.red, text="VENTE ?")
+
+${blocAlertes}`;
     }
 
     return "";
