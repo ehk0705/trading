@@ -215,6 +215,21 @@
             line-height: 1.5;
         }
 
+        .info-categorie {
+            margin-top: 14px;
+            padding: 12px;
+            background: #020617;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            color: #cbd5e1;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .info-categorie strong {
+            color: #00e5ff;
+        }
+
         footer {
             margin-top: 30px;
             padding: 18px;
@@ -242,6 +257,10 @@
                 font-size: 22px;
             }
         }
+		.label-categorie {
+			color: #00e5ff;
+			font-weight: bold;
+		}
     </style>
 </head>
 
@@ -249,7 +268,7 @@
 
 <header>
     <h1>Analyse de stratégie TradingView</h1>
-    <p>Analyse des paramètres de marché, des indicateurs et des conditions de stratégie.</p>
+    <p>Analyse des paramètres de marché, des indicateurs, des catégories Bitcoin et des conditions de stratégie.</p>
 </header>
 
 <nav>
@@ -344,6 +363,42 @@
                 </div>
 
                 <div>
+                    <label for="categorieAnalyse" class="label-categorie">Catégorie d’analyse</label>
+                    <select id="categorieAnalyse" onchange="mettreAJourDescriptionCategorie()">
+                        <option value="macroeconomie">
+                            Macroéconomie
+                        </option>
+                        <option value="monnaie_bitcoin">
+                            Monnaie Bitcoin
+                        </option>
+                        <option value="donnees_on_chain">
+                            Données on-chain
+                        </option>
+                        <option value="minage">
+                            Minage
+                        </option>
+                        <option value="analyse_technique">
+                            Analyse technique
+                        </option>
+                        <option value="derives">
+                            Dérivés
+                        </option>
+                        <option value="liquidite_marche">
+                            Liquidité de marché
+                        </option>
+                        <option value="institutionnel">
+                            Institutionnel
+                        </option>
+                        <option value="sentiment">
+                            Sentiment
+                        </option>
+                        <option value="reglementation_risques">
+                            Réglementation et risques
+                        </option>
+                    </select>
+                </div>
+
+                <div>
                     <label for="capital">Capital initial</label>
                     <input type="number" id="capital" value="1000">
                 </div>
@@ -379,9 +434,14 @@
 
             </div>
 
+            <div id="descriptionCategorie" class="info-categorie">
+                <strong>Catégorie choisie :</strong> Macroéconomie.
+                Taux, inflation, liquidité mondiale, dollar, obligations, bilan de la Fed.
+            </div>
+
             <div style="margin-top: 14px;">
                 <label for="notes">Notes personnelles</label>
-                <textarea id="notes" placeholder="Exemple : surveiller les mèches, les zones de liquidité, les supports et résistances..."></textarea>
+                <textarea id="notes" placeholder="Exemple : surveiller les mèches, les zones de liquidité, les supports, les résistances, les données on-chain ou la macroéconomie..."></textarea>
             </div>
 
             <div class="button-row">
@@ -420,6 +480,12 @@ Aucune analyse lancée.
         </p>
 
         <p class="note">
+            La catégorie d’analyse permet d’orienter le traitement côté serveur.
+            Une analyse macroéconomique, une analyse on-chain, une analyse technique ou une analyse des dérivés
+            ne doivent pas être traitées de la même façon.
+        </p>
+
+        <p class="note">
             Pour fonctionner correctement, ton serveur Node.js doit être hébergé sur Render,
             Railway, Vercel ou un autre hébergeur capable d’exécuter Node.js.
         </p>
@@ -449,6 +515,7 @@ Aucune analyse lancée.
         const intervalle = document.getElementById("intervalle");
         const indicateur = document.getElementById("indicateur");
         const strategie = document.getElementById("strategie");
+        const categorieAnalyse = document.getElementById("categorieAnalyse");
         const capital = document.getElementById("capital");
         const risque = document.getElementById("risque");
         const stopLoss = document.getElementById("stopLoss");
@@ -470,6 +537,10 @@ Aucune analyse lancée.
             strategie: strategie.value,
             libelleStrategie: strategie.options[strategie.selectedIndex].text,
 
+            categorieAnalyse: categorieAnalyse.value,
+            libelleCategorieAnalyse: categorieAnalyse.options[categorieAnalyse.selectedIndex].text,
+            descriptionCategorieAnalyse: obtenirDescriptionCategorie(categorieAnalyse.value),
+
             capital: Number(capital.value),
             risque: Number(risque.value),
             stopLoss: Number(stopLoss.value),
@@ -479,8 +550,59 @@ Aucune analyse lancée.
             sens: sens.value,
             libelleSens: sens.options[sens.selectedIndex].text,
 
-            notes: notes.value.trim()
+            notes: notes.value.trim(),
+
+            source: "analyse-strategy.html",
+            dateEnvoi: new Date().toISOString()
         };
+    }
+
+    function obtenirDescriptionCategorie(categorie) {
+        switch (categorie) {
+            case "macroeconomie":
+                return "Taux, inflation, liquidité mondiale, dollar, obligations, bilan de la Fed.";
+
+            case "monnaie_bitcoin":
+                return "Offre maximale, émission, halving, inflation de BTC.";
+
+            case "donnees_on_chain":
+                return "Adresses, transactions, MVRV, realized price, flux des plateformes.";
+
+            case "minage":
+                return "Taux de hachage, difficulté, revenus et ventes des mineurs.";
+
+            case "analyse_technique":
+                return "Graphiques, tendances, supports, résistances, RSI, moyennes mobiles.";
+
+            case "derives":
+                return "Contrats à terme, options, funding rates, open interest, liquidations.";
+
+            case "liquidite_marche":
+                return "Volumes, carnets d’ordres, spreads, profondeur de marché.";
+
+            case "institutionnel":
+                return "FNB Bitcoin, achats d’entreprises, fonds, banques, adoption officielle.";
+
+            case "sentiment":
+                return "Réseaux sociaux, Google Trends, médias, peur et avidité.";
+
+            case "reglementation_risques":
+                return "Lois, fiscalité, SEC, plateformes, garde, géopolitique.";
+
+            default:
+                return "Catégorie non reconnue.";
+        }
+    }
+
+    function mettreAJourDescriptionCategorie() {
+        const categorieAnalyse = document.getElementById("categorieAnalyse");
+        const description = obtenirDescriptionCategorie(categorieAnalyse.value);
+
+        document.getElementById("descriptionCategorie").innerHTML =
+            "<strong>Catégorie choisie :</strong> " +
+            categorieAnalyse.options[categorieAnalyse.selectedIndex].text +
+            ". " +
+            description;
     }
 
     function chargerGraphique() {
@@ -509,14 +631,19 @@ Aucune analyse lancée.
         switch (indicateur) {
             case "RSI":
                 return ["RSI@tv-basicstudies"];
+
             case "MACD":
                 return ["MACD@tv-basicstudies"];
+
             case "EMA":
                 return ["MASimple@tv-basicstudies"];
+
             case "SMA":
                 return ["MASimple@tv-basicstudies"];
+
             case "VOLUME":
                 return ["Volume@tv-basicstudies"];
+
             default:
                 return [];
         }
@@ -546,7 +673,8 @@ Aucune analyse lancée.
                 },
                 body: JSON.stringify({
                     test: true,
-                    message: "Test depuis analyse-strategy.html"
+                    message: "Test depuis analyse-strategy.html",
+                    categorieAnalyse: document.getElementById("categorieAnalyse").value
                 })
             });
 
@@ -613,12 +741,16 @@ Aucune analyse lancée.
                 "Intervalle : " + params.libelleIntervalle + "\n" +
                 "Indicateur : " + params.libelleIndicateur + "\n" +
                 "Stratégie : " + params.libelleStrategie + "\n" +
+                "Catégorie d’analyse : " + params.libelleCategorieAnalyse + "\n" +
+                "Code catégorie : " + params.categorieAnalyse + "\n" +
+                "Description catégorie : " + params.descriptionCategorieAnalyse + "\n" +
                 "Capital : " + params.capital + "\n" +
                 "Risque : " + params.risque + "%\n" +
                 "Stop loss : " + params.stopLoss + "%\n" +
                 "Take profit : " + params.takeProfit + "%\n" +
                 "Levier : " + params.levier + "\n" +
-                "Sens : " + params.libelleSens + "\n\n" +
+                "Sens : " + params.libelleSens + "\n" +
+                "Notes : " + (params.notes || "Aucune note") + "\n\n" +
 
                 "RÉPONSE DU SERVEUR NODE.JS\n" +
                 "--------------------------\n" +
@@ -646,7 +778,10 @@ Aucune analyse lancée.
         document.getElementById("etatServeur").textContent = "Serveur non testé";
     }
 
-    window.addEventListener("load", chargerGraphique);
+    window.addEventListener("load", function () {
+        mettreAJourDescriptionCategorie();
+        chargerGraphique();
+    });
 </script>
 
 </body>
