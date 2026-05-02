@@ -116,6 +116,11 @@
             color: #1a0b00;
         }
 
+        .btn-ai {
+            background: #38bdf8;
+            color: #00111a;
+        }
+
         .btn-clear {
             background: #ef4444;
             color: white;
@@ -316,6 +321,34 @@
             overflow: auto;
         }
 
+        .ai-section {
+            margin-top: 14px;
+            background: #0b1220;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 14px;
+        }
+
+        .ai-section h3 {
+            margin-top: 0;
+            color: #38bdf8;
+        }
+
+        .ai-result-box {
+            background: #020617;
+            border: 1px solid #334155;
+            border-radius: 10px;
+            padding: 14px;
+            min-height: 220px;
+            max-height: 520px;
+            overflow: auto;
+            white-space: pre-wrap;
+            word-break: break-word;
+            font-family: Consolas, monospace;
+            font-size: 13px;
+            color: #d1d5db;
+        }
+
         .note {
             color: #cbd5e1;
             font-size: 12px;
@@ -412,7 +445,7 @@
 
         <div class="control-group">
             <label for="asset-selector">ACTIF :</label>
-            <select id="asset-selector" onchange="actualiserGraphique()">
+            <select id="asset-selector" onchange="actualiserGraphique()" title="Choisir l’actif à afficher dans le graphique.">
                 <option value="BINANCE:BTCUSDT">Bitcoin / USDT</option>
                 <option value="COINBASE:BTCUSD">Bitcoin / USD</option>
                 <option value="BINANCE:ETHUSDT">Ethereum / USDT</option>
@@ -430,7 +463,7 @@
 
         <div class="control-group">
             <label for="interval-selector">INTERVALLE :</label>
-            <select id="interval-selector" onchange="actualiserGraphique()">
+            <select id="interval-selector" onchange="actualiserGraphique()" title="Choisir l’unité de temps du graphique.">
                 <option value="1">1 minute</option>
                 <option value="5">5 minutes</option>
                 <option value="15">15 minutes</option>
@@ -445,7 +478,7 @@
 
         <div class="control-group">
             <label for="indicator-selector">INDICATEUR :</label>
-            <select id="indicator-selector" onchange="actualiserGraphique()">
+            <select id="indicator-selector" onchange="actualiserGraphique()" title="Choisir l’indicateur principal utilisé pour l’analyse.">
                 <option value="RSI">RSI</option>
                 <option value="MACD">MACD</option>
                 <option value="EMA">EMA</option>
@@ -457,15 +490,55 @@
             </select>
         </div>
 
-        <button class="btn-tv" onclick="ouvrirTradingView()">Ouvrir dans TradingView</button>
-        <button class="btn-capture" onclick="capturerConfigurationTradingView()">Capturer configuration</button>
-        <button class="btn-save" onclick="sauvegarderConfiguration()">Sauvegarder</button>
-        <button class="btn-save" onclick="rechargerConfigurationTradingView()">Recharger</button>
-        <button class="btn-copy" onclick="copierConfiguration()">Copier JSON</button>
-        <button class="btn-export" onclick="exporterJSON()">Exporter JSON</button>
-        <button class="btn-import" onclick="ouvrirImportJSON()">Importer JSON</button>
-        <button class="btn-api" onclick="envoyerVersAPI()">Envoyer IA</button>
-        <button class="btn-clear" onclick="effacerConfiguration()">Effacer</button>
+        <button class="btn-tv" onclick="ouvrirTradingView()"
+                title="Ouvre TradingView avec l’actif et l’intervalle sélectionnés.">
+            Ouvrir dans TradingView
+        </button>
+
+        <button class="btn-capture" onclick="capturerConfigurationTradingView()"
+                title="Capture la configuration actuelle : actif, intervalle, indicateur et paramètres disponibles.">
+            Capturer configuration
+        </button>
+
+        <button class="btn-save" onclick="sauvegarderConfiguration()"
+                title="Sauvegarde la configuration capturée dans le navigateur.">
+            Sauvegarder
+        </button>
+
+        <button class="btn-save" onclick="rechargerConfigurationTradingView()"
+                title="Recharge la dernière configuration sauvegardée localement.">
+            Recharger
+        </button>
+
+        <button class="btn-copy" onclick="copierConfiguration()"
+                title="Copie la configuration actuelle au format JSON dans le presse-papiers.">
+            Copier JSON
+        </button>
+
+        <button class="btn-export" onclick="exporterJSON()"
+                title="Exporte la configuration dans un fichier JSON nommé avec l’actif, l’indicateur, l’intervalle, le type de bougie et la date.">
+            Exporter JSON
+        </button>
+
+        <button class="btn-import" onclick="ouvrirImportJSON()"
+                title="Importe une configuration JSON déjà sauvegardée.">
+            Importer JSON
+        </button>
+
+        <button class="btn-api" onclick="envoyerVersAPI()"
+                title="Envoie la configuration brute au serveur Node.js sur Render.">
+            Envoyer IA
+        </button>
+
+        <button class="btn-ai" onclick="analyserSnapshotIA()"
+                title="Analyse la configuration ou le snapshot chargé, puis affiche les recommandations sous le graphique.">
+            Analyse IA
+        </button>
+
+        <button class="btn-clear" onclick="effacerConfiguration()"
+                title="Efface la configuration affichée et les résultats de l’analyse IA.">
+            Effacer
+        </button>
     </div>
 </header>
 
@@ -485,6 +558,11 @@
 
         <input type="file" id="fichier-import-json" accept="application/json,.json" style="display:none;" onchange="importerJSONDepuisFichier(event)">
 
+        <section class="ai-section">
+            <h3>Résultats de l’analyse IA</h3>
+            <div id="resultat-analyse-ia" class="ai-result-box">Aucune analyse IA lancée.</div>
+        </section>
+
         <div class="note">
             Cette page capture les paramètres contrôlés par ton interface : actif, intervalle,
             indicateur, stratégie, risque, notes et lien de snapshot.
@@ -502,13 +580,25 @@
 
         <div class="form-block">
             <label for="api-url">Adresse API Render</label>
-            <input type="text" id="api-url" value="https://trading-pattern-api.onrender.com/api/analyse">
+            <input type="text" id="api-url" value="https://trading-pattern-api.onrender.com/api/analyse"
+                   title="Adresse de l’API Node.js déployée sur Render.">
         </div>
 
         <div class="button-zone">
-            <button class="btn-copy" onclick="testerServeur()">Tester serveur</button>
-            <button class="btn-dark" onclick="testerRouteAnalyse()">Tester /api/analyse</button>
-            <button class="btn-tv" onclick="ouvrirServeurRender()">Ouvrir serveur</button>
+            <button class="btn-copy" onclick="testerServeur()"
+                    title="Teste la route /api/test du serveur Render pour vérifier s’il est actif.">
+                Tester serveur
+            </button>
+
+            <button class="btn-dark" onclick="testerRouteAnalyse()"
+                    title="Teste directement la route /api/analyse utilisée pour envoyer les configurations.">
+                Tester /api/analyse
+            </button>
+
+            <button class="btn-tv" onclick="ouvrirServeurRender()"
+                    title="Ouvre l’adresse principale du serveur Render dans un nouvel onglet.">
+                Ouvrir serveur
+            </button>
         </div>
 
         <div id="infosServeur" class="server-info">
@@ -587,6 +677,10 @@ Aucun test effectué.
 
     function afficherInfosServeur(texte) {
         document.getElementById("infosServeur").textContent = texte;
+    }
+
+    function afficherAnalyseIA(texte) {
+        document.getElementById("resultat-analyse-ia").textContent = texte;
     }
 
     function obtenirStyleTradingView() {
@@ -1077,6 +1171,152 @@ Aucun test effectué.
         lecteur.readAsText(fichier);
     }
 
+    function genererAnalyseLocale(configuration) {
+        const graphique = configuration.graphique || {};
+        const risque = configuration.risque || {};
+        const snapshot = configuration.snapshot || {};
+
+        const actif = graphique.actif || "Actif non défini";
+        const intervalle = graphique.intervalleLibelle || graphique.intervalle || "Intervalle non défini";
+        const indicateur = graphique.indicateur || "Indicateur non défini";
+        const typeBougie = graphique.typeBougieLibelle || graphique.typeBougie || "Bougies japonaises";
+
+        let niveauRisque = "modéré";
+        let remarqueRisque = "Le risque paraît raisonnable si le stop loss est respecté.";
+
+        if (Number(risque.risqueParPositionPourcent) > 2) {
+            niveauRisque = "élevé";
+            remarqueRisque = "Le risque par position est élevé. Réduire le risque à 1 % ou 2 % maximum serait plus prudent.";
+        }
+
+        if (Number(risque.stopLossPourcent) <= 0) {
+            niveauRisque = "très élevé";
+            remarqueRisque = "Aucun stop loss valide n’est défini. C’est une mauvaise pratique.";
+        }
+
+        let lectureIndicateur = "Lecture générale de tendance.";
+
+        if (indicateur === "RSI") {
+            lectureIndicateur = "Le RSI sert à détecter les zones de surachat et de survente. Vérifier les divergences avant toute décision.";
+        } else if (indicateur === "MACD") {
+            lectureIndicateur = "Le MACD sert à repérer les croisements de momentum. Il est plus fiable lorsqu’il confirme la tendance principale.";
+        } else if (indicateur === "EMA") {
+            lectureIndicateur = "L’EMA sert à suivre la tendance. Surveiller les croisements et la pente moyenne.";
+        } else if (indicateur === "SUPERTREND") {
+            lectureIndicateur = "Le Supertrend donne une indication directionnelle, mais il peut donner de faux signaux en marché latéral.";
+        }
+
+        const presenceSnapshot = snapshot.url && snapshot.url.trim() !== "";
+
+        return (
+            "ANALYSE IA LOCALE\n" +
+            "=================\n\n" +
+
+            "Source analysée : " + (presenceSnapshot ? "snapshot fourni ou importé" : "configuration du graphique") + "\n" +
+            "Actif : " + actif + "\n" +
+            "Intervalle : " + intervalle + "\n" +
+            "Indicateur : " + indicateur + "\n" +
+            "Type de bougie : " + typeBougie + "\n" +
+            "Snapshot : " + (presenceSnapshot ? snapshot.url : "aucun lien de snapshot disponible") + "\n\n" +
+
+            "LECTURE TECHNIQUE\n" +
+            "-----------------\n" +
+            "- L’analyse est basée sur les paramètres capturés, pas sur une lecture complète des pixels du graphique.\n" +
+            "- " + lectureIndicateur + "\n" +
+            "- Vérifier la tendance générale avant d’utiliser un signal isolé.\n" +
+            "- Confirmer avec le volume, les supports, les résistances et les zones de liquidité.\n\n" +
+
+            "GESTION DU RISQUE\n" +
+            "-----------------\n" +
+            "Capital : " + (risque.capitalInitial ?? 1000) + "\n" +
+            "Risque par position : " + (risque.risqueParPositionPourcent ?? 1) + " %\n" +
+            "Stop loss : " + (risque.stopLossPourcent ?? 2) + " %\n" +
+            "Take profit : " + (risque.takeProfitPourcent ?? 4) + " %\n" +
+            "Levier : " + (risque.levier ?? 1) + "\n" +
+            "Niveau de risque estimé : " + niveauRisque + "\n" +
+            remarqueRisque + "\n\n" +
+
+            "RECOMMANDATIONS\n" +
+            "---------------\n" +
+            "1. Ne pas entrer en position uniquement sur un seul indicateur.\n" +
+            "2. Vérifier si le prix est proche d’un support ou d’une résistance importante.\n" +
+            "3. Éviter les entrées juste après une grande mèche ou une forte bougie impulsive.\n" +
+            "4. Attendre une confirmation de volume avant une cassure.\n" +
+            "5. Placer le stop loss hors des zones évidentes de liquidité.\n" +
+            "6. Utiliser un ratio gain/perte minimal de 1:2 si possible.\n\n" +
+
+            "AVERTISSEMENT\n" +
+            "-------------\n" +
+            "Cette analyse est pédagogique. Ce n’est pas un conseil financier."
+        );
+    }
+
+    async function analyserSnapshotIA() {
+        if (!configurationActuelle) {
+            capturerConfigurationTradingView();
+        }
+
+        afficherAnalyseIA("Analyse IA en cours...");
+
+        const apiUrl = getApiAnalyseUrl();
+
+        const chargeUtile = {
+            action: "analyse_snapshot_ou_configuration",
+            demande: "Analyser le snapshot capturé ou chargé, puis produire des recommandations.",
+            configuration: configurationActuelle
+        };
+
+        try {
+            const reponse = await fetch(apiUrl, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(chargeUtile)
+            });
+
+            const texte = await reponse.text();
+
+            let resultat;
+
+            try {
+                resultat = JSON.parse(texte);
+            } catch (erreurJson) {
+                throw new Error("Le serveur n’a pas retourné du JSON.\n\nRéponse reçue :\n" + texte);
+            }
+
+            if (!reponse.ok) {
+                throw new Error("Réponse serveur incorrecte : " + reponse.status);
+            }
+
+            afficherAnalyseIA(
+                "ANALYSE IA REÇUE DU SERVEUR\n" +
+                "===========================\n\n" +
+                JSON.stringify(resultat, null, 4)
+            );
+
+            afficherEtatServeur("ok", "Analyse IA terminée");
+            afficherStatus("Analyse IA terminée.");
+            alert("Analyse IA terminée.");
+
+        } catch (erreur) {
+            const analyseLocale = genererAnalyseLocale(configurationActuelle);
+
+            afficherAnalyseIA(
+                analyseLocale +
+                "\n\n" +
+                "NOTE TECHNIQUE\n" +
+                "--------------\n" +
+                "Le serveur Render n’a pas répondu correctement. Une analyse locale simplifiée a donc été affichée.\n\n" +
+                "Détail technique :\n" +
+                erreur.message
+            );
+
+            afficherEtatServeur("warning", "Analyse locale affichée");
+            afficherStatus("Analyse IA locale affichée.");
+        }
+    }
+
     function effacerConfiguration() {
         if (!confirm("Voulez-vous vraiment effacer la configuration affichée ?")) {
             return;
@@ -1086,6 +1326,8 @@ Aucun test effectué.
 
         document.getElementById("resultat-configuration").textContent =
             "Aucune configuration capturée.";
+
+        afficherAnalyseIA("Aucune analyse IA lancée.");
 
         afficherStatus("Configuration effacée.");
         alert("Configuration effacée.");
