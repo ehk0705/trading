@@ -113,32 +113,39 @@
             resize: vertical;
         }
 
-        .button-row {
-            margin-top: 18px;
+        .button-row,
+        .button-row-actions {
             display: flex;
             flex-wrap: wrap;
-            gap: 10px;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .button-row {
+            margin-top: 18px;
         }
 
         .button-row-actions {
             margin-top: 10px;
             padding-top: 10px;
             border-top: 1px solid #243044;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
         }
 
         button,
         .btn-link {
             border: none;
-            padding: 11px 16px;
+            padding: 9px 11px;
             border-radius: 8px;
             cursor: pointer;
             font-weight: bold;
-            font-size: 14px;
+            font-size: 13px;
             text-decoration: none;
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            min-height: 38px;
+            white-space: nowrap;
         }
 
         .btn-primary {
@@ -159,6 +166,20 @@
         .btn-dark {
             background: #334155;
             color: #ffffff;
+        }
+
+        .btn-pine-action {
+            background: #16a34a;
+            color: #ffffff;
+        }
+
+        .btn-pine-view {
+            background: #2563eb;
+            color: #ffffff;
+        }
+
+        .tv-icon {
+            margin-right: 2px;
         }
 
         button:hover,
@@ -291,6 +312,12 @@
                 min-height: 300px;
                 max-height: 520px;
             }
+
+            .button-row button,
+            .button-row-actions button {
+                flex: 1 1 100%;
+                width: 100%;
+            }
         }
     </style>
 </head>
@@ -321,6 +348,21 @@
                 </div>
 
                 <div class="button-row">
+                    <button class="btn-pine-action" onclick="afficherScriptPine()">
+                        <span class="tv-icon">🧩</span>
+                        <span>Générer Pine</span>
+                    </button>
+
+                    <button class="btn-pine-view" onclick="afficherPineScript()">
+                        <span class="tv-icon">👁️</span>
+                        <span>Afficher Pine Script</span>
+                    </button>
+
+                    <button class="btn-pine-action" onclick="copierScriptPine()">
+                        <span class="tv-icon">📋</span>
+                        <span>Copier Pine</span>
+                    </button>
+
                     <button 
                         class="btn-secondary" 
                         onclick="ouvrirTradingView()"
@@ -538,16 +580,11 @@ Aucune analyse lancée.
 <script src="https://s3.tradingview.com/tv.js"></script>
 
 <script>
-    /*
-        IMPORTANT :
-        Remplace cette adresse par l’adresse réelle de ton serveur Node.js.
-        Exemple Render :
-        https://trading-pattern-api.onrender.com/api/analyse
-    */
     const API_URL = "https://trading-pattern-api.onrender.com/api/analyse";
 
     let widgetTradingView = null;
     let actifsConnexesDisponibles = [];
+    let scriptPineGenere = "";
 
     function lireParametres() {
         const actif = document.getElementById("actif");
@@ -567,36 +604,26 @@ Aucune analyse lancée.
         return {
             actif: actif.value,
             libelleActif: actif.options[actif.selectedIndex].text,
-
             intervalle: intervalle.value,
             libelleIntervalle: intervalle.options[intervalle.selectedIndex].text,
-
             indicateur: indicateur.value,
             libelleIndicateur: indicateur.options[indicateur.selectedIndex].text,
-
             strategie: strategie.value,
             libelleStrategie: strategie.options[strategie.selectedIndex].text,
-
             categorieAnalyse: categorieAnalyse.value,
             libelleCategorieAnalyse: categorieAnalyse.options[categorieAnalyse.selectedIndex].text,
             descriptionCategorieAnalyse: obtenirDescriptionCategorie(categorieAnalyse.value),
-
             modeAnalyseAvancee: modeAnalyseAvancee.value,
             libelleModeAnalyseAvancee: modeAnalyseAvancee.options[modeAnalyseAvancee.selectedIndex].text,
-
             actifsConnexes: lireActifsConnexesSelectionnes(),
-
             capital: Number(capital.value),
             risque: Number(risque.value),
             stopLoss: Number(stopLoss.value),
             takeProfit: Number(takeProfit.value),
             levier: Number(levier.value),
-
             sens: sens.value,
             libelleSens: sens.options[sens.selectedIndex].text,
-
             notes: notes.value.trim(),
-
             source: "analyse-strategy.html",
             dateEnvoi: new Date().toISOString()
         };
@@ -606,34 +633,24 @@ Aucune analyse lancée.
         switch (categorie) {
             case "macroeconomie":
                 return "Taux, inflation, liquidité mondiale, dollar, obligations, bilan de la Fed.";
-
             case "monnaie_bitcoin":
                 return "Offre maximale, émission, halving, inflation de BTC.";
-
             case "donnees_on_chain":
                 return "Adresses, transactions, MVRV, realized price, flux des plateformes.";
-
             case "minage":
                 return "Taux de hachage, difficulté, revenus et ventes des mineurs.";
-
             case "analyse_technique":
                 return "Graphiques, tendances, supports, résistances, RSI, moyennes mobiles.";
-
             case "derives":
                 return "Contrats à terme, options, funding rates, open interest, liquidations.";
-
             case "liquidite_marche":
                 return "Volumes, carnets d’ordres, spreads, profondeur de marché.";
-
             case "institutionnel":
                 return "FNB Bitcoin, achats d’entreprises, fonds, banques, adoption officielle.";
-
             case "sentiment":
                 return "Réseaux sociaux, Google Trends, médias, peur et avidité.";
-
             case "reglementation_risques":
                 return "Lois, fiscalité, SEC, plateformes, garde, géopolitique.";
-
             default:
                 return "Catégorie non reconnue.";
         }
@@ -708,7 +725,6 @@ Aucune analyse lancée.
         }
 
         actifsConnexesDisponibles = obtenirActifsConnexes(actif);
-
         selectActifsConnexes.innerHTML = "";
 
         const optionTous = document.createElement("option");
@@ -730,23 +746,18 @@ Aucune analyse lancée.
             case "simple":
                 texteMode = "Analyse simple : seul l’actif principal est prioritaire. Tu peux choisir un actif connexe si nécessaire.";
                 break;
-
             case "snapshots":
                 texteMode = "Snapshots : Node.js recevra l’actif principal et l’actif connexe choisi, ou tous les actifs recommandés.";
                 break;
-
             case "multi_charts":
                 texteMode = "Multi-charts : Node.js comparera l’actif principal avec l’actif connexe choisi, ou avec tous les actifs recommandés.";
                 break;
-
             case "carnet_ordres":
                 texteMode = "Carnet des ordres : Node.js devra appeler une API externe pour récupérer les ordres d’achat, de vente, les volumes et la profondeur de marché.";
                 break;
-
             case "complet":
                 texteMode = "Analyse complète : snapshots, multi-charts, actif connexe et carnet des ordres seront demandés au serveur.";
                 break;
-
             default:
                 texteMode = "Mode d’analyse non reconnu.";
         }
@@ -779,6 +790,173 @@ Aucune analyse lancée.
         ];
     }
 
+    function genererScriptPine() {
+        const params = lireParametres();
+
+        const nomStrategie = "Strategie " + params.libelleIndicateur + " - " + params.actif + " - " + params.intervalle;
+
+        let conditionAchat = "ta.crossover(close, emaLongue)";
+        let conditionVente = "ta.crossunder(close, emaLongue)";
+
+        if (params.indicateur === "RSI") {
+            conditionAchat = "rsi < 30";
+            conditionVente = "rsi > 70";
+        }
+
+        if (params.indicateur === "MACD") {
+            conditionAchat = "ta.crossover(macdLine, signalLine)";
+            conditionVente = "ta.crossunder(macdLine, signalLine)";
+        }
+
+        if (params.indicateur === "EMA" || params.indicateur === "SMA") {
+            conditionAchat = "ta.crossover(emaCourte, emaLongue)";
+            conditionVente = "ta.crossunder(emaCourte, emaLongue)";
+        }
+
+        const stopLossValeur = params.stopLoss / 100;
+        const takeProfitValeur = params.takeProfit / 100;
+
+        return `//@version=5
+// Script généré automatiquement depuis la page HTML d'analyse.
+// Actif sélectionné : ${params.actif}
+// Libellé actif : ${params.libelleActif}
+// Intervalle : ${params.libelleIntervalle}
+// Indicateur : ${params.libelleIndicateur}
+// Stratégie : ${params.libelleStrategie}
+// Catégorie d'analyse : ${params.libelleCategorieAnalyse}
+// Mode avancé : ${params.libelleModeAnalyseAvancee}
+// Capital initial : ${params.capital}
+// Risque par position : ${params.risque}%
+// Stop loss : ${params.stopLoss}%
+// Take profit : ${params.takeProfit}%
+// Levier : ${params.levier}
+// Sens de trading : ${params.libelleSens}
+// Notes : ${params.notes || "Aucune note"}
+
+strategy("${nomStrategie}", overlay=true, initial_capital=${params.capital}, default_qty_type=strategy.percent_of_equity, default_qty_value=${params.risque})
+
+sourcePrix = close
+
+emaCourte = ta.ema(sourcePrix, 20)
+emaLongue = ta.ema(sourcePrix, 50)
+smaLongue = ta.sma(sourcePrix, 50)
+rsi = ta.rsi(sourcePrix, 14)
+[macdLine, signalLine, histLine] = ta.macd(sourcePrix, 12, 26, 9)
+
+conditionAchat = ${conditionAchat}
+conditionVente = ${conditionVente}
+
+prixStopAchat = strategy.position_avg_price * (1 - ${stopLossValeur})
+prixProfitAchat = strategy.position_avg_price * (1 + ${takeProfitValeur})
+
+prixStopVente = strategy.position_avg_price * (1 + ${stopLossValeur})
+prixProfitVente = strategy.position_avg_price * (1 - ${takeProfitValeur})
+
+autoriserAchat = "${params.sens}" == "achat" or "${params.sens}" == "achat_vente"
+autoriserVente = "${params.sens}" == "vente" or "${params.sens}" == "achat_vente"
+
+if conditionAchat and autoriserAchat
+    strategy.entry("Achat", strategy.long)
+
+if conditionVente and autoriserVente
+    strategy.entry("Vente", strategy.short)
+
+strategy.exit("Sortie achat", from_entry="Achat", stop=prixStopAchat, limit=prixProfitAchat)
+strategy.exit("Sortie vente", from_entry="Vente", stop=prixStopVente, limit=prixProfitVente)
+
+plot(emaCourte, title="EMA 20")
+plot(emaLongue, title="EMA 50")
+plot(smaLongue, title="SMA 50")
+
+// Rappel : TradingView ne permet pas d'injecter automatiquement ce script dans Pine Editor depuis une page HTML externe.
+// Méthode recommandée : générer le script, le copier, ouvrir TradingView, puis le coller dans Pine Editor.`;
+    }
+
+    function afficherScriptPine() {
+        scriptPineGenere = genererScriptPine();
+
+        document.getElementById("resultatAnalyse").textContent =
+            "SCRIPT PINE GÉNÉRÉ\n" +
+            "------------------\n\n" +
+            scriptPineGenere;
+
+        document.getElementById("etatServeur").className = "status ok";
+        document.getElementById("etatServeur").textContent = "Script Pine généré";
+
+        alert("Le script Pine a été généré avec succès.");
+    }
+
+    function afficherPineScript() {
+        if (!scriptPineGenere) {
+            scriptPineGenere = genererScriptPine();
+        }
+
+        document.getElementById("resultatAnalyse").textContent =
+            "AFFICHAGE DU SCRIPT PINE\n" +
+            "------------------------\n\n" +
+            scriptPineGenere;
+
+        document.getElementById("etatServeur").className = "status ok";
+        document.getElementById("etatServeur").textContent = "Script Pine affiché";
+
+        alert("Le script Pine est maintenant affiché dans la zone des résultats.");
+    }
+
+    async function copierScriptPine() {
+        const resultatBox = document.getElementById("resultatAnalyse");
+
+        if (!scriptPineGenere) {
+            scriptPineGenere = genererScriptPine();
+        }
+
+        try {
+            await navigator.clipboard.writeText(scriptPineGenere);
+
+            resultatBox.textContent =
+                "SCRIPT PINE COPIÉ DANS LE PRESSE-PAPIERS\n" +
+                "----------------------------------------\n\n" +
+                scriptPineGenere;
+
+            document.getElementById("etatServeur").className = "status ok";
+            document.getElementById("etatServeur").textContent = "Script Pine copié";
+
+            alert("Le script Pine a été copié dans le presse-papiers.");
+
+        } catch (erreur) {
+            const zoneCopie = document.createElement("textarea");
+            zoneCopie.value = scriptPineGenere;
+            document.body.appendChild(zoneCopie);
+            zoneCopie.select();
+
+            try {
+                document.execCommand("copy");
+
+                resultatBox.textContent =
+                    "SCRIPT PINE COPIÉ DANS LE PRESSE-PAPIERS\n" +
+                    "----------------------------------------\n\n" +
+                    scriptPineGenere;
+
+                document.getElementById("etatServeur").className = "status ok";
+                document.getElementById("etatServeur").textContent = "Script Pine copié";
+
+                alert("Le script Pine a été copié dans le presse-papiers.");
+
+            } catch (erreurCopie) {
+                resultatBox.textContent =
+                    "Impossible de copier automatiquement le script Pine.\n\n" +
+                    "Tu peux le sélectionner manuellement ci-dessous :\n\n" +
+                    scriptPineGenere;
+
+                document.getElementById("etatServeur").className = "status error";
+                document.getElementById("etatServeur").textContent = "Copie impossible";
+
+                alert("Impossible de copier automatiquement le script Pine.");
+            }
+
+            document.body.removeChild(zoneCopie);
+        }
+    }
+
     function chargerGraphique() {
         const params = lireParametres();
 
@@ -805,19 +983,14 @@ Aucune analyse lancée.
         switch (indicateur) {
             case "RSI":
                 return ["RSI@tv-basicstudies"];
-
             case "MACD":
                 return ["MACD@tv-basicstudies"];
-
             case "EMA":
                 return ["MASimple@tv-basicstudies"];
-
             case "SMA":
                 return ["MASimple@tv-basicstudies"];
-
             case "VOLUME":
                 return ["Volume@tv-basicstudies"];
-
             default:
                 return [];
         }
@@ -834,19 +1007,16 @@ Aucune analyse lancée.
 
         parametresUrl.set("symbol", params.actif);
         parametresUrl.set("interval", params.intervalle);
-
         parametresUrl.set("indicateur", params.indicateur);
         parametresUrl.set("strategie", params.strategie);
         parametresUrl.set("categorieAnalyse", params.categorieAnalyse);
         parametresUrl.set("modeAnalyseAvancee", params.modeAnalyseAvancee);
-
         parametresUrl.set("capital", params.capital);
         parametresUrl.set("risque", params.risque);
         parametresUrl.set("stopLoss", params.stopLoss);
         parametresUrl.set("takeProfit", params.takeProfit);
         parametresUrl.set("levier", params.levier);
         parametresUrl.set("sens", params.sens);
-
         parametresUrl.set("actifsConnexes", JSON.stringify(params.actifsConnexes));
 
         if (params.notes) {
@@ -993,6 +1163,7 @@ Aucune analyse lancée.
         document.getElementById("resultatAnalyse").textContent = "Aucune analyse lancée.";
         document.getElementById("etatServeur").className = "status neutral";
         document.getElementById("etatServeur").textContent = "Serveur non testé";
+        scriptPineGenere = "";
     }
 
     window.addEventListener("load", function () {
