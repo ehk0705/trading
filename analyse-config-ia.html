@@ -64,6 +64,7 @@
             border-radius: 6px;
             padding: 7px;
             font-size: 13px;
+            max-width: 100%;
         }
 
         button {
@@ -116,9 +117,9 @@
 
         main {
             display: grid;
-            grid-template-columns: 1.5fr 0.8fr;
-            gap: 16px;
-            padding: 16px;
+            grid-template-columns: minmax(0, 2.3fr) minmax(320px, 0.7fr);
+            gap: 14px;
+            padding: 14px;
         }
 
         .chart-panel,
@@ -129,8 +130,17 @@
             padding: 14px;
         }
 
+        .chart-panel {
+            min-width: 0;
+        }
+
+        .side-panel {
+            min-width: 320px;
+            overflow: hidden;
+        }
+
         #tradingview_chart {
-            height: 620px;
+            height: 700px;
             width: 100%;
             border-radius: 10px;
             overflow: hidden;
@@ -160,11 +170,18 @@
 
         .form-block {
             margin-bottom: 12px;
+            min-width: 0;
         }
 
         .form-block label {
             display: block;
             margin-bottom: 5px;
+        }
+
+        .form-block input,
+        .form-block select,
+        .form-block textarea {
+            width: 100%;
         }
 
         textarea {
@@ -184,6 +201,7 @@
             overflow: auto;
             font-size: 12px;
             white-space: pre-wrap;
+            word-break: break-word;
         }
 
         .button-zone {
@@ -191,6 +209,10 @@
             flex-wrap: wrap;
             gap: 8px;
             margin: 12px 0;
+        }
+
+        .button-zone button {
+            flex: 1 1 120px;
         }
 
         .status {
@@ -218,9 +240,23 @@
             border-top: 1px solid #263244;
         }
 
+        @media (max-width: 1200px) {
+            main {
+                grid-template-columns: minmax(0, 2fr) minmax(320px, 0.8fr);
+            }
+
+            #tradingview_chart {
+                height: 650px;
+            }
+        }
+
         @media (max-width: 1000px) {
             main {
                 grid-template-columns: 1fr;
+            }
+
+            .side-panel {
+                min-width: 0;
             }
 
             #tradingview_chart {
@@ -229,6 +265,10 @@
         }
 
         @media (max-width: 700px) {
+            header {
+                padding: 12px;
+            }
+
             .top-bar {
                 flex-direction: column;
                 align-items: stretch;
@@ -247,9 +287,17 @@
                 width: 100%;
             }
 
+            .button-zone button {
+                flex: 1 1 100%;
+            }
+
             .logo {
                 text-align: center;
                 margin-right: 0;
+            }
+
+            #tradingview_chart {
+                height: 460px;
             }
         }
     </style>
@@ -296,7 +344,7 @@
 
         <div class="control-group">
             <label for="indicator-selector">INDICATEUR :</label>
-            <select id="indicator-selector">
+            <select id="indicator-selector" onchange="actualiserGraphique()">
                 <option value="RSI">RSI</option>
                 <option value="MACD">MACD</option>
                 <option value="EMA">EMA</option>
@@ -326,8 +374,9 @@
         <div id="tradingview_chart"></div>
 
         <div class="note">
-            Cette page capture les paramètres contrôlés par ton interface : actif, intervalle, indicateur, stratégie,
-            risque, notes et lien de snapshot. Elle ne peut pas lire automatiquement les dessins internes privés du site TradingView officiel.
+            Cette page capture les paramètres contrôlés par ton interface : actif, intervalle,
+            indicateur, stratégie, risque, notes et lien de snapshot.
+            Elle ne peut pas lire automatiquement les dessins internes privés du site TradingView officiel.
         </div>
     </section>
 
