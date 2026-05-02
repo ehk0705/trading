@@ -29,7 +29,7 @@
             display: flex;
             flex-wrap: wrap;
             align-items: center;
-            gap: 12px;
+            gap: 8px;
         }
 
         .logo {
@@ -70,10 +70,11 @@
         button {
             border: none;
             border-radius: 7px;
-            padding: 8px 11px;
+            padding: 8px 10px;
             font-weight: bold;
             cursor: pointer;
-            font-size: 13px;
+            font-size: 12px;
+            white-space: nowrap;
         }
 
         button:hover {
@@ -176,8 +177,8 @@
         }
 
         .chart-title-icons img {
-            width: 50px;
-            height: 50px;
+            width: 36px;
+            height: 36px;
             object-fit: cover;
             border-radius: 6px;
             border: 1px solid #334155;
@@ -259,16 +260,6 @@
 
         .button-zone button {
             flex: 1 1 120px;
-        }
-
-        .graph-buttons {
-            justify-content: flex-start;
-            margin-top: 12px;
-            margin-bottom: 10px;
-        }
-
-        .graph-buttons button {
-            flex: 0 0 auto;
         }
 
         .status {
@@ -387,8 +378,7 @@
                 width: 100%;
             }
 
-            .button-zone button,
-            .graph-buttons button {
+            .button-zone button {
                 flex: 1 1 100%;
             }
 
@@ -467,13 +457,15 @@
             </select>
         </div>
 
-        <button class="btn-tv" onclick="ouvrirTradingView()">
-            Ouvrir dans TradingView
-        </button>
-
-        <button class="btn-capture" onclick="capturerConfigurationTradingView()">
-            Capturer configuration
-        </button>
+        <button class="btn-tv" onclick="ouvrirTradingView()">Ouvrir dans TradingView</button>
+        <button class="btn-capture" onclick="capturerConfigurationTradingView()">Capturer configuration</button>
+        <button class="btn-save" onclick="sauvegarderConfiguration()">Sauvegarder</button>
+        <button class="btn-save" onclick="rechargerConfigurationTradingView()">Recharger</button>
+        <button class="btn-copy" onclick="copierConfiguration()">Copier JSON</button>
+        <button class="btn-export" onclick="exporterJSON()">Exporter JSON</button>
+        <button class="btn-import" onclick="ouvrirImportJSON()">Importer JSON</button>
+        <button class="btn-api" onclick="envoyerVersAPI()">Envoyer IA</button>
+        <button class="btn-clear" onclick="effacerConfiguration()">Effacer</button>
     </div>
 </header>
 
@@ -492,16 +484,6 @@
         <div id="tradingview_chart"></div>
 
         <input type="file" id="fichier-import-json" accept="application/json,.json" style="display:none;" onchange="importerJSONDepuisFichier(event)">
-
-        <div class="button-zone graph-buttons">
-            <button class="btn-save" onclick="sauvegarderConfiguration()">Sauvegarder</button>
-            <button class="btn-save" onclick="rechargerConfigurationTradingView()">Recharger</button>
-            <button class="btn-copy" onclick="copierConfiguration()">Copier JSON</button>
-            <button class="btn-export" onclick="exporterJSON()">Exporter JSON</button>
-            <button class="btn-import" onclick="ouvrirImportJSON()">Importer JSON</button>
-            <button class="btn-api" onclick="envoyerVersAPI()">Envoyer IA</button>
-            <button class="btn-clear" onclick="effacerConfiguration()">Effacer</button>
-        </div>
 
         <div class="note">
             Cette page capture les paramètres contrôlés par ton interface : actif, intervalle,
@@ -524,17 +506,9 @@
         </div>
 
         <div class="button-zone">
-            <button class="btn-copy" onclick="testerServeur()">
-                Tester serveur
-            </button>
-
-            <button class="btn-dark" onclick="testerRouteAnalyse()">
-                Tester /api/analyse
-            </button>
-
-            <button class="btn-tv" onclick="ouvrirServeurRender()">
-                Ouvrir serveur
-            </button>
+            <button class="btn-copy" onclick="testerServeur()">Tester serveur</button>
+            <button class="btn-dark" onclick="testerRouteAnalyse()">Tester /api/analyse</button>
+            <button class="btn-tv" onclick="ouvrirServeurRender()">Ouvrir serveur</button>
         </div>
 
         <div id="infosServeur" class="server-info">
