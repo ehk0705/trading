@@ -115,6 +115,11 @@
             color: white;
         }
 
+        .btn-dark {
+            background: #334155;
+            color: white;
+        }
+
         main {
             display: grid;
             grid-template-columns: minmax(0, 2.3fr) minmax(320px, 0.7fr);
@@ -215,6 +220,16 @@
             flex: 1 1 120px;
         }
 
+        .graph-buttons {
+            justify-content: flex-start;
+            margin-top: 12px;
+            margin-bottom: 10px;
+        }
+
+        .graph-buttons button {
+            flex: 0 0 auto;
+        }
+
         .status {
             background: #020617;
             border: 1px solid #263244;
@@ -223,6 +238,50 @@
             color: #facc15;
             font-size: 13px;
             margin-top: 10px;
+        }
+
+        .server-status {
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            margin-bottom: 12px;
+            text-align: center;
+            font-size: 13px;
+        }
+
+        .server-status.neutral {
+            background: #334155;
+            color: #ffffff;
+        }
+
+        .server-status.ok {
+            background: #064e3b;
+            color: #86efac;
+        }
+
+        .server-status.error {
+            background: #7f1d1d;
+            color: #fecaca;
+        }
+
+        .server-status.warning {
+            background: #713f12;
+            color: #fde68a;
+        }
+
+        .server-info {
+            background: #020617;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 10px;
+            font-family: Consolas, monospace;
+            font-size: 12px;
+            color: #d1d5db;
+            white-space: pre-wrap;
+            word-break: break-word;
+            min-height: 90px;
+            max-height: 220px;
+            overflow: auto;
         }
 
         .note {
@@ -287,7 +346,8 @@
                 width: 100%;
             }
 
-            .button-zone button {
+            .button-zone button,
+            .graph-buttons button {
                 flex: 1 1 100%;
             }
 
@@ -373,6 +433,16 @@
 
         <div id="tradingview_chart"></div>
 
+        <div class="button-zone graph-buttons">
+            <button class="btn-capture" onclick="capturerConfigurationTradingView()">Capturer</button>
+            <button class="btn-save" onclick="sauvegarderConfiguration()">Sauvegarder</button>
+            <button class="btn-save" onclick="rechargerConfigurationTradingView()">Recharger</button>
+            <button class="btn-copy" onclick="copierConfiguration()">Copier JSON</button>
+            <button class="btn-export" onclick="exporterJSON()">Exporter JSON</button>
+            <button class="btn-api" onclick="envoyerVersAPI()">Envoyer IA</button>
+            <button class="btn-clear" onclick="effacerConfiguration()">Effacer</button>
+        </div>
+
         <div class="note">
             Cette page capture les paramètres contrôlés par ton interface : actif, intervalle,
             indicateur, stratégie, risque, notes et lien de snapshot.
@@ -381,7 +451,37 @@
     </section>
 
     <aside class="side-panel">
-        <h2>Configuration pour analyse IA</h2>
+
+        <h2>Serveur Node.js Render</h2>
+
+        <div id="etatServeur" class="server-status neutral">
+            Serveur non testé
+        </div>
+
+        <div class="form-block">
+            <label for="api-url">Adresse API Render</label>
+            <input type="text" id="api-url" value="https://trading-pattern-api.onrender.com/api/analyse">
+        </div>
+
+        <div class="button-zone">
+            <button class="btn-copy" onclick="testerServeur()">
+                Tester serveur
+            </button>
+
+            <button class="btn-dark" onclick="testerRouteAnalyse()">
+                Tester /api/analyse
+            </button>
+
+            <button class="btn-tv" onclick="ouvrirServeurRender()">
+                Ouvrir serveur
+            </button>
+        </div>
+
+        <div id="infosServeur" class="server-info">
+Aucun test effectué.
+        </div>
+
+        <h2 style="margin-top: 18px;">Configuration pour analyse IA</h2>
 
         <div class="form-grid">
             <div class="form-block">
@@ -463,21 +563,6 @@
             <textarea id="notes-analyse" placeholder="Exemple : cassure de résistance, volume élevé, zone de liquidité proche..."></textarea>
         </div>
 
-        <div class="form-block">
-            <label for="api-url">Adresse API Render</label>
-            <input type="text" id="api-url" value="https://ton-service-render.onrender.com/api/analyse">
-        </div>
-
-        <div class="button-zone">
-            <button class="btn-capture" onclick="capturerConfigurationTradingView()">Capturer</button>
-            <button class="btn-save" onclick="sauvegarderConfiguration()">Sauvegarder</button>
-            <button class="btn-save" onclick="rechargerConfigurationTradingView()">Recharger</button>
-            <button class="btn-copy" onclick="copierConfiguration()">Copier JSON</button>
-            <button class="btn-export" onclick="exporterJSON()">Exporter JSON</button>
-            <button class="btn-api" onclick="envoyerVersAPI()">Envoyer IA</button>
-            <button class="btn-clear" onclick="effacerConfiguration()">Effacer</button>
-        </div>
-
         <h3>Configuration capturée</h3>
 
         <pre id="resultat-configuration">Aucune configuration capturée.</pre>
@@ -496,6 +581,29 @@
 <script>
     let widgetTradingView = null;
     let configurationActuelle = null;
+
+    function getApiAnalyseUrl() {
+        return document.getElementById("api-url").value.trim();
+    }
+
+    function getApiBaseUrl() {
+        const apiAnalyseUrl = getApiAnalyseUrl();
+        return apiAnalyseUrl.replace(/\/api\/analyse\/?$/, "");
+    }
+
+    function getApiTestUrl() {
+        return getApiBaseUrl() + "/api/test";
+    }
+
+    function afficherEtatServeur(type, message) {
+        const etat = document.getElementById("etatServeur");
+        etat.className = "server-status " + type;
+        etat.textContent = message;
+    }
+
+    function afficherInfosServeur(texte) {
+        document.getElementById("infosServeur").textContent = texte;
+    }
 
     function creerWidgetTradingView() {
         const symbole = document.getElementById("asset-selector").value;
@@ -564,8 +672,143 @@
             + encodeURIComponent(intervalle);
 
         window.open(url, "_blank");
+    }
 
-        alert("TradingView ouvert avec l’actif et l’intervalle sélectionnés.");
+    function ouvrirServeurRender() {
+        const baseUrl = getApiBaseUrl();
+
+        if (!baseUrl) {
+            alert("Adresse API manquante.");
+            return;
+        }
+
+        window.open(baseUrl, "_blank");
+    }
+
+    async function testerServeur() {
+        const urlTest = getApiTestUrl();
+        const debut = performance.now();
+
+        afficherEtatServeur("warning", "Test du serveur en cours...");
+        afficherInfosServeur("Test de la route :\n" + urlTest);
+
+        try {
+            const reponse = await fetch(urlTest, {
+                method: "GET",
+                cache: "no-store"
+            });
+
+            const duree = Math.round(performance.now() - debut);
+            const texte = await reponse.text();
+
+            let contenu;
+
+            try {
+                contenu = JSON.stringify(JSON.parse(texte), null, 2);
+            } catch (erreurJson) {
+                contenu = texte;
+            }
+
+            if (!reponse.ok) {
+                throw new Error("Réponse HTTP " + reponse.status + "\n\n" + contenu);
+            }
+
+            afficherEtatServeur("ok", "Serveur connecté");
+
+            afficherInfosServeur(
+                "TEST RÉUSSI\n" +
+                "-----------\n" +
+                "Route : " + urlTest + "\n" +
+                "Statut HTTP : " + reponse.status + "\n" +
+                "Temps de réponse : " + duree + " ms\n\n" +
+                "Réponse serveur :\n" +
+                contenu
+            );
+
+        } catch (erreur) {
+            afficherEtatServeur("error", "Serveur inaccessible");
+
+            afficherInfosServeur(
+                "TEST ÉCHOUÉ\n" +
+                "-----------\n" +
+                "Route testée : " + urlTest + "\n\n" +
+                "Causes possibles :\n" +
+                "- Render est en veille ;\n" +
+                "- le service Render n’est pas encore réveillé ;\n" +
+                "- la route /api/test n’existe pas dans server.js ;\n" +
+                "- le serveur Node.js a planté ;\n" +
+                "- l’adresse API est incorrecte ;\n" +
+                "- CORS bloque la requête.\n\n" +
+                "Détail technique :\n" +
+                erreur.message
+            );
+        }
+    }
+
+    async function testerRouteAnalyse() {
+        const apiUrl = getApiAnalyseUrl();
+        const debut = performance.now();
+
+        afficherEtatServeur("warning", "Test de /api/analyse en cours...");
+        afficherInfosServeur("Test de la route :\n" + apiUrl);
+
+        try {
+            const reponse = await fetch(apiUrl, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                cache: "no-store",
+                body: JSON.stringify({
+                    test: true,
+                    message: "Test depuis analyse-config.html",
+                    dateTest: new Date().toISOString()
+                })
+            });
+
+            const duree = Math.round(performance.now() - debut);
+            const texte = await reponse.text();
+
+            let contenu;
+
+            try {
+                contenu = JSON.stringify(JSON.parse(texte), null, 2);
+            } catch (erreurJson) {
+                contenu = texte;
+            }
+
+            if (!reponse.ok) {
+                throw new Error("Réponse HTTP " + reponse.status + "\n\n" + contenu);
+            }
+
+            afficherEtatServeur("ok", "Route /api/analyse connectée");
+
+            afficherInfosServeur(
+                "TEST /api/analyse RÉUSSI\n" +
+                "------------------------\n" +
+                "Route : " + apiUrl + "\n" +
+                "Statut HTTP : " + reponse.status + "\n" +
+                "Temps de réponse : " + duree + " ms\n\n" +
+                "Réponse serveur :\n" +
+                contenu
+            );
+
+        } catch (erreur) {
+            afficherEtatServeur("error", "Route /api/analyse inaccessible");
+
+            afficherInfosServeur(
+                "TEST /api/analyse ÉCHOUÉ\n" +
+                "-------------------------\n" +
+                "Route testée : " + apiUrl + "\n\n" +
+                "Vérifie :\n" +
+                "- que server.js contient bien app.post('/api/analyse', ...);\n" +
+                "- que CORS est activé ;\n" +
+                "- que Render est réveillé ;\n" +
+                "- que l’adresse API est correcte.\n\n" +
+                "Détail technique :\n" +
+                erreur.message
+            );
+        }
     }
 
     function capturerConfigurationTradingView() {
@@ -576,6 +819,13 @@
         configurationActuelle = {
             nom: "Configuration TradingView IA",
             dateCapture: new Date().toISOString(),
+
+            serveur: {
+                apiAnalyse: getApiAnalyseUrl(),
+                apiTest: getApiTestUrl(),
+                hebergeur: "Render",
+                type: "Node.js"
+            },
 
             graphique: {
                 actif: actifSelect.value,
@@ -688,6 +938,10 @@
             definirValeur("snapshot-url", configuration.snapshot.url);
         }
 
+        if (configuration.serveur && configuration.serveur.apiAnalyse) {
+            definirValeur("api-url", configuration.serveur.apiAnalyse);
+        }
+
         if (configuration.notes) {
             document.getElementById("notes-analyse").value = configuration.notes;
         }
@@ -758,7 +1012,7 @@
             capturerConfigurationTradingView();
         }
 
-        const apiUrl = document.getElementById("api-url").value.trim();
+        const apiUrl = getApiAnalyseUrl();
 
         if (!apiUrl) {
             alert("Adresse API manquante.");
@@ -767,6 +1021,7 @@
 
         try {
             afficherStatus("Envoi vers l’API IA...");
+            afficherEtatServeur("warning", "Envoi vers l’API IA...");
 
             const reponse = await fetch(apiUrl, {
                 method: "POST",
@@ -776,11 +1031,19 @@
                 body: JSON.stringify(configurationActuelle)
             });
 
+            const texte = await reponse.text();
+
+            let resultat;
+
+            try {
+                resultat = JSON.parse(texte);
+            } catch (erreurJson) {
+                throw new Error("Le serveur n’a pas retourné du JSON.\n\nRéponse reçue :\n" + texte);
+            }
+
             if (!reponse.ok) {
                 throw new Error("Réponse serveur incorrecte : " + reponse.status);
             }
-
-            const resultat = await reponse.json();
 
             const sortie = {
                 configurationEnvoyee: configurationActuelle,
@@ -791,21 +1054,31 @@
                 JSON.stringify(sortie, null, 4);
 
             afficherStatus("Réponse IA reçue.");
+            afficherEtatServeur("ok", "Analyse IA reçue");
+            afficherInfosServeur("Analyse IA reçue avec succès depuis :\n" + apiUrl);
+
             alert("Analyse IA reçue.");
 
         } catch (erreur) {
             afficherStatus("Erreur lors de l’appel API.");
+            afficherEtatServeur("error", "Erreur API");
 
-            alert(
-                "Impossible d’envoyer la configuration à l’API.\n\n" +
+            afficherInfosServeur(
+                "ERREUR LORS DE L’ENVOI À L’API\n" +
+                "-------------------------------\n" +
+                "Adresse : " + apiUrl + "\n\n" +
                 "Causes possibles :\n" +
-                "- serveur Render arrêté ;\n" +
+                "- serveur Render en veille ;\n" +
+                "- serveur Node.js arrêté ;\n" +
                 "- adresse API incorrecte ;\n" +
                 "- route /api/analyse absente ;\n" +
                 "- CORS non activé ;\n" +
                 "- réponse non JSON.\n\n" +
-                "Détail technique : " + erreur.message
+                "Détail technique :\n" +
+                erreur.message
             );
+
+            alert("Impossible d’envoyer la configuration à l’API.");
         }
     }
 
