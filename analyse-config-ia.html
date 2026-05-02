@@ -105,6 +105,11 @@
             color: white;
         }
 
+        .btn-import {
+            background: #14b8a6;
+            color: #001a16;
+        }
+
         .btn-api {
             background: #fb923c;
             color: #1a0b00;
@@ -433,12 +438,15 @@
 
         <div id="tradingview_chart"></div>
 
+        <input type="file" id="fichier-import-json" accept="application/json,.json" style="display:none;" onchange="importerJSONDepuisFichier(event)">
+
         <div class="button-zone graph-buttons">
             <button class="btn-capture" onclick="capturerConfigurationTradingView()">Capturer</button>
             <button class="btn-save" onclick="sauvegarderConfiguration()">Sauvegarder</button>
             <button class="btn-save" onclick="rechargerConfigurationTradingView()">Recharger</button>
             <button class="btn-copy" onclick="copierConfiguration()">Copier JSON</button>
             <button class="btn-export" onclick="exporterJSON()">Exporter JSON</button>
+            <button class="btn-import" onclick="ouvrirImportJSON()">Importer JSON</button>
             <button class="btn-api" onclick="envoyerVersAPI()">Envoyer IA</button>
             <button class="btn-clear" onclick="effacerConfiguration()">Effacer</button>
         </div>
@@ -515,6 +523,30 @@ Aucun test effectué.
 
         <div class="form-grid">
             <div class="form-block">
+                <label for="type-bougie">Type de bougie</label>
+                <select id="type-bougie" onchange="actualiserGraphique()">
+                    <option value="bougies_japonaises">Bougies japonaises</option>
+                    <option value="barres">Barres</option>
+                    <option value="ligne">Ligne</option>
+                    <option value="heikin_ashi">Heikin Ashi</option>
+                    <option value="renko">Renko</option>
+                    <option value="kagi">Kagi</option>
+                    <option value="point_figure">Point & Figure</option>
+                </select>
+            </div>
+
+            <div class="form-block">
+                <label for="sens-selector">Sens</label>
+                <select id="sens-selector">
+                    <option value="achat_vente">Achat et vente</option>
+                    <option value="achat_seulement">Achat seulement</option>
+                    <option value="vente_seulement">Vente seulement</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-grid">
+            <div class="form-block">
                 <label for="risk-input">Risque par position (%)</label>
                 <input type="number" id="risk-input" value="1" min="0" step="0.1">
             </div>
@@ -541,15 +573,6 @@ Aucun test effectué.
             <div class="form-block">
                 <label for="levier-input">Levier</label>
                 <input type="number" id="levier-input" value="1" min="1">
-            </div>
-
-            <div class="form-block">
-                <label for="sens-selector">Sens</label>
-                <select id="sens-selector">
-                    <option value="achat_vente">Achat et vente</option>
-                    <option value="achat_seulement">Achat seulement</option>
-                    <option value="vente_seulement">Vente seulement</option>
-                </select>
             </div>
         </div>
 
@@ -605,6 +628,29 @@ Aucun test effectué.
         document.getElementById("infosServeur").textContent = texte;
     }
 
+    function obtenirStyleTradingView() {
+        const typeBougie = document.getElementById("type-bougie")?.value || "bougies_japonaises";
+
+        switch (typeBougie) {
+            case "barres":
+                return "0";
+            case "bougies_japonaises":
+                return "1";
+            case "ligne":
+                return "3";
+            case "heikin_ashi":
+                return "8";
+            case "renko":
+                return "4";
+            case "kagi":
+                return "5";
+            case "point_figure":
+                return "6";
+            default:
+                return "1";
+        }
+    }
+
     function creerWidgetTradingView() {
         const symbole = document.getElementById("asset-selector").value;
         const intervalle = document.getElementById("interval-selector").value;
@@ -617,7 +663,7 @@ Aucun test effectué.
             interval: intervalle,
             timezone: "America/Toronto",
             theme: "dark",
-            style: "1",
+            style: obtenirStyleTradingView(),
             locale: "fr",
             toolbar_bg: "#0f172a",
             enable_publishing: false,
@@ -815,6 +861,7 @@ Aucun test effectué.
         const actifSelect = document.getElementById("asset-selector");
         const intervalleSelect = document.getElementById("interval-selector");
         const indicateurSelect = document.getElementById("indicator-selector");
+        const typeBougieSelect = document.getElementById("type-bougie");
 
         configurationActuelle = {
             nom: "Configuration TradingView IA",
@@ -834,6 +881,8 @@ Aucun test effectué.
                 intervalleLibelle: intervalleSelect.options[intervalleSelect.selectedIndex].text,
                 indicateur: indicateurSelect.value,
                 indicateurLibelle: indicateurSelect.options[indicateurSelect.selectedIndex].text,
+                typeBougie: typeBougieSelect.value,
+                typeBougieLibelle: typeBougieSelect.options[typeBougieSelect.selectedIndex].text,
                 source: "widget_tradingview_integre"
             },
 
@@ -919,6 +968,7 @@ Aucun test effectué.
         definirValeur("asset-selector", configuration.graphique.actif);
         definirValeur("interval-selector", configuration.graphique.intervalle);
         definirValeur("indicator-selector", configuration.graphique.indicateur);
+        definirValeur("type-bougie", configuration.graphique.typeBougie);
 
         if (configuration.analyseIA) {
             definirValeur("categorie-analyse", configuration.analyseIA.categorie);
@@ -942,7 +992,7 @@ Aucun test effectué.
             definirValeur("api-url", configuration.serveur.apiAnalyse);
         }
 
-        if (configuration.notes) {
+        if (configuration.notes !== undefined) {
             document.getElementById("notes-analyse").value = configuration.notes;
         }
 
@@ -974,6 +1024,38 @@ Aucun test effectué.
             });
     }
 
+    function nettoyerNomFichier(valeur) {
+        return String(valeur || "non-defini")
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .replace(/[^a-zA-Z0-9-_]/g, "-")
+            .replace(/-+/g, "-")
+            .replace(/^-|-$/g, "");
+    }
+
+    function genererTimestampFichier() {
+        const maintenant = new Date();
+
+        const annee = maintenant.getFullYear();
+        const mois = String(maintenant.getMonth() + 1).padStart(2, "0");
+        const jour = String(maintenant.getDate()).padStart(2, "0");
+        const heure = String(maintenant.getHours()).padStart(2, "0");
+        const minute = String(maintenant.getMinutes()).padStart(2, "0");
+        const seconde = String(maintenant.getSeconds()).padStart(2, "0");
+
+        return annee + mois + jour + "-" + heure + minute + seconde;
+    }
+
+    function genererNomFichierJSON(configuration) {
+        const actif = nettoyerNomFichier(configuration.graphique.actif);
+        const indicateur = nettoyerNomFichier(configuration.graphique.indicateur);
+        const intervalle = nettoyerNomFichier(configuration.graphique.intervalle);
+        const bougie = nettoyerNomFichier(configuration.graphique.typeBougie);
+        const timestamp = genererTimestampFichier();
+
+        return actif + "-" + indicateur + "-" + intervalle + "-" + bougie + "-" + timestamp + ".json";
+    }
+
     function exporterJSON() {
         if (!configurationActuelle) {
             capturerConfigurationTradingView();
@@ -984,13 +1066,55 @@ Aucun test effectué.
 
         const lien = document.createElement("a");
         lien.href = URL.createObjectURL(fichier);
-        lien.download = "configuration-tradingview-ia.json";
+        lien.download = genererNomFichierJSON(configurationActuelle);
         lien.click();
 
         URL.revokeObjectURL(lien.href);
 
-        afficherStatus("Configuration exportée en JSON.");
+        afficherStatus("Configuration exportée en JSON avec un nom personnalisé.");
         alert("Fichier JSON exporté.");
+    }
+
+    function ouvrirImportJSON() {
+        document.getElementById("fichier-import-json").click();
+    }
+
+    function importerJSONDepuisFichier(event) {
+        const fichier = event.target.files[0];
+
+        if (!fichier) {
+            return;
+        }
+
+        const lecteur = new FileReader();
+
+        lecteur.onload = function(e) {
+            try {
+                const contenu = e.target.result;
+                const configuration = JSON.parse(contenu);
+
+                if (!configuration.graphique) {
+                    throw new Error("Le fichier JSON ne contient pas de bloc graphique.");
+                }
+
+                configurationActuelle = configuration;
+
+                appliquerConfiguration(configurationActuelle);
+                afficherConfiguration(configurationActuelle);
+
+                localStorage.setItem("configurationTradingViewIA", JSON.stringify(configurationActuelle));
+
+                afficherStatus("Configuration importée depuis le fichier JSON.");
+                alert("Configuration JSON importée avec succès.");
+
+            } catch (erreur) {
+                alert("Import impossible. Le fichier JSON est invalide.\n\nDétail : " + erreur.message);
+            }
+
+            event.target.value = "";
+        };
+
+        lecteur.readAsText(fichier);
     }
 
     function effacerConfiguration() {
