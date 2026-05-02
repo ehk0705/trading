@@ -149,6 +149,42 @@
             overflow: hidden;
         }
 
+        .chart-title-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 10px;
+            width: 100%;
+        }
+
+        .chart-title-row h2 {
+            margin: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+            line-height: 1.1;
+            flex: 0 0 auto;
+        }
+
+        .chart-title-icons {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 8px;
+            flex-shrink: 0;
+            margin-left: auto;
+        }
+
+        .chart-title-icons img {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid #334155;
+            background: #020617;
+            padding: 1px;
+        }
+
         #tradingview_chart {
             height: 700px;
             width: 100%;
@@ -361,6 +397,16 @@
                 margin-right: 0;
             }
 
+            .chart-title-row {
+                justify-content: space-between;
+                flex-wrap: nowrap;
+            }
+
+            .chart-title-icons img {
+                width: 30px;
+                height: 30px;
+            }
+
             #tradingview_chart {
                 height: 460px;
             }
@@ -434,14 +480,20 @@
 <main>
 
     <section class="chart-panel">
-        <h2>Graphique TradingView intégré</h2>
+        <div class="chart-title-row">
+            <h2>Graphique TradingView intégré</h2>
+
+            <div class="chart-title-icons">
+                <img src="img/bitcoin.jfif" alt="Symbole du Bitcoin">
+                <img src="img/lingot-or.jfif" alt="Lingot d'or">
+            </div>
+        </div>
 
         <div id="tradingview_chart"></div>
 
         <input type="file" id="fichier-import-json" accept="application/json,.json" style="display:none;" onchange="importerJSONDepuisFichier(event)">
 
         <div class="button-zone graph-buttons">
-            <button class="btn-capture" onclick="capturerConfigurationTradingView()">Capturer</button>
             <button class="btn-save" onclick="sauvegarderConfiguration()">Sauvegarder</button>
             <button class="btn-save" onclick="rechargerConfigurationTradingView()">Recharger</button>
             <button class="btn-copy" onclick="copierConfiguration()">Copier JSON</button>
@@ -489,102 +541,12 @@
 Aucun test effectué.
         </div>
 
-        <h2 style="margin-top: 18px;">Configuration pour analyse IA</h2>
-
-        <div class="form-grid">
-            <div class="form-block">
-                <label for="categorie-analyse">Catégorie IA</label>
-                <select id="categorie-analyse">
-                    <option value="analyse_tendance">Analyse de tendance</option>
-                    <option value="support_resistance">Support et résistance</option>
-                    <option value="zones_liquidite">Zones de liquidité</option>
-                    <option value="pattern">Recherche de pattern</option>
-                    <option value="breakout">Cassure / breakout</option>
-                    <option value="retournement">Retournement possible</option>
-                    <option value="gestion_risque">Gestion du risque</option>
-                    <option value="scalping">Scalping</option>
-                    <option value="swing_trading">Swing trading</option>
-                </select>
-            </div>
-
-            <div class="form-block">
-                <label for="strategie-selector">Stratégie</label>
-                <select id="strategie-selector">
-                    <option value="suivi_tendance">Suivi de tendance</option>
-                    <option value="contre_tendance">Contre-tendance</option>
-                    <option value="breakout">Breakout</option>
-                    <option value="range">Trading en range</option>
-                    <option value="liquidite">Chasse aux liquidités</option>
-                    <option value="scalping">Scalping</option>
-                    <option value="swing">Swing trading</option>
-                </select>
-            </div>
-        </div>
-
-        <div class="form-grid">
-            <div class="form-block">
-                <label for="type-bougie">Type de bougie</label>
-                <select id="type-bougie" onchange="actualiserGraphique()">
-                    <option value="bougies_japonaises">Bougies japonaises</option>
-                    <option value="barres">Barres</option>
-                    <option value="ligne">Ligne</option>
-                    <option value="heikin_ashi">Heikin Ashi</option>
-                    <option value="renko">Renko</option>
-                    <option value="kagi">Kagi</option>
-                    <option value="point_figure">Point & Figure</option>
-                </select>
-            </div>
-
-            <div class="form-block">
-                <label for="sens-selector">Sens</label>
-                <select id="sens-selector">
-                    <option value="achat_vente">Achat et vente</option>
-                    <option value="achat_seulement">Achat seulement</option>
-                    <option value="vente_seulement">Vente seulement</option>
-                </select>
-            </div>
-        </div>
-
-        <div class="form-grid">
-            <div class="form-block">
-                <label for="risk-input">Risque par position (%)</label>
-                <input type="number" id="risk-input" value="1" min="0" step="0.1">
-            </div>
-
-            <div class="form-block">
-                <label for="capital-input">Capital initial</label>
-                <input type="number" id="capital-input" value="1000" min="0">
-            </div>
-        </div>
-
-        <div class="form-grid">
-            <div class="form-block">
-                <label for="stoploss-input">Stop loss (%)</label>
-                <input type="number" id="stoploss-input" value="2" min="0" step="0.1">
-            </div>
-
-            <div class="form-block">
-                <label for="takeprofit-input">Take profit (%)</label>
-                <input type="number" id="takeprofit-input" value="4" min="0" step="0.1">
-            </div>
-        </div>
-
-        <div class="form-grid">
-            <div class="form-block">
-                <label for="levier-input">Levier</label>
-                <input type="number" id="levier-input" value="1" min="1">
-            </div>
-        </div>
-
-        <div class="form-block">
-            <label for="snapshot-url">Lien du snapshot TradingView</label>
-            <input type="text" id="snapshot-url" placeholder="Coller ici le lien du snapshot TradingView">
-        </div>
-
-        <div class="form-block">
-            <label for="notes-analyse">Notes d’analyse</label>
-            <textarea id="notes-analyse" placeholder="Exemple : cassure de résistance, volume élevé, zone de liquidité proche..."></textarea>
-        </div>
+        <!--
+        ========================================================
+        ZONE CONFIGURATION POUR ANALYSE IA
+        MISE EN COMMENTAIRE TEMPORAIREMENT
+        ========================================================
+        -->
 
         <h3>Configuration capturée</h3>
 
@@ -604,6 +566,31 @@ Aucun test effectué.
 <script>
     let widgetTradingView = null;
     let configurationActuelle = null;
+
+    function valeurElement(id, valeurDefaut = "") {
+        const element = document.getElementById(id);
+        return element ? element.value : valeurDefaut;
+    }
+
+    function libelleElement(id, valeurDefaut = "") {
+        const element = document.getElementById(id);
+
+        if (!element || element.selectedIndex < 0) {
+            return valeurDefaut;
+        }
+
+        return element.options[element.selectedIndex].text;
+    }
+
+    function nombreElement(id, valeurDefaut = 0) {
+        const element = document.getElementById(id);
+
+        if (!element) {
+            return valeurDefaut;
+        }
+
+        return Number(element.value || valeurDefaut);
+    }
 
     function getApiAnalyseUrl() {
         return document.getElementById("api-url").value.trim();
@@ -629,7 +616,7 @@ Aucun test effectué.
     }
 
     function obtenirStyleTradingView() {
-        const typeBougie = document.getElementById("type-bougie")?.value || "bougies_japonaises";
+        const typeBougie = valeurElement("type-bougie", "bougies_japonaises");
 
         switch (typeBougie) {
             case "barres":
@@ -861,7 +848,6 @@ Aucun test effectué.
         const actifSelect = document.getElementById("asset-selector");
         const intervalleSelect = document.getElementById("interval-selector");
         const indicateurSelect = document.getElementById("indicator-selector");
-        const typeBougieSelect = document.getElementById("type-bougie");
 
         configurationActuelle = {
             nom: "Configuration TradingView IA",
@@ -881,31 +867,31 @@ Aucun test effectué.
                 intervalleLibelle: intervalleSelect.options[intervalleSelect.selectedIndex].text,
                 indicateur: indicateurSelect.value,
                 indicateurLibelle: indicateurSelect.options[indicateurSelect.selectedIndex].text,
-                typeBougie: typeBougieSelect.value,
-                typeBougieLibelle: typeBougieSelect.options[typeBougieSelect.selectedIndex].text,
+                typeBougie: valeurElement("type-bougie", "bougies_japonaises"),
+                typeBougieLibelle: libelleElement("type-bougie", "Bougies japonaises"),
                 source: "widget_tradingview_integre"
             },
 
             analyseIA: {
-                categorie: document.getElementById("categorie-analyse").value,
-                strategie: document.getElementById("strategie-selector").value,
+                categorie: valeurElement("categorie-analyse", "analyse_tendance"),
+                strategie: valeurElement("strategie-selector", "suivi_tendance"),
                 statut: "pret_pour_analyse"
             },
 
             risque: {
-                capitalInitial: Number(document.getElementById("capital-input").value),
-                risqueParPositionPourcent: Number(document.getElementById("risk-input").value),
-                stopLossPourcent: Number(document.getElementById("stoploss-input").value),
-                takeProfitPourcent: Number(document.getElementById("takeprofit-input").value),
-                levier: Number(document.getElementById("levier-input").value),
-                sens: document.getElementById("sens-selector").value
+                capitalInitial: nombreElement("capital-input", 1000),
+                risqueParPositionPourcent: nombreElement("risk-input", 1),
+                stopLossPourcent: nombreElement("stoploss-input", 2),
+                takeProfitPourcent: nombreElement("takeprofit-input", 4),
+                levier: nombreElement("levier-input", 1),
+                sens: valeurElement("sens-selector", "achat_vente")
             },
 
             snapshot: {
-                url: document.getElementById("snapshot-url").value.trim()
+                url: valeurElement("snapshot-url", "")
             },
 
-            notes: document.getElementById("notes-analyse").value.trim(),
+            notes: valeurElement("notes-analyse", "").trim(),
 
             limites: {
                 captureCompleteTradingView: false,
@@ -993,7 +979,7 @@ Aucun test effectué.
         }
 
         if (configuration.notes !== undefined) {
-            document.getElementById("notes-analyse").value = configuration.notes;
+            definirValeur("notes-analyse", configuration.notes);
         }
 
         creerWidgetTradingView();
