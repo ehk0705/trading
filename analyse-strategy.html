@@ -65,6 +65,7 @@
             display: grid;
             grid-template-columns: 2fr 1fr;
             gap: 20px;
+            align-items: start;
         }
 
         .card {
@@ -157,7 +158,7 @@
         }
 
         .chart-box {
-            height: 520px;
+            height: 330px;
             background: #020617;
             border: 1px solid #334155;
             border-radius: 12px;
@@ -169,12 +170,22 @@
             height: 100%;
         }
 
+        .result-card-inline {
+            margin-top: 16px;
+        }
+
+        .result-card-inline h2 {
+            margin-top: 0;
+        }
+
         .result-box {
             background: #020617;
             border: 1px solid #334155;
             border-radius: 10px;
             padding: 14px;
-            min-height: 180px;
+            min-height: 160px;
+            max-height: 360px;
+            overflow-y: auto;
             white-space: pre-wrap;
             font-family: Consolas, monospace;
             font-size: 14px;
@@ -230,6 +241,16 @@
             color: #00e5ff;
         }
 
+        .label-categorie,
+        .label-avance {
+            color: #00e5ff;
+            font-weight: bold;
+        }
+
+        #actifsConnexes {
+            min-height: auto;
+        }
+
         footer {
             margin-top: 30px;
             padding: 18px;
@@ -250,17 +271,17 @@
             }
 
             .chart-box {
-                height: 420px;
+                height: 300px;
             }
 
             header h1 {
                 font-size: 22px;
             }
+
+            .result-box {
+                max-height: 320px;
+            }
         }
-		.label-categorie {
-			color: #00e5ff;
-			font-weight: bold;
-		}
     </style>
 </head>
 
@@ -268,34 +289,44 @@
 
 <header>
     <h1>Analyse de stratégie TradingView</h1>
-    <p>Analyse des paramètres de marché, des indicateurs, des catégories Bitcoin et des conditions de stratégie.</p>
+    <p>Analyse des paramètres de marché, des indicateurs, des catégories Bitcoin, des snapshots et des multi-charts.</p>
 </header>
 
 <nav>
     <a href="index.html">Accueil</a>
     <a href="https://www.tradingview.com/chart/" target="_blank">TradingView</a>
-    <a href="create-strategy.html">Créer une stratégie</a>
+    <a href="create-strategy.html">Comment créer une stratégie</a>
 </nav>
 
 <main>
 
     <section class="layout">
 
-        <div class="card">
-            <h2>Graphique TradingView</h2>
+        <div>
+            <div class="card">
+                <h2>Graphique TradingView</h2>
 
-            <div class="chart-box">
-                <div id="tradingview-widget"></div>
+                <div class="chart-box">
+                    <div id="tradingview-widget"></div>
+                </div>
+
+                <div class="button-row">
+                    <button class="btn-secondary" onclick="ouvrirTradingView()">
+                        Ouvrir dans TradingView
+                    </button>
+
+                    <button class="btn-dark" onclick="rafraichirGraphique()">
+                        Rafraîchir le graphique
+                    </button>
+                </div>
             </div>
 
-            <div class="button-row">
-                <button class="btn-secondary" onclick="ouvrirTradingView()">
-                    Ouvrir dans TradingView
-                </button>
+            <div class="card result-card-inline">
+                <h2>Résultat de l’analyse</h2>
 
-                <button class="btn-dark" onclick="rafraichirGraphique()">
-                    Rafraîchir le graphique
-                </button>
+                <div id="resultatAnalyse" class="result-box">
+Aucune analyse lancée.
+                </div>
             </div>
         </div>
 
@@ -310,8 +341,9 @@
 
                 <div>
                     <label for="actif">Actif</label>
-                    <select id="actif" onchange="rafraichirGraphique()">
+                    <select id="actif" onchange="mettreAJourActifsConnexes(); rafraichirGraphique();">
                         <option value="BINANCE:BTCUSDT">Bitcoin / USDT</option>
+                        <option value="COINBASE:BTCUSD">Bitcoin / USD - Coinbase</option>
                         <option value="BINANCE:ETHUSDT">Ethereum / USDT</option>
                         <option value="OANDA:XAUUSD">Or / Dollar - XAUUSD</option>
                         <option value="NASDAQ:AAPL">Apple</option>
@@ -339,7 +371,7 @@
 
                 <div>
                     <label for="indicateur">Indicateur principal</label>
-                    <select id="indicateur">
+                    <select id="indicateur" onchange="rafraichirGraphique()">
                         <option value="RSI">RSI</option>
                         <option value="MACD">MACD</option>
                         <option value="EMA">EMA</option>
@@ -365,37 +397,33 @@
                 <div>
                     <label for="categorieAnalyse" class="label-categorie">Catégorie d’analyse</label>
                     <select id="categorieAnalyse" onchange="mettreAJourDescriptionCategorie()">
-                        <option value="macroeconomie">
-                            Macroéconomie
-                        </option>
-                        <option value="monnaie_bitcoin">
-                            Monnaie Bitcoin
-                        </option>
-                        <option value="donnees_on_chain">
-                            Données on-chain
-                        </option>
-                        <option value="minage">
-                            Minage
-                        </option>
-                        <option value="analyse_technique">
-                            Analyse technique
-                        </option>
-                        <option value="derives">
-                            Dérivés
-                        </option>
-                        <option value="liquidite_marche">
-                            Liquidité de marché
-                        </option>
-                        <option value="institutionnel">
-                            Institutionnel
-                        </option>
-                        <option value="sentiment">
-                            Sentiment
-                        </option>
-                        <option value="reglementation_risques">
-                            Réglementation et risques
-                        </option>
+                        <option value="macroeconomie">Macroéconomie</option>
+                        <option value="monnaie_bitcoin">Monnaie Bitcoin</option>
+                        <option value="donnees_on_chain">Données on-chain</option>
+                        <option value="minage">Minage</option>
+                        <option value="analyse_technique">Analyse technique</option>
+                        <option value="derives">Dérivés</option>
+                        <option value="liquidite_marche">Liquidité de marché</option>
+                        <option value="institutionnel">Institutionnel</option>
+                        <option value="sentiment">Sentiment</option>
+                        <option value="reglementation_risques">Réglementation et risques</option>
                     </select>
+                </div>
+
+                <div>
+                    <label for="modeAnalyseAvancee" class="label-avance">Mode d’analyse avancée</label>
+                    <select id="modeAnalyseAvancee" onchange="mettreAJourActifsConnexes()">
+                        <option value="simple">Analyse simple</option>
+                        <option value="snapshots">Snapshots</option>
+                        <option value="multi_charts">Multi-charts</option>
+                        <option value="carnet_ordres">Carnet des ordres</option>
+                        <option value="complet">Analyse complète</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="actifsConnexes" class="label-avance">Actif connexe à analyser</label>
+                    <select id="actifsConnexes"></select>
                 </div>
 
                 <div>
@@ -439,6 +467,10 @@
                 Taux, inflation, liquidité mondiale, dollar, obligations, bilan de la Fed.
             </div>
 
+            <div id="descriptionAnalyseAvancee" class="info-categorie">
+                <strong>Analyse avancée :</strong> les actifs connexes sélectionnés seront transmis à Node.js avec l’actif principal.
+            </div>
+
             <div style="margin-top: 14px;">
                 <label for="notes">Notes personnelles</label>
                 <textarea id="notes" placeholder="Exemple : surveiller les mèches, les zones de liquidité, les supports, les résistances, les données on-chain ou la macroéconomie..."></textarea>
@@ -463,31 +495,23 @@
     </section>
 
     <section class="card" style="margin-top: 20px;">
-        <h2>Résultat de l’analyse</h2>
-
-        <div id="resultatAnalyse" class="result-box">
-Aucune analyse lancée.
-        </div>
-    </section>
-
-    <section class="card" style="margin-top: 20px;">
         <h2>Conseils d’utilisation</h2>
 
         <p class="note">
-            Cette page ne remplace pas TradingView ni Pine Editor.
-            Elle sert à récupérer les paramètres choisis, les envoyer à ton serveur Node.js,
-            puis afficher une analyse ou une recommandation.
+            Cette page récupère les paramètres choisis et les envoie au serveur Node.js.
+            Le serveur doit ensuite récupérer les données de marché, les données on-chain,
+            les données de dominance, les données de dérivés ou le carnet des ordres.
         </p>
 
         <p class="note">
-            La catégorie d’analyse permet d’orienter le traitement côté serveur.
-            Une analyse macroéconomique, une analyse on-chain, une analyse technique ou une analyse des dérivés
-            ne doivent pas être traitées de la même façon.
+            Pour Bitcoin, l’analyse avancée peut comparer le prix de BTC avec la dominance Bitcoin,
+            la capitalisation totale du marché crypto, la dominance USDT, la dominance USDC,
+            le dollar américain, l’or et d’autres actifs connexes.
         </p>
 
         <p class="note">
-            Pour fonctionner correctement, ton serveur Node.js doit être hébergé sur Render,
-            Railway, Vercel ou un autre hébergeur capable d’exécuter Node.js.
+            Le carnet des ordres ne peut pas être lu directement depuis le graphique TradingView intégré.
+            Il doit être récupéré côté serveur avec une API externe, par exemple Binance, Coinbase ou Kraken.
         </p>
     </section>
 
@@ -509,6 +533,7 @@ Aucune analyse lancée.
     const API_URL = "https://trading-pattern-api.onrender.com/api/analyse";
 
     let widgetTradingView = null;
+    let actifsConnexesDisponibles = [];
 
     function lireParametres() {
         const actif = document.getElementById("actif");
@@ -516,6 +541,7 @@ Aucune analyse lancée.
         const indicateur = document.getElementById("indicateur");
         const strategie = document.getElementById("strategie");
         const categorieAnalyse = document.getElementById("categorieAnalyse");
+        const modeAnalyseAvancee = document.getElementById("modeAnalyseAvancee");
         const capital = document.getElementById("capital");
         const risque = document.getElementById("risque");
         const stopLoss = document.getElementById("stopLoss");
@@ -540,6 +566,11 @@ Aucune analyse lancée.
             categorieAnalyse: categorieAnalyse.value,
             libelleCategorieAnalyse: categorieAnalyse.options[categorieAnalyse.selectedIndex].text,
             descriptionCategorieAnalyse: obtenirDescriptionCategorie(categorieAnalyse.value),
+
+            modeAnalyseAvancee: modeAnalyseAvancee.value,
+            libelleModeAnalyseAvancee: modeAnalyseAvancee.options[modeAnalyseAvancee.selectedIndex].text,
+
+            actifsConnexes: lireActifsConnexesSelectionnes(),
 
             capital: Number(capital.value),
             risque: Number(risque.value),
@@ -603,6 +634,135 @@ Aucune analyse lancée.
             categorieAnalyse.options[categorieAnalyse.selectedIndex].text +
             ". " +
             description;
+    }
+
+    function obtenirActifsConnexes(actifPrincipal) {
+        if (actifPrincipal === "BINANCE:BTCUSDT" || actifPrincipal === "COINBASE:BTCUSD") {
+            return [
+                { symbole: "CRYPTOCAP:BTC.D", nom: "Bitcoin dominance" },
+                { symbole: "CRYPTOCAP:TOTAL", nom: "Crypto total market cap" },
+                { symbole: "CRYPTOCAP:TOTAL2", nom: "Crypto market cap sans Bitcoin" },
+                { symbole: "CRYPTOCAP:TOTAL3", nom: "Crypto market cap sans Bitcoin ni Ethereum" },
+                { symbole: "CRYPTOCAP:USDT.D", nom: "USDT dominance" },
+                { symbole: "CRYPTOCAP:USDC.D", nom: "USDC dominance" },
+                { symbole: "CRYPTOCAP:OTHERS.D", nom: "Dominance des altcoins" },
+                { symbole: "BINANCE:ETHUSDT", nom: "Ethereum / USDT" },
+                { symbole: "OANDA:XAUUSD", nom: "Or / Dollar" },
+                { symbole: "TVC:DXY", nom: "Indice dollar américain" },
+                { symbole: "TVC:US10Y", nom: "Rendement obligataire américain 10 ans" },
+                { symbole: "NASDAQ:QQQ", nom: "Nasdaq 100 ETF" }
+            ];
+        }
+
+        if (actifPrincipal === "BINANCE:ETHUSDT") {
+            return [
+                { symbole: "BINANCE:BTCUSDT", nom: "Bitcoin / USDT" },
+                { symbole: "CRYPTOCAP:BTC.D", nom: "Bitcoin dominance" },
+                { symbole: "CRYPTOCAP:TOTAL", nom: "Crypto total market cap" },
+                { symbole: "CRYPTOCAP:TOTAL2", nom: "Crypto market cap sans Bitcoin" },
+                { symbole: "CRYPTOCAP:ETH.D", nom: "Ethereum dominance" },
+                { symbole: "CRYPTOCAP:USDT.D", nom: "USDT dominance" },
+                { symbole: "NASDAQ:QQQ", nom: "Nasdaq 100 ETF" }
+            ];
+        }
+
+        if (actifPrincipal === "OANDA:XAUUSD") {
+            return [
+                { symbole: "TVC:DXY", nom: "Indice dollar américain" },
+                { symbole: "TVC:US10Y", nom: "Rendement obligataire américain 10 ans" },
+                { symbole: "BINANCE:BTCUSDT", nom: "Bitcoin / USDT" },
+                { symbole: "NASDAQ:QQQ", nom: "Nasdaq 100 ETF" }
+            ];
+        }
+
+        return [
+            { symbole: "TVC:DXY", nom: "Indice dollar américain" },
+            { symbole: "NASDAQ:QQQ", nom: "Nasdaq 100 ETF" },
+            { symbole: "CRYPTOCAP:TOTAL", nom: "Crypto total market cap" },
+            { symbole: "BINANCE:BTCUSDT", nom: "Bitcoin / USDT" }
+        ];
+    }
+
+    function mettreAJourActifsConnexes() {
+        const actif = document.getElementById("actif").value;
+        const modeAnalyseAvancee = document.getElementById("modeAnalyseAvancee").value;
+        const selectActifsConnexes = document.getElementById("actifsConnexes");
+        const descriptionAnalyseAvancee = document.getElementById("descriptionAnalyseAvancee");
+
+        if (!selectActifsConnexes) {
+            return;
+        }
+
+        actifsConnexesDisponibles = obtenirActifsConnexes(actif);
+
+        selectActifsConnexes.innerHTML = "";
+
+        const optionTous = document.createElement("option");
+        optionTous.value = "__TOUS__";
+        optionTous.textContent = "Tous les actifs connexes recommandés";
+        optionTous.selected = true;
+        selectActifsConnexes.appendChild(optionTous);
+
+        actifsConnexesDisponibles.forEach(function (item) {
+            const option = document.createElement("option");
+            option.value = item.symbole;
+            option.textContent = item.nom + " — " + item.symbole;
+            selectActifsConnexes.appendChild(option);
+        });
+
+        let texteMode = "";
+
+        switch (modeAnalyseAvancee) {
+            case "simple":
+                texteMode = "Analyse simple : seul l’actif principal est prioritaire. Tu peux choisir un actif connexe si nécessaire.";
+                break;
+
+            case "snapshots":
+                texteMode = "Snapshots : Node.js recevra l’actif principal et l’actif connexe choisi, ou tous les actifs recommandés.";
+                break;
+
+            case "multi_charts":
+                texteMode = "Multi-charts : Node.js comparera l’actif principal avec l’actif connexe choisi, ou avec tous les actifs recommandés.";
+                break;
+
+            case "carnet_ordres":
+                texteMode = "Carnet des ordres : Node.js devra appeler une API externe pour récupérer les ordres d’achat, de vente, les volumes et la profondeur de marché.";
+                break;
+
+            case "complet":
+                texteMode = "Analyse complète : snapshots, multi-charts, actif connexe et carnet des ordres seront demandés au serveur.";
+                break;
+
+            default:
+                texteMode = "Mode d’analyse non reconnu.";
+        }
+
+        descriptionAnalyseAvancee.innerHTML =
+            "<strong>Analyse avancée :</strong> " + texteMode;
+    }
+
+    function lireActifsConnexesSelectionnes() {
+        const selectActifsConnexes = document.getElementById("actifsConnexes");
+
+        if (!selectActifsConnexes || selectActifsConnexes.selectedIndex < 0) {
+            return [];
+        }
+
+        if (selectActifsConnexes.value === "__TOUS__") {
+            return actifsConnexesDisponibles.map(function (item) {
+                return {
+                    symbole: item.symbole,
+                    libelle: item.nom + " — " + item.symbole
+                };
+            });
+        }
+
+        return [
+            {
+                symbole: selectActifsConnexes.value,
+                libelle: selectActifsConnexes.options[selectActifsConnexes.selectedIndex].text
+            }
+        ];
     }
 
     function chargerGraphique() {
@@ -674,7 +834,9 @@ Aucune analyse lancée.
                 body: JSON.stringify({
                     test: true,
                     message: "Test depuis analyse-strategy.html",
-                    categorieAnalyse: document.getElementById("categorieAnalyse").value
+                    categorieAnalyse: document.getElementById("categorieAnalyse").value,
+                    modeAnalyseAvancee: document.getElementById("modeAnalyseAvancee").value,
+                    actifsConnexes: lireActifsConnexesSelectionnes()
                 })
             });
 
@@ -744,6 +906,22 @@ Aucune analyse lancée.
                 "Catégorie d’analyse : " + params.libelleCategorieAnalyse + "\n" +
                 "Code catégorie : " + params.categorieAnalyse + "\n" +
                 "Description catégorie : " + params.descriptionCategorieAnalyse + "\n" +
+                "Mode avancé : " + params.libelleModeAnalyseAvancee + "\n" +
+                "Code mode avancé : " + params.modeAnalyseAvancee + "\n\n" +
+
+                "ACTIFS CONNEXES TRANSMIS\n" +
+                "------------------------\n" +
+                (
+                    params.actifsConnexes.length > 0
+                        ? params.actifsConnexes.map(function (a) {
+                            return "- " + a.libelle;
+                        }).join("\n")
+                        : "Aucun actif connexe sélectionné."
+                ) +
+                "\n\n" +
+
+                "GESTION DU RISQUE\n" +
+                "-----------------\n" +
                 "Capital : " + params.capital + "\n" +
                 "Risque : " + params.risque + "%\n" +
                 "Stop loss : " + params.stopLoss + "%\n" +
@@ -780,6 +958,7 @@ Aucune analyse lancée.
 
     window.addEventListener("load", function () {
         mettreAJourDescriptionCategorie();
+        mettreAJourActifsConnexes();
         chargerGraphique();
     });
 </script>
