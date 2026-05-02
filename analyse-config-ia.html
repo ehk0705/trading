@@ -213,13 +213,6 @@
             margin-bottom: 8px;
         }
 
-        .form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 12px;
-        }
-
         .form-block {
             margin-bottom: 12px;
             min-width: 0;
@@ -234,12 +227,6 @@
         .form-block select,
         .form-block textarea {
             width: 100%;
-        }
-
-        textarea {
-            width: 100%;
-            min-height: 80px;
-            resize: vertical;
         }
 
         pre {
@@ -319,6 +306,39 @@
             min-height: 90px;
             max-height: 220px;
             overflow: auto;
+        }
+
+        .analysis-category-box {
+            background: #0b1220;
+            border: 1px solid #334155;
+            border-radius: 10px;
+            padding: 12px;
+            margin: 14px 0;
+        }
+
+        .analysis-category-box h2 {
+            margin-top: 0;
+            color: #38bdf8;
+        }
+
+        .analysis-category-box label {
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        .analysis-category-box select {
+            width: 100%;
+        }
+
+        .category-description {
+            margin-top: 10px;
+            padding: 10px;
+            background: #020617;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            color: #d1d5db;
+            font-size: 12px;
+            line-height: 1.5;
         }
 
         .ai-section {
@@ -401,10 +421,6 @@
             .control-group {
                 flex-direction: column;
                 align-items: stretch;
-            }
-
-            .form-grid {
-                grid-template-columns: 1fr;
             }
 
             button {
@@ -490,55 +506,16 @@
             </select>
         </div>
 
-        <button class="btn-tv" onclick="ouvrirTradingView()"
-                title="Ouvre TradingView avec l’actif et l’intervalle sélectionnés.">
-            Ouvrir dans TradingView
-        </button>
-
-        <button class="btn-capture" onclick="capturerConfigurationTradingView()"
-                title="Capture la configuration actuelle : actif, intervalle, indicateur et paramètres disponibles.">
-            Capturer configuration
-        </button>
-
-        <button class="btn-save" onclick="sauvegarderConfiguration()"
-                title="Sauvegarde la configuration capturée dans le navigateur.">
-            Sauvegarder
-        </button>
-
-        <button class="btn-save" onclick="rechargerConfigurationTradingView()"
-                title="Recharge la dernière configuration sauvegardée localement.">
-            Recharger
-        </button>
-
-        <button class="btn-copy" onclick="copierConfiguration()"
-                title="Copie la configuration actuelle au format JSON dans le presse-papiers.">
-            Copier JSON
-        </button>
-
-        <button class="btn-export" onclick="exporterJSON()"
-                title="Exporte la configuration dans un fichier JSON nommé avec l’actif, l’indicateur, l’intervalle, le type de bougie et la date.">
-            Exporter JSON
-        </button>
-
-        <button class="btn-import" onclick="ouvrirImportJSON()"
-                title="Importe une configuration JSON déjà sauvegardée.">
-            Importer JSON
-        </button>
-
-        <button class="btn-api" onclick="envoyerVersAPI()"
-                title="Envoie la configuration brute au serveur Node.js sur Render.">
-            Envoyer IA
-        </button>
-
-        <button class="btn-ai" onclick="analyserSnapshotIA()"
-                title="Analyse la configuration ou le snapshot chargé, puis affiche les recommandations sous le graphique.">
-            Analyse IA
-        </button>
-
-        <button class="btn-clear" onclick="effacerConfiguration()"
-                title="Efface la configuration affichée et les résultats de l’analyse IA.">
-            Effacer
-        </button>
+        <button class="btn-tv" onclick="ouvrirTradingView()" title="Ouvre TradingView avec l’actif et l’intervalle sélectionnés.">Ouvrir dans TradingView</button>
+        <button class="btn-capture" onclick="capturerConfigurationTradingView()" title="Capture la configuration actuelle, y compris la catégorie d’analyse choisie.">Capturer configuration</button>
+        <button class="btn-save" onclick="sauvegarderConfiguration()" title="Sauvegarde la configuration capturée dans le navigateur.">Sauvegarder</button>
+        <button class="btn-save" onclick="rechargerConfigurationTradingView()" title="Recharge la dernière configuration sauvegardée localement.">Recharger</button>
+        <button class="btn-copy" onclick="copierConfiguration()" title="Copie la configuration actuelle au format JSON.">Copier JSON</button>
+        <button class="btn-export" onclick="exporterJSON()" title="Exporte la configuration dans un fichier JSON.">Exporter JSON</button>
+        <button class="btn-import" onclick="ouvrirImportJSON()" title="Importe une configuration JSON déjà sauvegardée.">Importer JSON</button>
+        <button class="btn-api" onclick="envoyerVersAPI()" title="Envoie la configuration brute au serveur Node.js sur Render.">Envoyer IA</button>
+        <button class="btn-ai" onclick="analyserSnapshotIA()" title="Analyse la configuration ou le snapshot chargé selon la catégorie choisie.">Analyse IA</button>
+        <button class="btn-clear" onclick="effacerConfiguration()" title="Efface la configuration affichée et les résultats de l’analyse IA.">Effacer</button>
     </div>
 </header>
 
@@ -565,8 +542,7 @@
 
         <div class="note">
             Cette page capture les paramètres contrôlés par ton interface : actif, intervalle,
-            indicateur, stratégie, risque, notes et lien de snapshot.
-            Elle ne peut pas lire automatiquement les dessins internes privés du site TradingView officiel.
+            indicateur, stratégie, risque, catégorie d’analyse et lien de snapshot.
         </div>
     </section>
 
@@ -585,25 +561,37 @@
         </div>
 
         <div class="button-zone">
-            <button class="btn-copy" onclick="testerServeur()"
-                    title="Teste la route /api/test du serveur Render pour vérifier s’il est actif.">
-                Tester serveur
-            </button>
-
-            <button class="btn-dark" onclick="testerRouteAnalyse()"
-                    title="Teste directement la route /api/analyse utilisée pour envoyer les configurations.">
-                Tester /api/analyse
-            </button>
-
-            <button class="btn-tv" onclick="ouvrirServeurRender()"
-                    title="Ouvre l’adresse principale du serveur Render dans un nouvel onglet.">
-                Ouvrir serveur
-            </button>
+            <button class="btn-copy" onclick="testerServeur()" title="Teste la route /api/test du serveur Render.">Tester serveur</button>
+            <button class="btn-dark" onclick="testerRouteAnalyse()" title="Teste directement la route /api/analyse.">Tester /api/analyse</button>
+            <button class="btn-tv" onclick="ouvrirServeurRender()" title="Ouvre l’adresse principale du serveur Render.">Ouvrir serveur</button>
         </div>
 
         <div id="infosServeur" class="server-info">
 Aucun test effectué.
         </div>
+
+        <section class="analysis-category-box">
+            
+
+            <label for="categorie-analyse-btc">Choisir une catégorie</label>
+
+            <select id="categorie-analyse-btc" title="Choisir le type d’analyse IA à appliquer au Bitcoin ou au marché.">
+                <option value="macroeconomie">Macroéconomie</option>
+                <option value="monnaie_bitcoin">Monnaie Bitcoin</option>
+                <option value="donnees_on_chain">Données on-chain</option>
+                <option value="minage">Minage</option>
+                <option value="analyse_technique" selected>Analyse technique</option>
+                <option value="derives">Dérivés</option>
+                <option value="liquidite_marche">Liquidité de marché</option>
+                <option value="institutionnel">Institutionnel</option>
+                <option value="sentiment">Sentiment</option>
+                <option value="reglementation_risques">Réglementation et risques</option>
+            </select>
+
+            <div id="description-categorie-analyse" class="category-description">
+                Analyse technique : graphiques, tendances, supports, résistances, RSI et moyennes mobiles.
+            </div>
+        </section>
 
         <!--
         ========================================================
@@ -681,6 +669,40 @@ Aucun test effectué.
 
     function afficherAnalyseIA(texte) {
         document.getElementById("resultat-analyse-ia").textContent = texte;
+    }
+
+    function getCategorieAnalyseBTC() {
+        return valeurElement("categorie-analyse-btc", "analyse_technique");
+    }
+
+    function getLibelleCategorieAnalyseBTC() {
+        return libelleElement("categorie-analyse-btc", "Analyse technique");
+    }
+
+    function getDescriptionCategorieAnalyseBTC() {
+        const descriptions = {
+            macroeconomie: "Macroéconomie : taux, inflation, liquidité mondiale, dollar, obligations et bilan de la Fed.",
+            monnaie_bitcoin: "Monnaie Bitcoin : offre maximale, émission, halving et inflation de BTC.",
+            donnees_on_chain: "Données on-chain : adresses, transactions, MVRV, realized price et flux des plateformes.",
+            minage: "Minage : taux de hachage, difficulté, revenus et ventes des mineurs.",
+            analyse_technique: "Analyse technique : graphiques, tendances, supports, résistances, RSI et moyennes mobiles.",
+            derives: "Dérivés : contrats à terme, options, funding rates, open interest et liquidations.",
+            liquidite_marche: "Liquidité de marché : volumes, carnets d’ordres, spreads et profondeur de marché.",
+            institutionnel: "Institutionnel : FNB Bitcoin, achats d’entreprises, fonds, banques et adoption officielle.",
+            sentiment: "Sentiment : réseaux sociaux, Google Trends, médias, peur et avidité.",
+            reglementation_risques: "Réglementation et risques : lois, fiscalité, SEC, plateformes, garde et géopolitique."
+        };
+
+        const categorie = getCategorieAnalyseBTC();
+        return descriptions[categorie] || descriptions.analyse_technique;
+    }
+
+    function actualiserDescriptionCategorie() {
+        const zone = document.getElementById("description-categorie-analyse");
+
+        if (zone) {
+            zone.textContent = getDescriptionCategorieAnalyseBTC();
+        }
     }
 
     function obtenirStyleTradingView() {
@@ -941,7 +963,9 @@ Aucun test effectué.
             },
 
             analyseIA: {
-                categorie: valeurElement("categorie-analyse", "analyse_tendance"),
+                categorie: getCategorieAnalyseBTC(),
+                categorieLibelle: getLibelleCategorieAnalyseBTC(),
+                descriptionCategorie: getDescriptionCategorieAnalyseBTC(),
                 strategie: valeurElement("strategie-selector", "suivi_tendance"),
                 statut: "pret_pour_analyse"
             },
@@ -956,7 +980,10 @@ Aucun test effectué.
             },
 
             snapshot: {
-                url: valeurElement("snapshot-url", "")
+                url: valeurElement("snapshot-url", ""),
+                categorieAnalyse: getCategorieAnalyseBTC(),
+                categorieAnalyseLibelle: getLibelleCategorieAnalyseBTC(),
+                descriptionCategorieAnalyse: getDescriptionCategorieAnalyseBTC()
             },
 
             notes: valeurElement("notes-analyse", "").trim(),
@@ -964,13 +991,13 @@ Aucun test effectué.
             limites: {
                 captureCompleteTradingView: false,
                 dessinsInternesTradingView: false,
-                remarque: "La page capture les paramètres contrôlés par l’interface HTML, pas toute la configuration interne privée de TradingView."
+                remarque: "La page capture les paramètres contrôlés par l’interface HTML, la catégorie d’analyse et le lien éventuel du snapshot."
             }
         };
 
         afficherConfiguration(configurationActuelle);
-        afficherStatus("Configuration capturée avec succès.");
-        alert("Configuration capturée.");
+        afficherStatus("Configuration et catégorie d’analyse capturées avec succès.");
+        alert("Configuration capturée avec la catégorie d’analyse.");
     }
 
     function afficherConfiguration(configuration) {
@@ -1023,6 +1050,11 @@ Aucun test effectué.
         definirValeur("interval-selector", configuration.graphique.intervalle);
         definirValeur("indicator-selector", configuration.graphique.indicateur);
         definirValeur("type-bougie", configuration.graphique.typeBougie);
+
+        if (configuration.analyseIA && configuration.analyseIA.categorie) {
+            definirValeur("categorie-analyse-btc", configuration.analyseIA.categorie);
+            actualiserDescriptionCategorie();
+        }
 
         if (configuration.analyseIA) {
             definirValeur("categorie-analyse", configuration.analyseIA.categorie);
@@ -1104,10 +1136,10 @@ Aucun test effectué.
         const actif = nettoyerNomFichier(configuration.graphique.actif);
         const indicateur = nettoyerNomFichier(configuration.graphique.indicateur);
         const intervalle = nettoyerNomFichier(configuration.graphique.intervalle);
-        const bougie = nettoyerNomFichier(configuration.graphique.typeBougie);
+        const categorie = nettoyerNomFichier(configuration.analyseIA?.categorie || "analyse");
         const timestamp = genererTimestampFichier();
 
-        return actif + "-" + indicateur + "-" + intervalle + "-" + bougie + "-" + timestamp + ".json";
+        return actif + "-" + indicateur + "-" + intervalle + "-" + categorie + "-" + timestamp + ".json";
     }
 
     function exporterJSON() {
@@ -1125,7 +1157,7 @@ Aucun test effectué.
 
         URL.revokeObjectURL(lien.href);
 
-        afficherStatus("Configuration exportée en JSON avec un nom personnalisé.");
+        afficherStatus("Configuration exportée en JSON avec la catégorie d’analyse.");
         alert("Fichier JSON exporté.");
     }
 
@@ -1158,7 +1190,7 @@ Aucun test effectué.
 
                 localStorage.setItem("configurationTradingViewIA", JSON.stringify(configurationActuelle));
 
-                afficherStatus("Configuration importée depuis le fichier JSON.");
+                afficherStatus("Configuration JSON importée avec sa catégorie d’analyse.");
                 alert("Configuration JSON importée avec succès.");
 
             } catch (erreur) {
@@ -1175,11 +1207,13 @@ Aucun test effectué.
         const graphique = configuration.graphique || {};
         const risque = configuration.risque || {};
         const snapshot = configuration.snapshot || {};
+        const analyseIA = configuration.analyseIA || {};
 
         const actif = graphique.actif || "Actif non défini";
         const intervalle = graphique.intervalleLibelle || graphique.intervalle || "Intervalle non défini";
         const indicateur = graphique.indicateur || "Indicateur non défini";
-        const typeBougie = graphique.typeBougieLibelle || graphique.typeBougie || "Bougies japonaises";
+        const categorie = analyseIA.categorieLibelle || getLibelleCategorieAnalyseBTC();
+        const descriptionCategorie = analyseIA.descriptionCategorie || getDescriptionCategorieAnalyseBTC();
 
         let niveauRisque = "modéré";
         let remarqueRisque = "Le risque paraît raisonnable si le stop loss est respecté.";
@@ -1194,18 +1228,6 @@ Aucun test effectué.
             remarqueRisque = "Aucun stop loss valide n’est défini. C’est une mauvaise pratique.";
         }
 
-        let lectureIndicateur = "Lecture générale de tendance.";
-
-        if (indicateur === "RSI") {
-            lectureIndicateur = "Le RSI sert à détecter les zones de surachat et de survente. Vérifier les divergences avant toute décision.";
-        } else if (indicateur === "MACD") {
-            lectureIndicateur = "Le MACD sert à repérer les croisements de momentum. Il est plus fiable lorsqu’il confirme la tendance principale.";
-        } else if (indicateur === "EMA") {
-            lectureIndicateur = "L’EMA sert à suivre la tendance. Surveiller les croisements et la pente moyenne.";
-        } else if (indicateur === "SUPERTREND") {
-            lectureIndicateur = "Le Supertrend donne une indication directionnelle, mais il peut donner de faux signaux en marché latéral.";
-        }
-
         const presenceSnapshot = snapshot.url && snapshot.url.trim() !== "";
 
         return (
@@ -1216,15 +1238,15 @@ Aucun test effectué.
             "Actif : " + actif + "\n" +
             "Intervalle : " + intervalle + "\n" +
             "Indicateur : " + indicateur + "\n" +
-            "Type de bougie : " + typeBougie + "\n" +
+            "Catégorie choisie : " + categorie + "\n" +
+            "Description : " + descriptionCategorie + "\n" +
             "Snapshot : " + (presenceSnapshot ? snapshot.url : "aucun lien de snapshot disponible") + "\n\n" +
 
             "LECTURE TECHNIQUE\n" +
             "-----------------\n" +
-            "- L’analyse est basée sur les paramètres capturés, pas sur une lecture complète des pixels du graphique.\n" +
-            "- " + lectureIndicateur + "\n" +
-            "- Vérifier la tendance générale avant d’utiliser un signal isolé.\n" +
-            "- Confirmer avec le volume, les supports, les résistances et les zones de liquidité.\n\n" +
+            "- L’analyse tient compte de la catégorie sélectionnée.\n" +
+            "- Les résultats restent basés sur les paramètres capturés, pas sur une lecture complète des pixels du graphique.\n" +
+            "- Confirmer les signaux avec le volume, les supports, les résistances et les zones de liquidité.\n\n" +
 
             "GESTION DU RISQUE\n" +
             "-----------------\n" +
@@ -1238,12 +1260,11 @@ Aucun test effectué.
 
             "RECOMMANDATIONS\n" +
             "---------------\n" +
-            "1. Ne pas entrer en position uniquement sur un seul indicateur.\n" +
-            "2. Vérifier si le prix est proche d’un support ou d’une résistance importante.\n" +
-            "3. Éviter les entrées juste après une grande mèche ou une forte bougie impulsive.\n" +
-            "4. Attendre une confirmation de volume avant une cassure.\n" +
-            "5. Placer le stop loss hors des zones évidentes de liquidité.\n" +
-            "6. Utiliser un ratio gain/perte minimal de 1:2 si possible.\n\n" +
+            "1. Interpréter le graphique selon la catégorie choisie : " + categorie + ".\n" +
+            "2. Ne pas entrer en position uniquement sur un seul indicateur.\n" +
+            "3. Vérifier si le prix est proche d’un support ou d’une résistance importante.\n" +
+            "4. Vérifier la liquidité, le volume et les mèches avant toute décision.\n" +
+            "5. Utiliser un ratio gain/perte minimal de 1:2 si possible.\n\n" +
 
             "AVERTISSEMENT\n" +
             "-------------\n" +
@@ -1262,7 +1283,10 @@ Aucun test effectué.
 
         const chargeUtile = {
             action: "analyse_snapshot_ou_configuration",
-            demande: "Analyser le snapshot capturé ou chargé, puis produire des recommandations.",
+            demande: "Analyser le snapshot capturé ou chargé selon la catégorie choisie, puis produire des recommandations.",
+            categorieAnalyse: getCategorieAnalyseBTC(),
+            categorieAnalyseLibelle: getLibelleCategorieAnalyseBTC(),
+            descriptionCategorieAnalyse: getDescriptionCategorieAnalyseBTC(),
             configuration: configurationActuelle
         };
 
@@ -1410,6 +1434,30 @@ Aucun test effectué.
 
     document.addEventListener("DOMContentLoaded", function () {
         creerWidgetTradingView();
+
+        const selectCategorie = document.getElementById("categorie-analyse-btc");
+
+        if (selectCategorie) {
+            selectCategorie.addEventListener("change", function () {
+                actualiserDescriptionCategorie();
+
+                if (configurationActuelle) {
+                    configurationActuelle.analyseIA.categorie = getCategorieAnalyseBTC();
+                    configurationActuelle.analyseIA.categorieLibelle = getLibelleCategorieAnalyseBTC();
+                    configurationActuelle.analyseIA.descriptionCategorie = getDescriptionCategorieAnalyseBTC();
+
+                    if (configurationActuelle.snapshot) {
+                        configurationActuelle.snapshot.categorieAnalyse = getCategorieAnalyseBTC();
+                        configurationActuelle.snapshot.categorieAnalyseLibelle = getLibelleCategorieAnalyseBTC();
+                        configurationActuelle.snapshot.descriptionCategorieAnalyse = getDescriptionCategorieAnalyseBTC();
+                    }
+
+                    afficherConfiguration(configurationActuelle);
+                }
+            });
+
+            actualiserDescriptionCategorie();
+        }
     });
 </script>
 
