@@ -1,28 +1,6 @@
 /*
     Serveur Node.js pour l'analyse IA des patterns et des configurations TradingView
     --------------------------------------------------------------------------------
-
-    Installation :
-        npm install
-
-    Lancement :
-        npm start
-
-    Adresse locale :
-        http://localhost:3000
-
-    Routes disponibles :
-        GET  /api/test
-        POST /api/analyse
-        POST /api/marche
-        POST /api/analyse-pattern
-
-    Fonctions principales :
-        - récupère les bougies Binance ;
-        - calcule RSI, MACD, EMA ;
-        - calcule prix actuel, support, résistance, volume et tendance ;
-        - compare un segment actuel à des segments historiques ;
-        - retourne un signal probabiliste.
 */
 
 const express = require("express");
@@ -38,20 +16,16 @@ app.use(cors({
     allowedHeaders: ["Content-Type"]
 }));
 
-app.use(express.json({ limit: "2mb" }));
+app.use(express.json({ limit: "5mb" }));
 app.use(express.static(path.join(__dirname)));
 
 /*
-    Route de test simple
+    Route principale
 */
 app.get("/", (req, res) => {
-    res.send("Serveur Node.js actif.");
-});
-
-app.get("/api/test", (req, res) => {
     res.json({
         ok: true,
-        message: "Serveur Node.js actif",
+        message: "Serveur Node.js actif.",
         routes: [
             "GET /api/test",
             "POST /api/analyse",
@@ -63,12 +37,26 @@ app.get("/api/test", (req, res) => {
 });
 
 /*
-    Route simple pour recevoir une configuration depuis la page HTML
+    Route de test
+*/
+app.get("/api/test", (req, res) => {
+    res.json({
+        ok: true,
+        statut: "ok",
+        message: "API accessible",
+        serveur: "trading-pattern-api",
+        date: new Date().toISOString()
+    });
+});
+
+/*
+    Route d'analyse simple
 */
 app.post("/api/analyse", async (req, res) => {
     try {
         res.json({
             ok: true,
+            statut: "ok",
             message: "Configuration reçue par le serveur.",
             configuration: req.body,
             date: new Date().toISOString()
@@ -76,6 +64,7 @@ app.post("/api/analyse", async (req, res) => {
     } catch (err) {
         res.status(500).json({
             ok: false,
+            statut: "erreur",
             message: "Erreur dans /api/analyse.",
             detail: err.message
         });
@@ -84,29 +73,6 @@ app.post("/api/analyse", async (req, res) => {
 
 /*
     Route utilisée par le bouton "Ajouter marché"
-    dans analyse-config-ia-marche.html
-
-    Elle retourne :
-        - prix actuel ;
-        - support ;
-        - résistance ;
-        - RSI ;
-        - EMA 20 ;
-        - EMA 50 ;
-        - volume ;
-        - tendance.
-
-    Limite :
-        Cette version utilise Binance.
-        Elle fonctionne donc surtout avec :
-            BINANCE:BTCUSDT
-            BINANCE:ETHUSDT
-            etc.
-
-        Elle ne fonctionnera pas directement avec :
-            NASDAQ:AAPL
-            OANDA:XAUUSD
-            TVC:DXY
 */
 app.post("/api/marche", async (req, res) => {
     try {
@@ -117,108 +83,65 @@ app.post("/api/marche", async (req, res) => {
             categorieAnalyse = "analyse_technique"
         } = req.body || {};
 
-        const symbole = convertirSymboleBinance(actif);
+        const actifNormalise = String(actif).trim().toUpperCase();
+
+        /*
+            Si l'actif n'est pas Binance, on retourne une simulation propre.
+            Cela évite le blocage du bouton "Ajouter marché".
+        */
+        if (!actifNormalise.startsWith("BINANCE:")) {
+            return res.json(genererDonneesMarcheSimulees({
+                actif,
+                intervalle,
+                indicateur,
+                categorieAnalyse,
+                raison: "Actif non compatible avec Binance API."
+            }));
+        }
+
+        const symbole = convertirSymboleBinance(actifNormalise);
         const intervalleBinance = convertirIntervalleBinance(intervalle);
 
-        const bougies = await recupererBougiesBinance(symbole, intervalleBinance, 200);
+        let bougies = [];
+
+        try {
+            bougies = await recupererBougiesBinance(symbole, intervalleBinance, 200);
+        } catch (erreurBinance) {
+            return res.json(genererDonneesMarcheSimulees({
+                actif,
+                intervalle,
+                indicateur,
+                categorieAnalyse,
+                raison: "Binance inaccessible ou symbole refusé : " + erreurBinance.message
+            }));
+        }
 
         if (!bougies || bougies.length < 60) {
-            return res.status(400).json({
-                ok: false,
-                message: "Historique insuffisant pour calculer les données de marché.",
+            return res.json(genererDonneesMarcheSimulees({
                 actif,
-                symbole,
                 intervalle,
-                intervalleBinance
-            });
+                indicateur,
+                categorieAnalyse,
+                raison: "Historique Binance insuffisant."
+            }));
         }
 
-        const closes = bougies.map(b => b.close);
-        const volumes = bougies.map(b => b.volume);
-
-        const rsiSeries = calculerRSISeries(closes, 14);
-        const ema20Series = calculerEMASeries(closes, 20);
-        const ema50Series = calculerEMASeries(closes, 50);
-        const macdSeries = calculerMACDSeries(closes);
-
-        const dernierIndex = bougies.length - 1;
-        const derniereBougie = bougies[dernierIndex];
-
-        const prixActuel = derniereBougie.close;
-        const rsi = rsiSeries[dernierIndex] || 50;
-        const ema20 = ema20Series[dernierIndex] || prixActuel;
-        const ema50 = ema50Series[dernierIndex] || prixActuel;
-        const macd = macdSeries.histogramme[dernierIndex] || 0;
-
-        const recentes = bougies.slice(-30);
-
-        const support = Math.min(...recentes.map(b => b.low));
-        const resistance = Math.max(...recentes.map(b => b.high));
-
-        const volumeMoyen = moyenne(volumes.slice(-30));
-        const volumeActuel = derniereBougie.volume;
-
-        let volume = "neutre";
-
-        if (volumeActuel > volumeMoyen * 1.25) {
-            volume = "fort";
-        } else if (volumeActuel > volumeMoyen) {
-            volume = "hausse";
-        } else if (volumeActuel < volumeMoyen * 0.75) {
-            volume = "faible";
-        } else {
-            volume = "neutre";
-        }
-
-        let tendance = "neutre";
-
-        if (prixActuel > ema20 && ema20 > ema50) {
-            tendance = "haussiere";
-        } else if (prixActuel < ema20 && ema20 < ema50) {
-            tendance = "baissiere";
-        } else {
-            tendance = "range";
-        }
-
-        res.json({
-            ok: true,
-
+        const analyse = analyserBougiesMarche({
             actif,
             symbole,
             intervalle,
             intervalleBinance,
             indicateur,
             categorieAnalyse,
-
-            prixActuel: arrondir(prixActuel),
-            support: arrondir(support),
-            resistance: arrondir(resistance),
-            rsi: arrondir(rsi),
-            ema20: arrondir(ema20),
-            ema50: arrondir(ema50),
-            macd: arrondir(macd),
-            volume,
-            tendance,
-
-            derniereBougie: {
-                open: arrondir(derniereBougie.open),
-                high: arrondir(derniereBougie.high),
-                low: arrondir(derniereBougie.low),
-                close: arrondir(derniereBougie.close),
-                volume: arrondir(derniereBougie.volume),
-                temps: derniereBougie.temps
-            },
-
-            source: "binance",
-            nombreBougies: bougies.length,
-            dateMiseAJour: new Date().toISOString()
+            bougies
         });
 
-    } catch (err) {
-        console.error(err);
+        res.json(analyse);
 
+    } catch (err) {
         res.status(500).json({
             ok: false,
+            statut: "erreur",
             message: "Erreur pendant la récupération des données de marché.",
             detail: err.message
         });
@@ -226,7 +149,7 @@ app.post("/api/marche", async (req, res) => {
 });
 
 /*
-    Route existante pour l'analyse des patterns
+    Route d'analyse de pattern
 */
 app.post("/api/analyse-pattern", async (req, res) => {
     try {
@@ -238,7 +161,19 @@ app.post("/api/analyse-pattern", async (req, res) => {
             seuil = 1.5
         } = req.body || {};
 
-        const symbole = convertirSymboleBinance(actif);
+        const actifNormalise = String(actif).trim().toUpperCase();
+
+        if (!actifNormalise.startsWith("BINANCE:")) {
+            return res.json({
+                ok: false,
+                statut: "non_disponible",
+                message: "L’analyse de pattern automatique utilise Binance. Choisir un actif BINANCE, par exemple BINANCE:BTCUSDT.",
+                actif,
+                date: new Date().toISOString()
+            });
+        }
+
+        const symbole = convertirSymboleBinance(actifNormalise);
         const intervalleBinance = convertirIntervalleBinance(intervalle);
         const limite = Math.min(1000, Math.max(300, Number(longueurPattern) * 12));
 
@@ -247,7 +182,11 @@ app.post("/api/analyse-pattern", async (req, res) => {
         if (!bougies || bougies.length < Number(longueurPattern) + Number(horizon) + 100) {
             return res.json({
                 ok: false,
-                message: "Historique insuffisant pour cette analyse."
+                statut: "historique_insuffisant",
+                message: "Historique insuffisant pour cette analyse.",
+                actif,
+                symbole,
+                intervalle: intervalleBinance
             });
         }
 
@@ -262,10 +201,11 @@ app.post("/api/analyse-pattern", async (req, res) => {
         });
 
         res.json(analyse);
+
     } catch (err) {
-        console.error(err);
         res.status(500).json({
             ok: false,
+            statut: "erreur",
             message: "Erreur pendant l'analyse du pattern.",
             detail: err.message
         });
@@ -273,10 +213,179 @@ app.post("/api/analyse-pattern", async (req, res) => {
 });
 
 /*
-    Convertit un symbole TradingView Binance vers un symbole Binance API
+    Analyse des bougies pour /api/marche
+*/
+function analyserBougiesMarche({
+    actif,
+    symbole,
+    intervalle,
+    intervalleBinance,
+    indicateur,
+    categorieAnalyse,
+    bougies
+}) {
+    const closes = bougies.map(b => b.close);
+    const volumes = bougies.map(b => b.volume);
 
-    Exemple :
-        BINANCE:BTCUSDT -> BTCUSDT
+    const rsiSeries = calculerRSISeries(closes, 14);
+    const ema20Series = calculerEMASeries(closes, 20);
+    const ema50Series = calculerEMASeries(closes, 50);
+    const macdSeries = calculerMACDSeries(closes);
+
+    const dernierIndex = bougies.length - 1;
+    const derniereBougie = bougies[dernierIndex];
+
+    const prixActuel = derniereBougie.close;
+    const rsi = rsiSeries[dernierIndex] || 50;
+    const ema20 = ema20Series[dernierIndex] || prixActuel;
+    const ema50 = ema50Series[dernierIndex] || prixActuel;
+    const macd = macdSeries.histogramme[dernierIndex] || 0;
+
+    const recentes = bougies.slice(-30);
+
+    const support = Math.min(...recentes.map(b => b.low));
+    const resistance = Math.max(...recentes.map(b => b.high));
+
+    const volumeMoyen = moyenne(volumes.slice(-30));
+    const volumeActuel = derniereBougie.volume;
+
+    let volume = "neutre";
+
+    if (volumeActuel > volumeMoyen * 1.25) {
+        volume = "fort";
+    } else if (volumeActuel > volumeMoyen) {
+        volume = "hausse";
+    } else if (volumeActuel < volumeMoyen * 0.75) {
+        volume = "faible";
+    }
+
+    let tendance = "range";
+
+    if (prixActuel > ema20 && ema20 > ema50) {
+        tendance = "haussiere";
+    } else if (prixActuel < ema20 && ema20 < ema50) {
+        tendance = "baissiere";
+    }
+
+    return {
+        ok: true,
+        statut: "ok",
+
+        actif,
+        symbole,
+        intervalle,
+        intervalleBinance,
+        indicateur,
+        categorieAnalyse,
+
+        prixActuel: arrondir(prixActuel),
+        support: arrondir(support),
+        resistance: arrondir(resistance),
+        rsi: arrondir(rsi),
+        ema20: arrondir(ema20),
+        ema50: arrondir(ema50),
+        macd: arrondir(macd),
+        volume,
+        tendance,
+
+        derniereBougie: {
+            open: arrondir(derniereBougie.open),
+            high: arrondir(derniereBougie.high),
+            low: arrondir(derniereBougie.low),
+            close: arrondir(derniereBougie.close),
+            volume: arrondir(derniereBougie.volume),
+            temps: derniereBougie.temps
+        },
+
+        source: "binance",
+        nombreBougies: bougies.length,
+        dateMiseAJour: new Date().toISOString()
+    };
+}
+
+/*
+    Simulation propre pour les actifs non pris en charge par Binance
+*/
+function genererDonneesMarcheSimulees({
+    actif,
+    intervalle,
+    indicateur,
+    categorieAnalyse,
+    raison
+}) {
+    const base = obtenirPrixSimulation(actif);
+    const variation = Math.sin(Date.now() / 1000000) * 0.015;
+
+    const prixActuel = base * (1 + variation);
+    const support = prixActuel * 0.97;
+    const resistance = prixActuel * 1.03;
+    const rsi = 50 + Math.round(variation * 1000);
+
+    let tendance = "range";
+
+    if (rsi > 55) {
+        tendance = "haussiere";
+    } else if (rsi < 45) {
+        tendance = "baissiere";
+    }
+
+    return {
+        ok: true,
+        statut: "simulation",
+
+        actif,
+        symbole: actif,
+        intervalle,
+        intervalleBinance: null,
+        indicateur,
+        categorieAnalyse,
+
+        prixActuel: arrondir(prixActuel),
+        support: arrondir(support),
+        resistance: arrondir(resistance),
+        rsi: arrondir(rsi),
+        ema20: arrondir(prixActuel * 0.995),
+        ema50: arrondir(prixActuel * 0.985),
+        macd: arrondir((prixActuel * 0.995) - (prixActuel * 0.985)),
+        volume: "neutre",
+        tendance,
+
+        derniereBougie: {
+            open: arrondir(prixActuel * 0.99),
+            high: arrondir(prixActuel * 1.015),
+            low: arrondir(prixActuel * 0.985),
+            close: arrondir(prixActuel),
+            volume: 0,
+            temps: Date.now()
+        },
+
+        source: "simulation_locale",
+        avertissement: raison,
+        nombreBougies: 0,
+        dateMiseAJour: new Date().toISOString()
+    };
+}
+
+function obtenirPrixSimulation(actif) {
+    const symbole = String(actif).toUpperCase();
+
+    if (symbole.includes("BTC")) return 65000;
+    if (symbole.includes("ETH")) return 3200;
+    if (symbole.includes("XAU") || symbole.includes("GOLD")) return 2350;
+    if (symbole.includes("AAPL")) return 190;
+    if (symbole.includes("TSLA")) return 180;
+    if (symbole.includes("NVDA")) return 900;
+    if (symbole.includes("MSFT")) return 420;
+    if (symbole.includes("AMZN")) return 185;
+    if (symbole.includes("GOOGL")) return 170;
+    if (symbole.includes("SPX")) return 5200;
+    if (symbole.includes("DXY")) return 105;
+
+    return 100;
+}
+
+/*
+    Conversion symbole TradingView Binance vers Binance API
 */
 function convertirSymboleBinance(actif) {
     return String(actif)
@@ -286,13 +395,7 @@ function convertirSymboleBinance(actif) {
 }
 
 /*
-    Convertit les intervalles TradingView vers les intervalles Binance
-
-    TradingView peut utiliser :
-        1, 5, 15, 30, 60, 240, D, W, M
-
-    Binance attend :
-        1m, 5m, 15m, 30m, 1h, 4h, 1d, 1w, 1M
+    Conversion intervalle TradingView vers Binance
 */
 function convertirIntervalleBinance(intervalle) {
     const valeur = String(intervalle).trim();
@@ -329,18 +432,29 @@ function convertirIntervalleBinance(intervalle) {
 }
 
 /*
-    Récupération des bougies depuis Binance
+    Récupération des bougies Binance
 */
 async function recupererBougiesBinance(symbole, intervalle, limite) {
-    const url = `https://api.binance.com/api/v3/klines?symbol=${encodeURIComponent(symbole)}&interval=${encodeURIComponent(intervalle)}&limit=${limite}`;
+    const url =
+        "https://api.binance.com/api/v3/klines?symbol=" +
+        encodeURIComponent(symbole) +
+        "&interval=" +
+        encodeURIComponent(intervalle) +
+        "&limit=" +
+        encodeURIComponent(limite);
 
     const reponse = await fetch(url);
 
     if (!reponse.ok) {
-        throw new Error(`Erreur Binance : ${reponse.status}`);
+        const texte = await reponse.text();
+        throw new Error("Erreur Binance " + reponse.status + " : " + texte);
     }
 
     const data = await reponse.json();
+
+    if (!Array.isArray(data)) {
+        throw new Error("Réponse Binance invalide.");
+    }
 
     return data.map(k => ({
         temps: k[0],
@@ -353,7 +467,7 @@ async function recupererBougiesBinance(symbole, intervalle, limite) {
 }
 
 /*
-    Analyse de similarité avec segments historiques
+    Analyse de similarité
 */
 function analyserSimilarite({ actif, symbole, intervalle, bougies, longueurPattern, horizon, seuil }) {
     const closes = bougies.map(b => b.close);
@@ -385,7 +499,6 @@ function analyserSimilarite({ actif, symbole, intervalle, bougies, longueurPatte
     }
 
     const comparaisons = [];
-
     const dernierDebutHistorique = bougies.length - longueurPattern - horizon - 10;
 
     for (let i = 60; i < dernierDebutHistorique; i++) {
@@ -429,7 +542,6 @@ function analyserSimilarite({ actif, symbole, intervalle, bougies, longueurPatte
 
     const indicateurs = extraireIndicateursActuels({
         closes,
-        volumes,
         rsiSeries,
         ema20Series,
         ema50Series,
@@ -442,13 +554,13 @@ function analyserSimilarite({ actif, symbole, intervalle, bougies, longueurPatte
     const decision = determinerSignal({
         pctHausse,
         pctBaisse,
-        pctNeutre,
         variationMoyenne,
         scoreTechnique
     });
 
     return {
         ok: true,
+        statut: "ok",
         actif,
         symbole,
         intervalle,
@@ -481,7 +593,8 @@ function analyserSimilarite({ actif, symbole, intervalle, bougies, longueurPatte
             indicateurs
         ),
         recommandation: construireRecommandation(decision.signal, indicateurs),
-        risque: construireRisque(decision.signal, bougies)
+        risque: construireRisque(decision.signal, bougies),
+        dateMiseAJour: new Date().toISOString()
     };
 }
 
@@ -497,6 +610,7 @@ function extraireFeatures(bougies, rsiSeries, ema20Series, ema50Series, macdSeri
     const volumes = segment.map(b => b.volume);
 
     const rendements = [];
+
     for (let i = 1; i < closes.length; i++) {
         rendements.push((closes[i] - closes[i - 1]) / closes[i - 1]);
     }
@@ -539,13 +653,21 @@ function extraireFeatures(bougies, rsiSeries, ema20Series, ema50Series, macdSeri
 function calculerRSISeries(valeurs, periode = 14) {
     const rsi = Array(valeurs.length).fill(null);
 
+    if (!Array.isArray(valeurs) || valeurs.length <= periode) {
+        return rsi;
+    }
+
     let gains = 0;
     let pertes = 0;
 
     for (let i = 1; i <= periode; i++) {
         const diff = valeurs[i] - valeurs[i - 1];
-        if (diff >= 0) gains += diff;
-        else pertes -= diff;
+
+        if (diff >= 0) {
+            gains += diff;
+        } else {
+            pertes -= diff;
+        }
     }
 
     let gainMoyen = gains / periode;
@@ -568,7 +690,10 @@ function calculerRSISeries(valeurs, periode = 14) {
 }
 
 function calculerRSI(gainMoyen, perteMoyenne) {
-    if (perteMoyenne === 0) return 100;
+    if (perteMoyenne === 0) {
+        return 100;
+    }
+
     const rs = gainMoyen / perteMoyenne;
     return 100 - (100 / (1 + rs));
 }
@@ -578,9 +703,15 @@ function calculerRSI(gainMoyen, perteMoyenne) {
 */
 function calculerEMASeries(valeurs, periode) {
     const ema = Array(valeurs.length).fill(null);
+
+    if (!Array.isArray(valeurs) || valeurs.length < periode) {
+        return ema;
+    }
+
     const multiplicateur = 2 / (periode + 1);
 
     let somme = 0;
+
     for (let i = 0; i < periode; i++) {
         somme += valeurs[i];
     }
@@ -602,7 +733,10 @@ function calculerMACDSeries(closes) {
     const ema26 = calculerEMASeries(closes, 26);
 
     const macd = closes.map((_, i) => {
-        if (ema12[i] === null || ema26[i] === null) return null;
+        if (ema12[i] === null || ema26[i] === null) {
+            return null;
+        }
+
         return ema12[i] - ema26[i];
     });
 
@@ -610,11 +744,18 @@ function calculerMACDSeries(closes) {
     const signal = calculerEMASeries(macdValides, 9);
 
     const histogramme = macd.map((v, i) => {
-        if (v === null || signal[i] === null) return null;
+        if (v === null || signal[i] === null) {
+            return null;
+        }
+
         return v - signal[i];
     });
 
-    return { macd, signal, histogramme };
+    return {
+        macd,
+        signal,
+        histogramme
+    };
 }
 
 function extraireIndicateursActuels({ closes, rsiSeries, ema20Series, ema50Series, macdSeries, bougies }) {
@@ -629,9 +770,9 @@ function extraireIndicateursActuels({ closes, rsiSeries, ema20Series, ema50Serie
     let tendance = "neutre";
 
     if (prixActuel > ema20 && ema20 > ema50) {
-        tendance = "haussière";
+        tendance = "haussiere";
     } else if (prixActuel < ema20 && ema20 < ema50) {
-        tendance = "baissière";
+        tendance = "baissiere";
     }
 
     return {
@@ -648,8 +789,8 @@ function extraireIndicateursActuels({ closes, rsiSeries, ema20Series, ema50Serie
 function calculerScoreTechnique(indicateurs) {
     let score = 50;
 
-    if (indicateurs.tendance === "haussière") score += 18;
-    if (indicateurs.tendance === "baissière") score -= 18;
+    if (indicateurs.tendance === "haussiere") score += 18;
+    if (indicateurs.tendance === "baissiere") score -= 18;
 
     if (indicateurs.rsi > 55 && indicateurs.rsi < 70) score += 10;
     if (indicateurs.rsi < 45 && indicateurs.rsi > 30) score -= 10;
@@ -685,7 +826,23 @@ function determinerSignal({ pctHausse, pctBaisse, variationMoyenne, scoreTechniq
 }
 
 function construireResume(signal, pctHausse, pctBaisse, pctNeutre, variationMoyenne, indicateurs) {
-    return `Le segment actuel ressemble à des configurations historiques où la hausse a représenté ${pctHausse} %, la baisse ${pctBaisse} % et le scénario neutre ${pctNeutre} %. La variation moyenne observée ensuite est de ${arrondir(variationMoyenne)} %. La tendance actuelle est ${indicateurs.tendance}, avec un RSI de ${arrondir(indicateurs.rsi)}. Signal retenu : ${signal}.`;
+    return (
+        "Le segment actuel ressemble à des configurations historiques où la hausse a représenté " +
+        pctHausse +
+        " %, la baisse " +
+        pctBaisse +
+        " % et le scénario neutre " +
+        pctNeutre +
+        " %. La variation moyenne observée ensuite est de " +
+        arrondir(variationMoyenne) +
+        " %. La tendance actuelle est " +
+        indicateurs.tendance +
+        ", avec un RSI de " +
+        arrondir(indicateurs.rsi) +
+        ". Signal retenu : " +
+        signal +
+        "."
+    );
 }
 
 function construireRecommandation(signal, indicateurs) {
@@ -697,7 +854,7 @@ function construireRecommandation(signal, indicateurs) {
         return "Vente possible seulement si le prix reste sous la moyenne courte ou casse un support récent. Éviter de vendre sur un excès déjà trop avancé.";
     }
 
-    return "Attendre une confirmation. Le rapport entre les cas historiques haussiers et baissiers n’est pas assez net pour justifier une entrée agressive.";
+    return "Attendre une confirmation. Le rapport entre les cas historiques haussiers et baissiers n’est pas assez net.";
 }
 
 function construireRisque(signal, bougies) {
@@ -708,16 +865,16 @@ function construireRisque(signal, bougies) {
 
     if (signal === "ACHETER") {
         return {
-            stopLoss: `sous le dernier creux : ${arrondir(plusBas)}`,
-            takeProfit: `vers la zone haute récente : ${arrondir(plusHaut)}`,
+            stopLoss: "sous le dernier creux : " + arrondir(plusBas),
+            takeProfit: "vers la zone haute récente : " + arrondir(plusHaut),
             prudence: "ne pas entrer si le prix est déjà trop éloigné de l’EMA 20"
         };
     }
 
     if (signal === "VENDRE") {
         return {
-            stopLoss: `au-dessus du dernier sommet : ${arrondir(plusHaut)}`,
-            takeProfit: `vers la zone basse récente : ${arrondir(plusBas)}`,
+            stopLoss: "au-dessus du dernier sommet : " + arrondir(plusHaut),
+            takeProfit: "vers la zone basse récente : " + arrondir(plusBas),
             prudence: "ne pas entrer si une forte mèche basse montre un rejet acheteur"
         };
     }
@@ -725,7 +882,7 @@ function construireRisque(signal, bougies) {
     return {
         stopLoss: "non prioritaire tant qu’il n’y a pas d’entrée",
         takeProfit: "non prioritaire tant qu’il n’y a pas d’entrée",
-        prudence: `prix actuel : ${arrondir(dernierPrix)} ; attendre une cassure ou un rejet clair`
+        prudence: "prix actuel : " + arrondir(dernierPrix) + " ; attendre une cassure ou un rejet clair"
     };
 }
 
@@ -734,9 +891,13 @@ function construireRisque(signal, bougies) {
 */
 function distanceEuclidienne(a, b) {
     const n = Math.min(a.length, b.length);
-    if (n === 0) return Infinity;
+
+    if (n === 0) {
+        return Infinity;
+    }
 
     let somme = 0;
+
     for (let i = 0; i < n; i++) {
         const diff = a[i] - b[i];
         somme += diff * diff;
@@ -758,23 +919,34 @@ function normaliser(tableau) {
 
 function moyenne(tableau) {
     const valeurs = tableau.filter(x => Number.isFinite(x));
-    if (valeurs.length === 0) return 0;
+
+    if (valeurs.length === 0) {
+        return 0;
+    }
+
     return valeurs.reduce((a, b) => a + b, 0) / valeurs.length;
 }
 
 function ecartType(tableau) {
     const m = moyenne(tableau);
     const variance = moyenne(tableau.map(x => (x - m) ** 2));
+
     return Math.sqrt(variance);
 }
 
 function pourcentage(nombre, total) {
-    if (!total) return 0;
+    if (!total) {
+        return 0;
+    }
+
     return Math.round((nombre / total) * 100);
 }
 
 function arrondir(nombre) {
-    if (!Number.isFinite(nombre)) return 0;
+    if (!Number.isFinite(nombre)) {
+        return 0;
+    }
+
     return Math.round(nombre * 100) / 100;
 }
 
@@ -782,5 +954,5 @@ function arrondir(nombre) {
     Démarrage serveur
 */
 app.listen(PORT, () => {
-    console.log(`Serveur lancé : http://localhost:${PORT}`);
+    console.log("Serveur lancé sur le port " + PORT);
 });
