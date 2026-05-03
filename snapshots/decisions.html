@@ -6,9 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <style>
-        * {
-            box-sizing: border-box;
-        }
+        * { box-sizing: border-box; }
 
         body {
             margin: 0;
@@ -57,8 +55,7 @@
             font-size: 13px;
         }
 
-        input,
-        select {
+        input, select {
             width: 100%;
             padding: 8px;
             background: #020617;
@@ -74,9 +71,7 @@
             gap: 12px;
         }
 
-        .field {
-            margin-bottom: 12px;
-        }
+        .field { margin-bottom: 12px; }
 
         pre {
             background: #020617;
@@ -103,24 +98,11 @@
             margin-bottom: 8px;
         }
 
-        button:hover {
-            opacity: 0.85;
-        }
+        button:hover { opacity: 0.85; }
 
-        .btn-retour {
-            background: #334155;
-            color: white;
-        }
-
-        .btn-local {
-            background: #22c55e;
-            color: #03130a;
-        }
-
-        .btn-analyse {
-            background: #facc15;
-            color: #1a1300;
-        }
+        .btn-retour { background: #334155; color: white; }
+        .btn-local { background: #22c55e; color: #03130a; }
+        .btn-analyse { background: #facc15; color: #1a1300; }
 
         .decision {
             font-size: 28px;
@@ -131,25 +113,10 @@
             margin-bottom: 16px;
         }
 
-        .achat {
-            background: #064e3b;
-            color: #86efac;
-        }
-
-        .vente {
-            background: #7f1d1d;
-            color: #fecaca;
-        }
-
-        .attente {
-            background: #713f12;
-            color: #fde68a;
-        }
-
-        .erreur {
-            background: #7f1d1d;
-            color: #fecaca;
-        }
+        .achat { background: #064e3b; color: #86efac; }
+        .vente { background: #7f1d1d; color: #fecaca; }
+        .attente { background: #713f12; color: #fde68a; }
+        .erreur { background: #7f1d1d; color: #fecaca; }
 
         .info {
             color: #cbd5e1;
@@ -168,18 +135,9 @@
         }
 
         @media (max-width: 800px) {
-            .grid {
-                grid-template-columns: 1fr;
-            }
-
-            button {
-                width: 100%;
-                margin-right: 0;
-            }
-
-            .decision {
-                font-size: 22px;
-            }
+            .grid { grid-template-columns: 1fr; }
+            button { width: 100%; margin-right: 0; }
+            .decision { font-size: 22px; }
         }
     </style>
 </head>
@@ -192,52 +150,26 @@
 
 <main>
 
-    <div id="decision-box" class="decision attente">
-        Aucune décision
-    </div>
+    <div id="decision-box" class="decision attente">Aucune décision</div>
 
     <div class="card">
-        <button id="btn-charger"
-                type="button"
-                onclick="chargerConfiguration()"
-                title="Parcourir le disque et choisir un fichier JSON depuis le dossier snapshots.">
+        <button id="btn-charger" type="button" onclick="chargerConfiguration()" title="Parcourir le disque et choisir un fichier JSON depuis le dossier snapshots.">
             Charger configuration JSON
         </button>
 
-        <button id="btn-local"
-                type="button"
-                class="btn-local"
-                onclick="chargerConfigurationLocale()"
-                title="Charge la dernière configuration sauvegardée dans le navigateur.">
+        <button id="btn-local" type="button" class="btn-local" onclick="chargerConfigurationLocale()" title="Charge la dernière configuration sauvegardée dans le navigateur.">
             Charger sauvegarde locale
         </button>
 
-        <button id="btn-analyser"
-                type="button"
-                class="btn-analyse"
-                onclick="analyserDecision()"
-                title="Analyse la configuration et les prix concrets.">
+        <button id="btn-analyser" type="button" class="btn-analyse" onclick="analyserDecision()" title="Analyse la configuration et les prix concrets.">
             Analyser décision
         </button>
 
-        <button id="btn-retour"
-                type="button"
-                class="btn-retour"
-                onclick="retour()">
-            Retour
-        </button>
+        <button id="btn-retour" type="button" class="btn-retour" onclick="retour()">Retour</button>
 
-        <input
-            type="file"
-            id="fichier-json"
-            accept="application/json,.json"
-            style="display:none;"
-            onchange="chargerConfigurationDepuisFichier(event)"
-        >
+        <input type="file" id="fichier-json" accept="application/json,.json" style="display:none;" onchange="chargerConfigurationDepuisFichier(event)">
 
-        <div id="fichier-selectionne" class="file-info">
-            Aucun fichier JSON chargé.
-        </div>
+        <div id="fichier-selectionne" class="file-info">Aucun fichier JSON chargé.</div>
 
         <p class="info">
             Charge un fichier JSON depuis ton dossier <strong>/snapshots</strong>, puis complète ou corrige les prix concrets ci-dessous.
@@ -309,23 +241,17 @@
 
     function afficherDecision(decision, classe) {
         const box = document.getElementById("decision-box");
-
         if (!box) {
             alert("Erreur : zone decision-box introuvable.");
             return;
         }
-
         box.className = "decision " + classe;
         box.textContent = decision;
     }
 
     function nombreChamp(id) {
         const element = document.getElementById(id);
-
-        if (!element || element.value === "") {
-            return null;
-        }
-
+        if (!element || element.value === "") return null;
         return Number(element.value);
     }
 
@@ -336,31 +262,21 @@
 
     function ouvrirChoixFichierJSON() {
         const input = document.getElementById("fichier-json");
-
         if (!input) {
             alert("Erreur : champ fichier-json introuvable.");
             return;
         }
-
         input.click();
     }
 
     function chargerConfigurationDepuisFichier(event) {
         const fichier = event.target.files[0];
-
-        if (!fichier) {
-            return;
-        }
+        if (!fichier) return;
 
         if (!fichier.name.toLowerCase().endsWith(".json")) {
             afficherDecision("Fichier invalide", "erreur");
-
-            document.getElementById("configuration-json").textContent =
-                "Erreur : le fichier choisi n’est pas un fichier JSON.";
-
-            document.getElementById("resultat-analyse").textContent =
-                "Impossible d’analyser ce fichier.";
-
+            document.getElementById("configuration-json").textContent = "Erreur : le fichier choisi n’est pas un fichier JSON.";
+            document.getElementById("resultat-analyse").textContent = "Impossible d’analyser ce fichier.";
             return;
         }
 
@@ -376,17 +292,12 @@
                 }
 
                 configuration = objet;
-
                 remplirChampsMarcheDepuisConfiguration(configuration);
 
                 localStorage.setItem("configurationTradingViewIA", JSON.stringify(configuration));
 
-                document.getElementById("configuration-json").textContent =
-                    JSON.stringify(configuration, null, 4);
-
-                document.getElementById("fichier-selectionne").textContent =
-                    "Fichier chargé : " + fichier.name;
-
+                document.getElementById("configuration-json").textContent = JSON.stringify(configuration, null, 4);
+                document.getElementById("fichier-selectionne").textContent = "Fichier chargé : " + fichier.name;
                 document.getElementById("resultat-analyse").textContent =
                     "Configuration JSON chargée. Vérifie les prix concrets, puis clique sur « Analyser décision ».";
 
@@ -394,12 +305,10 @@
 
             } catch (erreur) {
                 configuration = null;
-
                 afficherDecision("JSON invalide", "erreur");
 
                 document.getElementById("configuration-json").textContent =
-                    "Erreur : fichier JSON invalide.\n\n" +
-                    "Détail technique : " + erreur.message;
+                    "Erreur : fichier JSON invalide.\n\nDétail technique : " + erreur.message;
 
                 document.getElementById("resultat-analyse").textContent =
                     "Impossible d’analyser une configuration invalide.";
@@ -414,12 +323,10 @@
     function chargerConfigurationLocale() {
         const zoneConfiguration = document.getElementById("configuration-json");
         const zoneAnalyse = document.getElementById("resultat-analyse");
-
         const data = localStorage.getItem("configurationTradingViewIA");
 
         if (!data) {
             configuration = null;
-
             afficherDecision("Aucune configuration", "erreur");
 
             zoneConfiguration.textContent =
@@ -428,39 +335,30 @@
                 "1. Retourne dans analyse-config-ia.html puis fais Capturer configuration et Sauvegarder.\n" +
                 "2. Ou clique sur Charger configuration JSON pour choisir un fichier dans /snapshots.";
 
-            zoneAnalyse.textContent =
-                "Impossible d’analyser : aucune configuration n’est disponible.";
-
+            zoneAnalyse.textContent = "Impossible d’analyser : aucune configuration n’est disponible.";
             return;
         }
 
         try {
             configuration = JSON.parse(data);
-
             remplirChampsMarcheDepuisConfiguration(configuration);
 
-            zoneConfiguration.textContent =
-                JSON.stringify(configuration, null, 4);
-
+            zoneConfiguration.textContent = JSON.stringify(configuration, null, 4);
             document.getElementById("fichier-selectionne").textContent =
                 "Configuration chargée depuis la sauvegarde locale du navigateur.";
 
             afficherDecision("Configuration locale chargée", "attente");
-
             zoneAnalyse.textContent =
                 "Configuration locale chargée. Vérifie les prix concrets, puis clique sur « Analyser décision ».";
 
         } catch (erreur) {
             configuration = null;
-
             afficherDecision("Configuration invalide", "erreur");
 
             zoneConfiguration.textContent =
-                "Erreur : la configuration sauvegardée est invalide.\n\n" +
-                "Détail technique : " + erreur.message;
+                "Erreur : la configuration sauvegardée est invalide.\n\nDétail technique : " + erreur.message;
 
-            zoneAnalyse.textContent =
-                "Impossible d’analyser une configuration invalide.";
+            zoneAnalyse.textContent = "Impossible d’analyser une configuration invalide.";
         }
     }
 
@@ -471,35 +369,16 @@
     function remplirChampsMarcheDepuisConfiguration(config) {
         const marche = config.marche || {};
 
-        if (marche.prixActuel !== undefined) {
-            document.getElementById("prix-actuel").value = marche.prixActuel;
-        }
-
-        if (marche.support !== undefined) {
-            document.getElementById("support").value = marche.support;
-        }
-
-        if (marche.resistance !== undefined) {
-            document.getElementById("resistance").value = marche.resistance;
-        }
-
-        if (marche.rsi !== undefined) {
-            document.getElementById("rsi").value = marche.rsi;
-        }
-
-        if (marche.volume !== undefined) {
-            document.getElementById("volume").value = marche.volume;
-        }
-
-        if (marche.tendance !== undefined) {
-            document.getElementById("tendance").value = marche.tendance;
-        }
+        if (marche.prixActuel !== undefined) document.getElementById("prix-actuel").value = marche.prixActuel;
+        if (marche.support !== undefined) document.getElementById("support").value = marche.support;
+        if (marche.resistance !== undefined) document.getElementById("resistance").value = marche.resistance;
+        if (marche.rsi !== undefined) document.getElementById("rsi").value = marche.rsi;
+        if (marche.volume !== undefined) document.getElementById("volume").value = marche.volume;
+        if (marche.tendance !== undefined) document.getElementById("tendance").value = marche.tendance;
     }
 
     function ajouterMarcheDansConfiguration() {
-        if (!configuration) {
-            return;
-        }
+        if (!configuration) return;
 
         configuration.marche = {
             prixActuel: nombreChamp("prix-actuel"),
@@ -512,9 +391,7 @@
         };
 
         localStorage.setItem("configurationTradingViewIA", JSON.stringify(configuration));
-
-        document.getElementById("configuration-json").textContent =
-            JSON.stringify(configuration, null, 4);
+        document.getElementById("configuration-json").textContent = JSON.stringify(configuration, null, 4);
     }
 
     function analyserDecision() {
@@ -564,7 +441,6 @@
         const indicateur = graphique.indicateur || "";
         const categorie = analyseIA.categorie || "";
         const risquePosition = Number(risque.risqueParPositionPourcent || 1);
-
         const commentaires = [];
 
         if (tendance === "haussiere") {
@@ -677,10 +553,8 @@
         document.getElementById("resultat-analyse").textContent =
             "DÉCISION IA CONCRÈTE\n" +
             "====================\n\n" +
-
             "Signal proposé : " + symbole + " " + decision + "\n" +
             "Confiance estimée : " + confiance + " %\n\n" +
-
             "ACTIF\n" +
             "-----\n" +
             "Actif : " + (graphique.actifLibelle || graphique.actif || "Non défini") + "\n" +
@@ -689,7 +563,6 @@
             "Indicateur : " + (graphique.indicateur || "Non défini") + "\n" +
             "Catégorie : " + (analyseIA.categorieLibelle || analyseIA.categorie || "Non définie") + "\n" +
             "Snapshot : " + (snapshot.url || "Aucun snapshot lié") + "\n\n" +
-
             "PRIX UTILISÉS\n" +
             "-------------\n" +
             "Prix actuel : " + prixActuel + "\n" +
@@ -698,23 +571,19 @@
             "RSI : " + (isNaN(rsi) ? "Non renseigné" : rsi) + "\n" +
             "Volume : " + volume + "\n" +
             "Tendance : " + tendance + "\n\n" +
-
             "PLAN PROPOSÉ\n" +
             "------------\n" +
             plan + "\n\n" +
-
             "SCORES INTERNES\n" +
             "---------------\n" +
             "Achat : " + scoreAchat + "\n" +
             "Vente : " + scoreVente + "\n" +
             "Attente : " + scoreAttente + "\n\n" +
-
             "LECTURE\n" +
             "-------\n" +
             commentaires.map(function(commentaire) {
                 return "- " + commentaire;
             }).join("\n") +
-
             "\n\nNOTE\n" +
             "----\n" +
             "Cette décision est calculée à partir des prix que tu as fournis dans cette page. " +
@@ -777,11 +646,7 @@
 
     function calculerConfiance(scoreAchat, scoreVente, scoreAttente) {
         const total = scoreAchat + scoreVente + scoreAttente;
-
-        if (total <= 0) {
-            return 0;
-        }
-
+        if (total <= 0) return 0;
         const scoreMax = Math.max(scoreAchat, scoreVente, scoreAttente);
         return Math.round((scoreMax / total) * 100);
     }
