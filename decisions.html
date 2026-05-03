@@ -159,19 +159,33 @@
     </div>
 
     <div class="card">
-        <button id="btn-charger" type="button" onclick="chargerConfiguration()" title="Parcourir le disque et choisir un fichier JSON depuis le dossier snapshots.">
+        <button id="btn-charger"
+                type="button"
+                onclick="chargerConfiguration()"
+                title="Parcourir le disque et choisir un fichier JSON depuis le dossier snapshots.">
             Charger configuration JSON
         </button>
 
-        <button id="btn-local" type="button" class="btn-local" onclick="chargerConfigurationLocale()" title="Charge la dernière configuration sauvegardée dans le navigateur.">
+        <button id="btn-local"
+                type="button"
+                class="btn-local"
+                onclick="chargerConfigurationLocale()"
+                title="Charge la dernière configuration sauvegardée dans le navigateur.">
             Charger sauvegarde locale
         </button>
 
-        <button id="btn-analyser" type="button" onclick="analyserDecision()" title="Analyse la configuration chargée et propose acheter, vendre ou attendre.">
+        <button id="btn-analyser"
+                type="button"
+                onclick="analyserDecision()"
+                title="Analyse la configuration chargée et propose acheter, vendre ou attendre.">
             Analyser décision
         </button>
 
-        <button id="btn-retour" type="button" class="btn-retour" onclick="retour()" title="Retourner à la page principale.">
+        <button id="btn-retour"
+                type="button"
+                class="btn-retour"
+                onclick="retour()"
+                title="Retourner à la page principale.">
             Retour
         </button>
 
@@ -533,31 +547,7 @@
     window.retour = retour;
 
     document.addEventListener("DOMContentLoaded", function () {
-        const boutonCharger = document.getElementById("btn-charger");
-        const boutonLocal = document.getElementById("btn-local");
-        const boutonAnalyser = document.getElementById("btn-analyser");
-        const boutonRetour = document.getElementById("btn-retour");
-        const inputFichier = document.getElementById("fichier-json");
-
-        if (boutonCharger) {
-            boutonCharger.addEventListener("click", chargerConfiguration);
-        }
-
-        if (boutonLocal) {
-            boutonLocal.addEventListener("click", chargerConfigurationLocale);
-        }
-
-        if (boutonAnalyser) {
-            boutonAnalyser.addEventListener("click", analyserDecision);
-        }
-
-        if (boutonRetour) {
-            boutonRetour.addEventListener("click", retour);
-        }
-
-        if (inputFichier) {
-            inputFichier.addEventListener("change", chargerConfigurationDepuisFichier);
-        }
+        console.log("decisions.html chargé.");
     });
 </script>
 
