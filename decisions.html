@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Décision IA Trading</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #07111f;
+            color: white;
+        }
+
+        header {
+            background: #0f172a;
+            border-bottom: 2px solid #00d9ff;
+            padding: 18px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #00d9ff;
+            margin: 0;
+            font-size: 24px;
+        }
+
+        main {
+            max-width: 1100px;
+            margin: auto;
+            padding: 18px;
+        }
+
+        .card {
+            background: #111827;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 18px;
+            margin-bottom: 16px;
+        }
+
+        h2 {
+            color: #38bdf8;
+            margin-top: 0;
+        }
+
+        pre {
+            background: #020617;
+            border: 1px solid #334155;
+            border-radius: 10px;
+            padding: 14px;
+            color: #d1d5db;
+            white-space: pre-wrap;
+            word-break: break-word;
+            min-height: 180px;
+            max-height: 520px;
+            overflow: auto;
+        }
+
+        button {
+            border: none;
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-weight: bold;
+            cursor: pointer;
+            background: #38bdf8;
+            color: #00111a;
+            margin-right: 8px;
+            margin-bottom: 8px;
+        }
+
+        button:hover {
+            opacity: 0.85;
+        }
+
+        .btn-retour {
+            background: #334155;
+            color: white;
+        }
+
+        .btn-local {
+            background: #22c55e;
+            color: #03130a;
+        }
+
+        .decision {
+            font-size: 28px;
+            font-weight: bold;
+            padding: 18px;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .achat {
+            background: #064e3b;
+            color: #86efac;
+        }
+
+        .vente {
+            background: #7f1d1d;
+            color: #fecaca;
+        }
+
+        .attente {
+            background: #713f12;
+            color: #fde68a;
+        }
+
+        .erreur {
+            background: #7f1d1d;
+            color: #fecaca;
+        }
+
+        .info {
+            color: #cbd5e1;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .file-info {
+            background: #020617;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 10px;
+            color: #facc15;
+            font-size: 13px;
+            margin-top: 10px;
+        }
+
+        @media (max-width: 700px) {
+            button {
+                width: 100%;
+                margin-right: 0;
+            }
+
+            .decision {
+                font-size: 22px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>Décision IA Trading</h1>
+</header>
+
+<main>
+
+    <div id="decision-box" class="decision attente">
+        Aucune décision
+    </div>
+
+    <div class="card">
+        <button id="btn-charger" type="button" onclick="chargerConfiguration()" title="Parcourir le disque et choisir un fichier JSON depuis le dossier snapshots.">
+            Charger configuration JSON
+        </button>
+
+        <button id="btn-local" type="button" class="btn-local" onclick="chargerConfigurationLocale()" title="Charge la dernière configuration sauvegardée dans le navigateur.">
+            Charger sauvegarde locale
+        </button>
+
+        <button id="btn-analyser" type="button" onclick="analyserDecision()" title="Analyse la configuration chargée et propose acheter, vendre ou attendre.">
+            Analyser décision
+        </button>
+
+        <button id="btn-retour" type="button" class="btn-retour" onclick="retour()" title="Retourner à la page principale.">
+            Retour
+        </button>
+
+        <input
+            type="file"
+            id="fichier-json"
+            accept="application/json,.json"
+            style="display:none;"
+            onchange="chargerConfigurationDepuisFichier(event)"
+        >
+
+        <div id="fichier-selectionne" class="file-info">
+            Aucun fichier JSON chargé.
+        </div>
+
+        <p class="info">
+            Le bouton <strong>Charger configuration JSON</strong> ouvre l’explorateur de fichiers.
+            Va dans ton dossier <strong>/snapshots</strong>, puis choisis le fichier JSON à analyser.
+            Le navigateur ne permet pas d’ouvrir automatiquement un dossier précis pour des raisons de sécurité.
+        </p>
+    </div>
+
+    <section class="card">
+        <h2>Configuration chargée</h2>
+        <pre id="configuration-json">Aucune configuration chargée.</pre>
+    </section>
+
+    <section class="card">
+        <h2>Analyse et recommandations</h2>
+        <pre id="resultat-analyse">Aucune analyse lancée.</pre>
+    </section>
+
+</main>
+
+<script>
+    let configuration = null;
+
+    function afficherDecision(decision, classe) {
+        const box = document.getElementById("decision-box");
+
+        if (!box) {
+            alert("Erreur : zone decision-box introuvable.");
+            return;
+        }
+
+        box.className = "decision " + classe;
+        box.textContent = decision;
+    }
+
+    function ouvrirChoixFichierJSON() {
+        const input = document.getElementById("fichier-json");
+
+        if (!input) {
+            alert("Erreur : champ fichier-json introuvable.");
+            return;
+        }
+
+        input.click();
+    }
+
+    function chargerConfigurationDepuisFichier(event) {
+        const fichier = event.target.files[0];
+
+        if (!fichier) {
+            return;
+        }
+
+        if (!fichier.name.toLowerCase().endsWith(".json")) {
+            afficherDecision("Fichier invalide", "erreur");
+
+            document.getElementById("configuration-json").textContent =
+                "Erreur : le fichier choisi n’est pas un fichier JSON.";
+
+            document.getElementById("resultat-analyse").textContent =
+                "Impossible d’analyser ce fichier.";
+
+            return;
+        }
+
+        const lecteur = new FileReader();
+
+        lecteur.onload = function(e) {
+            try {
+                const contenu = e.target.result;
+                const objet = JSON.parse(contenu);
+
+                if (!objet.graphique) {
+                    throw new Error("Le fichier JSON ne contient pas de bloc 'graphique'.");
+                }
+
+                configuration = objet;
+
+                localStorage.setItem("configurationTradingViewIA", JSON.stringify(configuration));
+
+                document.getElementById("configuration-json").textContent =
+                    JSON.stringify(configuration, null, 4);
+
+                document.getElementById("fichier-selectionne").textContent =
+                    "Fichier chargé : " + fichier.name;
+
+                document.getElementById("resultat-analyse").textContent =
+                    "Configuration JSON chargée. Clique sur « Analyser décision ».";
+
+                afficherDecision("Configuration JSON chargée", "attente");
+
+            } catch (erreur) {
+                configuration = null;
+
+                afficherDecision("JSON invalide", "erreur");
+
+                document.getElementById("configuration-json").textContent =
+                    "Erreur : fichier JSON invalide.\n\n" +
+                    "Détail technique : " + erreur.message;
+
+                document.getElementById("resultat-analyse").textContent =
+                    "Impossible d’analyser une configuration invalide.";
+            }
+
+            event.target.value = "";
+        };
+
+        lecteur.readAsText(fichier);
+    }
+
+    function chargerConfigurationLocale() {
+        const zoneConfiguration = document.getElementById("configuration-json");
+        const zoneAnalyse = document.getElementById("resultat-analyse");
+
+        const data = localStorage.getItem("configurationTradingViewIA");
+
+        if (!data) {
+            configuration = null;
+
+            afficherDecision("Aucune configuration", "erreur");
+
+            zoneConfiguration.textContent =
+                "Aucune configuration locale trouvée.\n\n" +
+                "Solutions :\n" +
+                "1. Retourne dans analyse-config-ia.html puis fais Capturer configuration et Sauvegarder.\n" +
+                "2. Ou clique sur Charger configuration JSON pour choisir un fichier dans /snapshots.";
+
+            zoneAnalyse.textContent =
+                "Impossible d’analyser : aucune configuration n’est disponible.";
+
+            return;
+        }
+
+        try {
+            configuration = JSON.parse(data);
+
+            zoneConfiguration.textContent =
+                JSON.stringify(configuration, null, 4);
+
+            document.getElementById("fichier-selectionne").textContent =
+                "Configuration chargée depuis la sauvegarde locale du navigateur.";
+
+            afficherDecision("Configuration locale chargée", "attente");
+
+            zoneAnalyse.textContent =
+                "Configuration locale chargée. Clique sur « Analyser décision ».";
+
+        } catch (erreur) {
+            configuration = null;
+
+            afficherDecision("Configuration invalide", "erreur");
+
+            zoneConfiguration.textContent =
+                "Erreur : la configuration sauvegardée est invalide.\n\n" +
+                "Détail technique : " + erreur.message;
+
+            zoneAnalyse.textContent =
+                "Impossible d’analyser une configuration invalide.";
+        }
+    }
+
+    function chargerConfiguration() {
+        ouvrirChoixFichierJSON();
+    }
+
+    function analyserDecision() {
+        if (!configuration) {
+            document.getElementById("resultat-analyse").textContent =
+                "Aucune configuration n’est chargée.\n\n" +
+                "Clique d’abord sur « Charger configuration JSON » et choisis un fichier dans /snapshots,\n" +
+                "ou clique sur « Charger sauvegarde locale ».";
+
+            afficherDecision("Aucune configuration", "erreur");
+            return;
+        }
+
+        const graphique = configuration.graphique || {};
+        const risque = configuration.risque || {};
+        const analyseIA = configuration.analyseIA || {};
+        const snapshot = configuration.snapshot || {};
+
+        let scoreAchat = 0;
+        let scoreVente = 0;
+        let scoreAttente = 0;
+
+        const indicateur = graphique.indicateur || "";
+        const categorie = analyseIA.categorie || "";
+        const risquePosition = Number(risque.risqueParPositionPourcent || 1);
+        const stopLoss = Number(risque.stopLossPourcent || 2);
+        const takeProfit = Number(risque.takeProfitPourcent || 4);
+
+        const commentaires = [];
+
+        if (indicateur === "EMA") {
+            scoreAchat += 1;
+            commentaires.push("EMA : indicateur utile pour suivre une tendance.");
+        }
+
+        if (indicateur === "RSI") {
+            scoreAttente += 1;
+            commentaires.push("RSI : vérifier les zones de surachat et de survente avant décision.");
+        }
+
+        if (indicateur === "MACD") {
+            scoreAttente += 1;
+            commentaires.push("MACD : attendre une confirmation claire du croisement.");
+        }
+
+        if (indicateur === "SUPERTREND") {
+            scoreAchat += 1;
+            scoreVente += 1;
+            commentaires.push("Supertrend : utile, mais peut donner des faux signaux en marché latéral.");
+        }
+
+        if (categorie === "analyse_technique") {
+            scoreAttente += 1;
+            commentaires.push("Analyse technique : confirmer avec supports, résistances et volume.");
+        }
+
+        if (categorie === "macroeconomie") {
+            scoreAttente += 2;
+            commentaires.push("Macroéconomie : sans données de taux, inflation, dollar et liquidité, il vaut mieux attendre.");
+        }
+
+        if (categorie === "donnees_on_chain") {
+            scoreAttente += 1;
+            commentaires.push("Données on-chain : confirmer avec MVRV, realized price ou flux des plateformes.");
+        }
+
+        if (categorie === "derives") {
+            scoreAttente += 1;
+            commentaires.push("Dérivés : vérifier funding rates, open interest et liquidations.");
+        }
+
+        if (categorie === "reglementation_risques") {
+            scoreAttente += 2;
+            commentaires.push("Réglementation et risques : prudence renforcée.");
+        }
+
+        if (risquePosition > 2) {
+            scoreAttente += 2;
+            commentaires.push("Risque supérieur à 2 % : prudence recommandée.");
+        }
+
+        if (stopLoss <= 0) {
+            scoreAttente += 3;
+            commentaires.push("Aucun stop loss valide : il ne faut pas entrer en position.");
+        }
+
+        if (takeProfit > stopLoss && stopLoss > 0) {
+            scoreAchat += 1;
+            commentaires.push("Ratio take profit / stop loss favorable, si le signal est confirmé.");
+        }
+
+        let decision = "ATTENDRE";
+        let classe = "attente";
+        let symbole = "🟡";
+
+        if (scoreAchat >= scoreVente + 2 && scoreAchat > scoreAttente) {
+            decision = "ACHETER";
+            classe = "achat";
+            symbole = "🟢";
+        }
+
+        if (scoreVente >= scoreAchat + 2 && scoreVente > scoreAttente) {
+            decision = "VENDRE";
+            classe = "vente";
+            symbole = "🔴";
+        }
+
+        afficherDecision(symbole + " " + decision, classe);
+
+        document.getElementById("resultat-analyse").textContent =
+            "DÉCISION IA\n" +
+            "===========\n\n" +
+
+            "Signal proposé : " + symbole + " " + decision + "\n\n" +
+
+            "Actif : " + (graphique.actifLibelle || graphique.actif || "Non défini") + "\n" +
+            "Code actif : " + (graphique.actif || "Non défini") + "\n" +
+            "Intervalle : " + (graphique.intervalleLibelle || graphique.intervalle || "Non défini") + "\n" +
+            "Indicateur : " + (graphique.indicateur || "Non défini") + "\n" +
+            "Catégorie : " + (analyseIA.categorieLibelle || analyseIA.categorie || "Non définie") + "\n" +
+            "Snapshot : " + (snapshot.url || "Aucun snapshot lié") + "\n\n" +
+
+            "SCORES INTERNES\n" +
+            "---------------\n" +
+            "Achat : " + scoreAchat + "\n" +
+            "Vente : " + scoreVente + "\n" +
+            "Attente : " + scoreAttente + "\n\n" +
+
+            "LECTURE\n" +
+            "-------\n" +
+            commentaires.map(function(commentaire) {
+                return "- " + commentaire;
+            }).join("\n") +
+
+            "\n\nRECOMMANDATIONS\n" +
+            "---------------\n" +
+            genererRecommandation(decision) +
+
+            "\n\nAVERTISSEMENT\n" +
+            "-------------\n" +
+            "Cette analyse est pédagogique. Ce n’est pas un conseil financier.";
+    }
+
+    function genererRecommandation(decision) {
+        if (decision === "ACHETER") {
+            return (
+                "- Acheter seulement si la tendance est confirmée.\n" +
+                "- Éviter d’acheter après une forte bougie verticale.\n" +
+                "- Placer un stop loss clair.\n" +
+                "- Chercher un ratio gain/perte minimal de 1:2.\n" +
+                "- Ne pas risquer plus de 1 % à 2 % du capital."
+            );
+        }
+
+        if (decision === "VENDRE") {
+            return (
+                "- Vendre seulement si la cassure baissière est confirmée.\n" +
+                "- Éviter de vendre directement sur un support majeur.\n" +
+                "- Surveiller les mèches de liquidation.\n" +
+                "- Protéger la position avec un stop loss.\n" +
+                "- Revoir la décision si le prix réintègre la zone cassée."
+            );
+        }
+
+        return (
+            "- Attendre une confirmation plus claire.\n" +
+            "- Vérifier les supports, les résistances et le volume.\n" +
+            "- Éviter les décisions impulsives.\n" +
+            "- Refaire l’analyse après une cassure nette ou un retour sur support.\n" +
+            "- Garder le capital disponible tant que le signal n’est pas clair."
+        );
+    }
+
+    function retour() {
+        window.location.href = "analyse-config-ia.html";
+    }
+
+    window.chargerConfiguration = chargerConfiguration;
+    window.chargerConfigurationLocale = chargerConfigurationLocale;
+    window.chargerConfigurationDepuisFichier = chargerConfigurationDepuisFichier;
+    window.analyserDecision = analyserDecision;
+    window.retour = retour;
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const boutonCharger = document.getElementById("btn-charger");
+        const boutonLocal = document.getElementById("btn-local");
+        const boutonAnalyser = document.getElementById("btn-analyser");
+        const boutonRetour = document.getElementById("btn-retour");
+        const inputFichier = document.getElementById("fichier-json");
+
+        if (boutonCharger) {
+            boutonCharger.addEventListener("click", chargerConfiguration);
+        }
+
+        if (boutonLocal) {
+            boutonLocal.addEventListener("click", chargerConfigurationLocale);
+        }
+
+        if (boutonAnalyser) {
+            boutonAnalyser.addEventListener("click", analyserDecision);
+        }
+
+        if (boutonRetour) {
+            boutonRetour.addEventListener("click", retour);
+        }
+
+        if (inputFichier) {
+            inputFichier.addEventListener("change", chargerConfigurationDepuisFichier);
+        }
+    });
+</script>
+
+</body>
+</html>
