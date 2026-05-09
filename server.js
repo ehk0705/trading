@@ -119,7 +119,7 @@ app.get("/", (req, res) => {
     res.json({
         ok: true,
         statut: "ok",
-        message: "Serveur Trading API actif.",
+        message: "Serveur Trading API actif - version 2026-05-09.",
         serveur: "trading",
         databaseUrlConfiguree: Boolean(process.env.DATABASE_URL),
         routes: [
