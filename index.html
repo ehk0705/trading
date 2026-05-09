@@ -982,8 +982,8 @@
             intervalle: configurationActuelle.graphique.intervalle || null,
             nom_fichier: nomFichier || ("capture-" + new Date().toISOString()),
             configuration_json: configurationActuelle,
-            screenshot_base64: screenshotBase64 || null
-        };
+            /*screenshot_base64: screenshotBase64 || null */
+			screenshot_base64: null
 
         console.log("URL PostgreSQL :", urlCaptures);
         console.log("Données envoyées :", donneesAEnregistrer);
@@ -1053,6 +1053,7 @@
         afficherEtatServeur("warning", "Lecture /api/captures...");
 
         try {
+		    console.log("URL utilisée pour l'enregistrement :", urlCaptures);
             const resultat = await appelerJson(urlCaptures, { method: "GET", cache: "no-store" });
             select.innerHTML = '<option value="">Choisir une capture</option>';
 
