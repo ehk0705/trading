@@ -976,14 +976,15 @@
 
         const screenshotBase64 = obtenirScreenshotBase64DepuisConfiguration();
 
-        const donneesAEnregistrer = {
-            actif: configurationActuelle.graphique.actif || "NON_RENSEIGNE",
-            indicateur: configurationActuelle.graphique.indicateur || null,
-            intervalle: configurationActuelle.graphique.intervalle || null,
-            nom_fichier: nomFichier || ("capture-" + new Date().toISOString()),
-            configuration_json: configurationActuelle,
-            /*screenshot_base64: screenshotBase64 || null */
-			screenshot_base64: null
+ const donneesAEnregistrer = {
+    actif: configurationActuelle.graphique.actif || "NON_RENSEIGNE",
+    indicateur: configurationActuelle.graphique.indicateur || null,
+    intervalle: configurationActuelle.graphique.intervalle || null,
+    nom_fichier: nomFichier || ("capture-" + new Date().toISOString()),
+    configuration_json: configurationActuelle,
+    /* screenshot_base64: screenshotBase64 || null */
+    screenshot_base64: null
+};
 
         console.log("URL PostgreSQL :", urlCaptures);
         console.log("Données envoyées :", donneesAEnregistrer);
@@ -998,14 +999,31 @@
             "Nom fichier : " + donneesAEnregistrer.nom_fichier
         );
 
-        const resultat = await appelerJson(urlCaptures, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            cache: "no-store",
-            body: JSON.stringify(donneesAEnregistrer)
-        });
+const reponse = await fetch(urlCaptures, {
+    method: "POST",
+    headers: {
+        "Content-Type": "application/json"
+    },
+    cache: "no-store",
+    body: JSON.stringify(donneesAEnregistrer)
+});
+
+const texte = await reponse.text();
+
+console.log("Statut HTTP :", reponse.status);
+console.log("Réponse brute serveur :", texte);
+
+let resultat;
+
+try {
+    resultat = JSON.parse(texte);
+} catch (erreurJson) {
+    throw new Error("Réponse non JSON du serveur : " + texte);
+}
+
+if (!reponse.ok || resultat.ok !== true) {
+    throw new Error(resultat.detail || resultat.message || "Erreur serveur inconnue.");
+}
 
         console.log("Réponse PostgreSQL :", resultat);
 
