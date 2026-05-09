@@ -1063,7 +1063,7 @@ if (!reponse.ok || resultat.ok !== true) {
     }
 }
     async function chargerListeCapturesPostgres(afficherAlerte = true) {
-        const urlCaptures = getApiCapturesUrl();
+        const urlCaptures = "https://trading-g8ie.onrender.com/api/captures";
         const select = document.getElementById("liste-captures-postgres");
         if (!select) return;
 
