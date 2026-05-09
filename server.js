@@ -54,7 +54,6 @@ app.options("*", cors());
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
-// Optionnel : sert les fichiers statiques si index.html est aussi sur Render
 app.use(express.static(path.join(__dirname)));
 
 /* =========================
@@ -130,6 +129,8 @@ app.get("/", (req, res) => {
             "GET /api/verifier-db",
             "GET /api/verifier-table",
             "GET /api/verifier-captures",
+            "GET /api/structure-table",
+            "GET /api/contenu-table",
             "POST /api/analyse",
             "POST /api/marche",
             "POST /api/analyse-pattern",
@@ -250,6 +251,83 @@ app.get("/api/verifier-captures", async (req, res) => {
         });
     } catch (erreur) {
         return reponseErreur(res, 500, "Impossible de lire la table trading_capture.", erreur);
+    }
+});
+
+/* =========================
+   STRUCTURE DE LA TABLE
+========================= */
+
+app.get("/api/structure-table", async (req, res) => {
+    try {
+        await creerTableSiAbsente();
+
+        const db = obtenirPool();
+
+        const resultat = await db.query(`
+            SELECT
+                column_name AS colonne,
+                data_type AS type,
+                is_nullable AS nullable,
+                column_default AS valeur_par_defaut
+            FROM information_schema.columns
+            WHERE table_schema = 'public'
+            AND table_name = 'trading_capture'
+            ORDER BY ordinal_position;
+        `);
+
+        res.json({
+            ok: true,
+            statut: "ok",
+            table: "trading_capture",
+            colonnes: resultat.rows
+        });
+    } catch (erreur) {
+        return reponseErreur(res, 500, "Impossible de lire la structure de la table.", erreur);
+    }
+});
+
+/* =========================
+   CONTENU DE LA TABLE
+========================= */
+
+app.get("/api/contenu-table", async (req, res) => {
+    try {
+        await creerTableSiAbsente();
+
+        const db = obtenirPool();
+
+        const resultat = await db.query(`
+            SELECT
+                id,
+                actif,
+                indicateur,
+                intervalle,
+                nom_fichier,
+                configuration_json,
+                CASE
+                    WHEN screenshot_base64 IS NULL THEN false
+                    ELSE true
+                END AS contient_screenshot,
+                CASE
+                    WHEN screenshot_base64 IS NULL THEN 0
+                    ELSE LENGTH(screenshot_base64)
+                END AS taille_screenshot,
+                date_capture
+            FROM trading_capture
+            ORDER BY date_capture DESC
+            LIMIT 100;
+        `);
+
+        res.json({
+            ok: true,
+            statut: "ok",
+            table: "trading_capture",
+            totalRetourne: resultat.rows.length,
+            contenu: resultat.rows
+        });
+    } catch (erreur) {
+        return reponseErreur(res, 500, "Impossible de lire le contenu de la table.", erreur);
     }
 });
 
