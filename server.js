@@ -20,15 +20,17 @@ const PORT = process.env.PORT || 3000;
 
 const originesAutorisees = [
     "http://localhost",
+    "http://localhost:80",
     "http://localhost:3000",
     "http://127.0.0.1",
+    "http://127.0.0.1:80",
     "http://127.0.0.1:3000",
     "https://ehk0705.github.io",
     "https://trading-g8ie.onrender.com",
     "https://trading-pattern-api.onrender.com"
 ];
 
-app.use(cors({
+const optionsCors = {
     origin: function (origin, callback) {
         if (!origin) {
             return callback(null, true);
@@ -41,11 +43,43 @@ app.use(cors({
         return callback(null, true);
     },
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    allowedHeaders: [
+        "Content-Type",
+        "Authorization",
+        "Accept",
+        "Origin",
+        "X-Requested-With"
+    ],
+    exposedHeaders: ["Content-Type"],
+    credentials: false,
     optionsSuccessStatus: 204
-}));
+};
 
-app.options("*", cors());
+app.use(cors(optionsCors));
+
+app.use((req, res, next) => {
+    const origin = req.headers.origin;
+
+    if (!origin || originesAutorisees.includes(origin)) {
+        res.header("Access-Control-Allow-Origin", origin || "*");
+    } else {
+        res.header("Access-Control-Allow-Origin", "*");
+    }
+
+    res.header("Vary", "Origin");
+    res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+    res.header(
+        "Access-Control-Allow-Headers",
+        "Content-Type, Authorization, Accept, Origin, X-Requested-With"
+    );
+    res.header("Access-Control-Max-Age", "86400");
+
+    if (req.method === "OPTIONS") {
+        return res.sendStatus(204);
+    }
+
+    next();
+});
 
 /* =========================
    MIDDLEWARES
