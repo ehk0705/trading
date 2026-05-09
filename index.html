@@ -959,51 +959,91 @@
         return configurationActuelle.snapshot.screenshotBase64 || null;
     }
 
-    async function enregistrerCapturePostgres() {
+ async function enregistrerCapturePostgres() {
+    try {
         capturerConfigurationTradingView(false);
+
+        if (!configurationActuelle) {
+            throw new Error("configurationActuelle est vide ou non définie.");
+        }
+
+        if (!configurationActuelle.graphique) {
+            throw new Error("configurationActuelle.graphique est vide ou non défini.");
+        }
 
         const urlCaptures = getApiCapturesUrl();
         const nomFichier = genererNomCapturePostgres(configurationActuelle);
 
+        const screenshotBase64 = obtenirScreenshotBase64DepuisConfiguration();
+
         const donneesAEnregistrer = {
-            actif: configurationActuelle.graphique.actif,
-            indicateur: configurationActuelle.graphique.indicateur,
-            intervalle: configurationActuelle.graphique.intervalle,
-            nom_fichier: nomFichier,
+            actif: configurationActuelle.graphique.actif || "NON_RENSEIGNE",
+            indicateur: configurationActuelle.graphique.indicateur || null,
+            intervalle: configurationActuelle.graphique.intervalle || null,
+            nom_fichier: nomFichier || ("capture-" + new Date().toISOString()),
             configuration_json: configurationActuelle,
-            screenshot_base64: obtenirScreenshotBase64DepuisConfiguration()
+            screenshot_base64: screenshotBase64 || null
         };
+
+        console.log("URL PostgreSQL :", urlCaptures);
+        console.log("Données envoyées :", donneesAEnregistrer);
 
         afficherStatus("Enregistrement dans PostgreSQL...");
         afficherEtatServeur("warning", "Envoi vers PostgreSQL...");
-        afficherInfosServeur("ENVOI EN COURS\n--------------\nRoute : " + urlCaptures + "\nTable : trading_capture\nNom fichier : " + nomFichier);
+        afficherInfosServeur(
+            "ENVOI EN COURS\n" +
+            "--------------\n" +
+            "Route : " + urlCaptures + "\n" +
+            "Table : trading_capture\n" +
+            "Nom fichier : " + donneesAEnregistrer.nom_fichier
+        );
 
-        try {
-            const resultat = await appelerJson(urlCaptures, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                cache: "no-store",
-                body: JSON.stringify(donneesAEnregistrer)
-            });
+        const resultat = await appelerJson(urlCaptures, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            cache: "no-store",
+            body: JSON.stringify(donneesAEnregistrer)
+        });
 
-            if (resultat.statut !== "ok") {
-                throw new Error("Réponse serveur incorrecte : " + JSON.stringify(resultat));
-            }
+        console.log("Réponse PostgreSQL :", resultat);
 
-            localStorage.setItem("configurationTradingViewIA", JSON.stringify(configurationActuelle));
-            afficherStatus("Configuration enregistrée dans PostgreSQL.");
-            afficherEtatServeur("ok", "Enregistrement réussi");
-            afficherInfosServeur("ENREGISTREMENT RÉUSSI\n----------------------\n" + JSON.stringify(resultat, null, 4));
-            await chargerListeCapturesPostgres(false);
-            alert("Configuration enregistrée dans la base de données.");
-        } catch (erreur) {
-            afficherStatus("Erreur lors de l'enregistrement.");
-            afficherEtatServeur("error", "Erreur base de données");
-            afficherInfosServeur("ERREUR D'ENREGISTREMENT\n-----------------------\nRoute : " + urlCaptures + "\n\n" + erreur.message);
-            alert("Impossible d'enregistrer dans la base de données.");
+        if (!resultat || resultat.ok !== true || resultat.statut !== "ok") {
+            throw new Error("Réponse serveur incorrecte : " + JSON.stringify(resultat));
         }
-    }
 
+        localStorage.setItem(
+            "configurationTradingViewIA",
+            JSON.stringify(configurationActuelle)
+        );
+
+        afficherStatus("Configuration enregistrée dans PostgreSQL.");
+        afficherEtatServeur("ok", "Enregistrement réussi");
+        afficherInfosServeur(
+            "ENREGISTREMENT RÉUSSI\n" +
+            "----------------------\n" +
+            JSON.stringify(resultat, null, 4)
+        );
+
+        await chargerListeCapturesPostgres(false);
+
+        alert("Configuration enregistrée dans la base de données.");
+
+    } catch (erreur) {
+        console.error("Erreur complète d'enregistrement PostgreSQL :", erreur);
+
+        afficherStatus("Erreur lors de l'enregistrement.");
+        afficherEtatServeur("error", "Erreur base de données");
+        afficherInfosServeur(
+            "ERREUR D'ENREGISTREMENT\n" +
+            "-----------------------\n" +
+            erreur.message
+        );
+
+        alert("Impossible d'enregistrer dans la base de données : " + erreur.message);
+    }
+}
     async function chargerListeCapturesPostgres(afficherAlerte = true) {
         const urlCaptures = getApiCapturesUrl();
         const select = document.getElementById("liste-captures-postgres");
