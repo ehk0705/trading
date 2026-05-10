@@ -504,6 +504,23 @@
     </section>
 
     <aside class="side-panel">
+        <h2>Serveur Node.js Render</h2>
+
+        <div id="etatServeur" class="server-status neutral">Serveur non testé</div>
+
+        <div class="form-block">
+            <label for="api-url">Adresse API Render</label>
+            <input type="text" id="api-url" value="https://trading-g8ie.onrender.com/api/analyse">
+        </div>
+
+        <div class="button-zone">
+            <button class="btn-copy" onclick="testerServeur()">Tester serveur</button>
+            <button class="btn-db" onclick="creerTablePostgres()">Créer table</button>
+            <button class="btn-dark" onclick="verifierTablePostgres()">Vérifier table</button>
+            <button class="btn-tv" onclick="ouvrirServeurRender()">Ouvrir serveur</button>
+        </div>
+
+        <div id="infosServeur" class="server-info">Aucun test effectué.</div>
 
         <div class="form-block" style="margin-top:12px;">
             <label for="liste-captures-postgres">Captures PostgreSQL</label>
