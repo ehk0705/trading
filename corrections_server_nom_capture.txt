@@ -1,0 +1,179 @@
+CORRECTIONS À INTÉGRER DANS server.js
+=====================================
+
+1) Ajouter ces fonctions juste après reponseErreur(...)
+------------------------------------------------------
+
+function nettoyerNomCapture(valeur) {
+    return String(valeur || "NON_RENSEIGNE")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-zA-Z0-9-_]/g, "-")
+        .replace(/-+/g, "-")
+        .replace(/^-|-$/g, "");
+}
+
+function genererTimestampCapture() {
+    const maintenant = new Date();
+    const annee = maintenant.getFullYear();
+    const mois = String(maintenant.getMonth() + 1).padStart(2, "0");
+    const jour = String(maintenant.getDate()).padStart(2, "0");
+    const heure = String(maintenant.getHours()).padStart(2, "0");
+    const minute = String(maintenant.getMinutes()).padStart(2, "0");
+    const seconde = String(maintenant.getSeconds()).padStart(2, "0");
+    const milli = String(maintenant.getMilliseconds()).padStart(3, "0");
+    return annee + mois + jour + "-" + heure + minute + seconde + "-" + milli;
+}
+
+function genererNomCapture(actif, indicateur) {
+    return nettoyerNomCapture(actif) + "-" + nettoyerNomCapture(indicateur) + "-" + genererTimestampCapture();
+}
+
+
+2) Remplacer complètement creerTableSiAbsente() par ceci
+--------------------------------------------------------
+
+async function creerTableSiAbsente() {
+    const db = obtenirPool();
+
+    await db.query(`
+        CREATE TABLE IF NOT EXISTS trading_capture (
+            id SERIAL PRIMARY KEY,
+            actif VARCHAR(100) NOT NULL,
+            indicateur VARCHAR(100),
+            intervalle VARCHAR(50),
+            nom_capture VARCHAR(255),
+            nom_fichier VARCHAR(255),
+            configuration_json JSONB NOT NULL,
+            screenshot_base64 TEXT,
+            date_capture TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+    `);
+
+    await db.query(`
+        ALTER TABLE trading_capture
+        ADD COLUMN IF NOT EXISTS nom_capture VARCHAR(255);
+    `);
+
+    await db.query(`
+        UPDATE trading_capture
+        SET nom_capture = COALESCE(
+            NULLIF(nom_capture, ''),
+            NULLIF(nom_fichier, ''),
+            CONCAT(
+                REPLACE(COALESCE(NULLIF(actif, ''), 'ACTIF'), ':', '-'),
+                '-',
+                COALESCE(NULLIF(indicateur, ''), 'INDICATEUR'),
+                '-',
+                TO_CHAR(COALESCE(date_capture, CURRENT_TIMESTAMP), 'YYYYMMDD-HH24MISS'),
+                '-',
+                id::TEXT
+            )
+        )
+        WHERE nom_capture IS NULL OR nom_capture = '';
+    `);
+
+    await db.query(`
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_trading_capture_nom_capture_unique
+        ON trading_capture (nom_capture);
+    `);
+}
+
+
+3) Dans POST /api/captures, remplacer la déstructuration par ceci
+----------------------------------------------------------------
+
+        const {
+            actif,
+            symbole,
+            indicateur,
+            intervalle,
+            nom_capture,
+            nom_fichier,
+            configuration_json,
+            configuration,
+            screenshot_base64,
+            image,
+            screenshot
+        } = req.body || {};
+
+        const actifFinal = actif || symbole || "NON_RENSEIGNE";
+        const indicateurFinal = indicateur || null;
+        const intervalleFinal = intervalle || null;
+        const nomCaptureFinal = nom_capture || nom_fichier || genererNomCapture(actifFinal, indicateurFinal || "INDICATEUR");
+        const nomFichierFinal = nom_fichier || nomCaptureFinal;
+        const configurationFinale = configuration_json || configuration || req.body || {};
+        const screenshotFinal = screenshot_base64 || screenshot || image || null;
+
+
+4) Dans POST /api/captures, remplacer la requête INSERT par ceci
+---------------------------------------------------------------
+
+        const resultat = await db.query(
+            `
+            INSERT INTO trading_capture
+            (
+                actif,
+                indicateur,
+                intervalle,
+                nom_capture,
+                nom_fichier,
+                configuration_json,
+                screenshot_base64
+            )
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            RETURNING id, actif, indicateur, intervalle, nom_capture, nom_fichier, date_capture
+            `,
+            [
+                actifFinal,
+                indicateurFinal,
+                intervalleFinal,
+                nomCaptureFinal,
+                nomFichierFinal,
+                configurationFinale,
+                screenshotFinal
+            ]
+        );
+
+
+5) Dans GET /api/captures, ajouter nom_capture dans le SELECT
+-------------------------------------------------------------
+
+        const resultat = await db.query(`
+            SELECT
+                id,
+                actif,
+                indicateur,
+                intervalle,
+                nom_capture,
+                nom_fichier,
+                date_capture
+            FROM trading_capture
+            ORDER BY date_capture DESC
+            LIMIT 100;
+        `);
+
+
+6) Dans GET /api/contenu-table, ajouter nom_capture dans le SELECT
+------------------------------------------------------------------
+
+            SELECT
+                id,
+                actif,
+                indicateur,
+                intervalle,
+                nom_capture,
+                nom_fichier,
+                configuration_json,
+                CASE
+                    WHEN screenshot_base64 IS NULL THEN false
+                    ELSE true
+                END AS contient_screenshot,
+                CASE
+                    WHEN screenshot_base64 IS NULL THEN 0
+                    ELSE LENGTH(screenshot_base64)
+                END AS taille_screenshot,
+                date_capture
+            FROM trading_capture
+            ORDER BY date_capture DESC
+            LIMIT 100;

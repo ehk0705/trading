@@ -119,6 +119,38 @@ function obtenirPool() {
     return pool;
 }
 
+function nettoyerNomCapture(valeur) {
+    return String(valeur || "NON_RENSEIGNE")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-zA-Z0-9-_]/g, "-")
+        .replace(/-+/g, "-")
+        .replace(/^-|-$/g, "")
+        .toUpperCase();
+}
+
+function genererTimestampCapture() {
+    const maintenant = new Date();
+
+    const annee = maintenant.getFullYear();
+    const mois = String(maintenant.getMonth() + 1).padStart(2, "0");
+    const jour = String(maintenant.getDate()).padStart(2, "0");
+    const heure = String(maintenant.getHours()).padStart(2, "0");
+    const minute = String(maintenant.getMinutes()).padStart(2, "0");
+    const seconde = String(maintenant.getSeconds()).padStart(2, "0");
+    const milliseconde = String(maintenant.getMilliseconds()).padStart(3, "0");
+
+    return annee + mois + jour + "-" + heure + minute + seconde + milliseconde;
+}
+
+function genererNomCaptureUnique(actif, indicateur) {
+    const actifNettoye = nettoyerNomCapture(actif);
+    const indicateurNettoye = nettoyerNomCapture(indicateur || "INDICATEUR");
+    const timestamp = genererTimestampCapture();
+
+    return actifNettoye + "-" + indicateurNettoye + "-" + timestamp;
+}
+
 async function creerTableSiAbsente() {
     const db = obtenirPool();
 
@@ -129,10 +161,22 @@ async function creerTableSiAbsente() {
             indicateur VARCHAR(100),
             intervalle VARCHAR(50),
             nom_fichier VARCHAR(255),
+            nom_capture VARCHAR(255),
             configuration_json JSONB NOT NULL,
             screenshot_base64 TEXT,
             date_capture TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
+    `);
+
+    await db.query(`
+        ALTER TABLE trading_capture
+        ADD COLUMN IF NOT EXISTS nom_capture VARCHAR(255);
+    `);
+
+    await db.query(`
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_trading_capture_nom_capture_unique
+        ON trading_capture (nom_capture)
+        WHERE nom_capture IS NOT NULL;
     `);
 }
 
@@ -153,7 +197,7 @@ app.get("/", (req, res) => {
     res.json({
         ok: true,
         statut: "ok",
-        message: "Serveur Trading API actif - version 2026-05-09.",
+        message: "Serveur Trading API actif - version 2026-05-10.",
         serveur: "trading",
         databaseUrlConfiguree: Boolean(process.env.DATABASE_URL),
         routes: [
@@ -231,32 +275,54 @@ app.get("/api/creer-table", async (req, res) => {
             ok: true,
             statut: "ok",
             table: "trading_capture",
-            message: "La table trading_capture existe ou vient d'être créée.",
+            message: "La table trading_capture existe ou vient d'être créée. La colonne nom_capture et son index unique sont présents.",
             date: new Date().toISOString()
         });
     } catch (erreur) {
-        return reponseErreur(res, 500, "Impossible de créer la table trading_capture.", erreur);
+        return reponseErreur(res, 500, "Impossible de créer ou modifier la table trading_capture.", erreur);
     }
 });
 
 app.get("/api/verifier-table", async (req, res) => {
     try {
+        await creerTableSiAbsente();
+
         const db = obtenirPool();
 
-        const resultat = await db.query(`
+        const resultatTable = await db.query(`
             SELECT table_name
             FROM information_schema.tables
             WHERE table_schema = 'public'
             AND table_name = 'trading_capture';
         `);
 
-        const tableExiste = resultat.rows.length > 0;
+        const resultatColonne = await db.query(`
+            SELECT column_name
+            FROM information_schema.columns
+            WHERE table_schema = 'public'
+            AND table_name = 'trading_capture'
+            AND column_name = 'nom_capture';
+        `);
+
+        const resultatIndex = await db.query(`
+            SELECT indexname
+            FROM pg_indexes
+            WHERE schemaname = 'public'
+            AND tablename = 'trading_capture'
+            AND indexname = 'idx_trading_capture_nom_capture_unique';
+        `);
+
+        const tableExiste = resultatTable.rows.length > 0;
+        const nomCaptureExiste = resultatColonne.rows.length > 0;
+        const indexUniqueExiste = resultatIndex.rows.length > 0;
 
         res.json({
             ok: true,
             statut: "ok",
             table: "trading_capture",
             tableExiste,
+            nomCaptureExiste,
+            indexUniqueExiste,
             message: tableExiste
                 ? "La table trading_capture existe bien."
                 : "La table trading_capture n'existe pas. Ouvrir /api/creer-table pour la créer."
@@ -298,7 +364,7 @@ app.get("/api/structure-table", async (req, res) => {
 
         const db = obtenirPool();
 
-        const resultat = await db.query(`
+        const resultatColonnes = await db.query(`
             SELECT
                 column_name AS colonne,
                 data_type AS type,
@@ -310,11 +376,22 @@ app.get("/api/structure-table", async (req, res) => {
             ORDER BY ordinal_position;
         `);
 
+        const resultatIndex = await db.query(`
+            SELECT
+                indexname AS index,
+                indexdef AS definition
+            FROM pg_indexes
+            WHERE schemaname = 'public'
+            AND tablename = 'trading_capture'
+            ORDER BY indexname;
+        `);
+
         res.json({
             ok: true,
             statut: "ok",
             table: "trading_capture",
-            colonnes: resultat.rows
+            colonnes: resultatColonnes.rows,
+            index: resultatIndex.rows
         });
     } catch (erreur) {
         return reponseErreur(res, 500, "Impossible de lire la structure de la table.", erreur);
@@ -338,6 +415,7 @@ app.get("/api/contenu-table", async (req, res) => {
                 indicateur,
                 intervalle,
                 nom_fichier,
+                nom_capture,
                 configuration_json,
                 CASE
                     WHEN screenshot_base64 IS NULL THEN false
@@ -399,6 +477,7 @@ app.post("/api/captures", async (req, res) => {
             indicateur,
             intervalle,
             nom_fichier,
+            nom_capture,
             configuration_json,
             configuration,
             screenshot_base64,
@@ -407,8 +486,14 @@ app.post("/api/captures", async (req, res) => {
         } = req.body || {};
 
         const actifFinal = actif || symbole || "NON_RENSEIGNE";
+        const indicateurFinal = indicateur || null;
+        const intervalleFinal = intervalle || null;
         const configurationFinale = configuration_json || configuration || req.body || {};
         const screenshotFinal = screenshot_base64 || screenshot || image || null;
+
+        const nomCaptureFinal =
+            nom_capture ||
+            genererNomCaptureUnique(actifFinal, indicateurFinal || "INDICATEUR");
 
         const resultat = await db.query(
             `
@@ -418,17 +503,26 @@ app.post("/api/captures", async (req, res) => {
                 indicateur,
                 intervalle,
                 nom_fichier,
+                nom_capture,
                 configuration_json,
                 screenshot_base64
             )
-            VALUES ($1, $2, $3, $4, $5, $6)
-            RETURNING id, actif, indicateur, intervalle, nom_fichier, date_capture
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            RETURNING
+                id,
+                actif,
+                indicateur,
+                intervalle,
+                nom_fichier,
+                nom_capture,
+                date_capture
             `,
             [
                 actifFinal,
-                indicateur || null,
-                intervalle || null,
+                indicateurFinal,
+                intervalleFinal,
                 nom_fichier || null,
+                nomCaptureFinal,
                 configurationFinale,
                 screenshotFinal
             ]
@@ -466,6 +560,7 @@ app.get("/api/captures", async (req, res) => {
                 indicateur,
                 intervalle,
                 nom_fichier,
+                nom_capture,
                 date_capture
             FROM trading_capture
             ORDER BY date_capture DESC
