@@ -119,6 +119,21 @@ function obtenirPool() {
     return pool;
 }
 
+async function ajouterColonneNomCapture() {
+    const db = obtenirPool();
+
+    await db.query(`
+        ALTER TABLE trading_capture
+        ADD COLUMN IF NOT EXISTS nom_capture VARCHAR(255);
+    `);
+
+    await db.query(`
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_trading_capture_nom_capture_unique
+        ON trading_capture (nom_capture)
+        WHERE nom_capture IS NOT NULL;
+    `);
+}
+
 async function creerTableSiAbsente() {
     const db = obtenirPool();
 
@@ -135,16 +150,7 @@ async function creerTableSiAbsente() {
         );
     `);
 
-    await db.query(`
-        ALTER TABLE trading_capture
-        ADD COLUMN IF NOT EXISTS nom_capture VARCHAR(255);
-    `);
-
-    await db.query(`
-        CREATE UNIQUE INDEX IF NOT EXISTS idx_trading_capture_nom_capture_unique
-        ON trading_capture (nom_capture)
-        WHERE nom_capture IS NOT NULL;
-    `);
+    await ajouterColonneNomCapture();
 }
 
 function reponseErreur(res, status, message, erreur = null) {
@@ -164,13 +170,14 @@ app.get("/", (req, res) => {
     res.json({
         ok: true,
         statut: "ok",
-        message: "Serveur Trading API actif - version 2026-05-10.",
+        message: "Serveur Trading API actif - version 2026-05-10 avec nom_capture.",
         serveur: "trading",
         databaseUrlConfiguree: Boolean(process.env.DATABASE_URL),
         routes: [
             "GET /api/test",
             "GET /api/cors-test",
             "GET /api/creer-table",
+            "GET /api/ajouter-nom-capture",
             "GET /api/verifier-db",
             "GET /api/verifier-table",
             "GET /api/verifier-captures",
@@ -242,11 +249,29 @@ app.get("/api/creer-table", async (req, res) => {
             ok: true,
             statut: "ok",
             table: "trading_capture",
-            message: "La table trading_capture existe ou vient d'être créée. La colonne nom_capture est disponible.",
+            message: "La table trading_capture existe ou vient d'être créée. La colonne nom_capture a été ajoutée si elle était absente.",
             date: new Date().toISOString()
         });
     } catch (erreur) {
-        return reponseErreur(res, 500, "Impossible de créer la table trading_capture.", erreur);
+        return reponseErreur(res, 500, "Impossible de créer ou modifier la table trading_capture.", erreur);
+    }
+});
+
+app.get("/api/ajouter-nom-capture", async (req, res) => {
+    try {
+        await creerTableSiAbsente();
+        await ajouterColonneNomCapture();
+
+        res.json({
+            ok: true,
+            statut: "ok",
+            table: "trading_capture",
+            colonne: "nom_capture",
+            message: "La colonne nom_capture a été ajoutée ou existait déjà.",
+            date: new Date().toISOString()
+        });
+    } catch (erreur) {
+        return reponseErreur(res, 500, "Impossible d'ajouter la colonne nom_capture.", erreur);
     }
 });
 
@@ -271,8 +296,17 @@ app.get("/api/verifier-table", async (req, res) => {
             AND column_name = 'nom_capture';
         `);
 
+        const resultatIndex = await db.query(`
+            SELECT indexname
+            FROM pg_indexes
+            WHERE schemaname = 'public'
+            AND tablename = 'trading_capture'
+            AND indexname = 'idx_trading_capture_nom_capture_unique';
+        `);
+
         const tableExiste = resultatTable.rows.length > 0;
         const nomCaptureExiste = resultatNomCapture.rows.length > 0;
+        const indexNomCaptureExiste = resultatIndex.rows.length > 0;
 
         res.json({
             ok: true,
@@ -280,6 +314,7 @@ app.get("/api/verifier-table", async (req, res) => {
             table: "trading_capture",
             tableExiste,
             nomCaptureExiste,
+            indexNomCaptureExiste,
             message: tableExiste
                 ? "La table trading_capture existe bien."
                 : "La table trading_capture n'existe pas. Ouvrir /api/creer-table pour la créer."
@@ -450,7 +485,14 @@ app.post("/api/captures", async (req, res) => {
                 screenshot_base64
             )
             VALUES ($1, $2, $3, $4, $5, $6, $7)
-            RETURNING id, actif, indicateur, intervalle, nom_fichier, nom_capture, date_capture
+            RETURNING
+                id,
+                actif,
+                indicateur,
+                intervalle,
+                nom_fichier,
+                nom_capture,
+                date_capture
             `,
             [
                 actifFinal,
