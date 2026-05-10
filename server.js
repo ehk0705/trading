@@ -119,38 +119,6 @@ function obtenirPool() {
     return pool;
 }
 
-function nettoyerNomCapture(valeur) {
-    return String(valeur || "NON_RENSEIGNE")
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .replace(/[^a-zA-Z0-9-_]/g, "-")
-        .replace(/-+/g, "-")
-        .replace(/^-|-$/g, "")
-        .toUpperCase();
-}
-
-function genererTimestampCapture() {
-    const maintenant = new Date();
-
-    const annee = maintenant.getFullYear();
-    const mois = String(maintenant.getMonth() + 1).padStart(2, "0");
-    const jour = String(maintenant.getDate()).padStart(2, "0");
-    const heure = String(maintenant.getHours()).padStart(2, "0");
-    const minute = String(maintenant.getMinutes()).padStart(2, "0");
-    const seconde = String(maintenant.getSeconds()).padStart(2, "0");
-    const milliseconde = String(maintenant.getMilliseconds()).padStart(3, "0");
-
-    return annee + mois + jour + "-" + heure + minute + seconde + milliseconde;
-}
-
-function genererNomCapture(actif, indicateur) {
-    const actifNettoye = nettoyerNomCapture(actif);
-    const indicateurNettoye = nettoyerNomCapture(indicateur || "INDICATEUR");
-    const timestamp = genererTimestampCapture();
-
-    return actifNettoye + "-" + indicateurNettoye + "-" + timestamp;
-}
-
 async function creerTableSiAbsente() {
     const db = obtenirPool();
 
@@ -161,7 +129,6 @@ async function creerTableSiAbsente() {
             indicateur VARCHAR(100),
             intervalle VARCHAR(50),
             nom_fichier VARCHAR(255),
-            nom_capture VARCHAR(255),
             configuration_json JSONB NOT NULL,
             screenshot_base64 TEXT,
             date_capture TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -465,14 +432,10 @@ app.post("/api/captures", async (req, res) => {
         } = req.body || {};
 
         const actifFinal = actif || symbole || "NON_RENSEIGNE";
-        const indicateurFinal = indicateur || null;
         const configurationFinale = configuration_json || configuration || req.body || {};
         const screenshotFinal = screenshot_base64 || screenshot || image || null;
 
-        const nomCaptureFinal =
-            nom_capture ||
-            nom_fichier ||
-            genererNomCapture(actifFinal, indicateurFinal);
+        const nomCaptureFinal = nom_capture || nom_fichier || null;
 
         const resultat = await db.query(
             `
@@ -487,18 +450,11 @@ app.post("/api/captures", async (req, res) => {
                 screenshot_base64
             )
             VALUES ($1, $2, $3, $4, $5, $6, $7)
-            RETURNING
-                id,
-                actif,
-                indicateur,
-                intervalle,
-                nom_fichier,
-                nom_capture,
-                date_capture
+            RETURNING id, actif, indicateur, intervalle, nom_fichier, nom_capture, date_capture
             `,
             [
                 actifFinal,
-                indicateurFinal,
+                indicateur || null,
                 intervalle || null,
                 nom_fichier || nomCaptureFinal,
                 nomCaptureFinal,
