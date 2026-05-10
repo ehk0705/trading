@@ -615,8 +615,7 @@
             .replace(/\/api\/marche\/?$/, "")
             .replace(/\/api\/captures\/?$/, "")
             .replace(/\/api\/creer-table\/?$/, "")
-            .replace(/\/api\/verifier-table\/?$/, "")
-            .replace(/\/api\/verifier-db\/?$/, "");
+            .replace(/\/api\/verifier-table\/?$/, "");
 
         if (!valeurChamp.startsWith("http://") && !valeurChamp.startsWith("https://")) {
             return API_BASE_URL_PAR_DEFAUT;
@@ -628,7 +627,14 @@
     function getApiAnalyseUrl() { return getApiBaseUrl() + "/api/analyse"; }
     function getApiTestUrl() { return getApiBaseUrl() + "/api/test"; }
     function getApiMarcheUrl() { return getApiBaseUrl() + "/api/marche"; }
-    function getApiCapturesUrl() { return getApiBaseUrl() + "/api/captures"; }
+
+    /*
+        IMPORTANT :
+        Cette route reste volontairement fixe.
+        Ne pas remplacer par getApiBaseUrl(), car l'enregistrement fonctionnait ainsi.
+    */
+    function getApiCapturesUrl() { return API_BASE_URL_PAR_DEFAUT + "/api/captures"; }
+
     function getApiCreerTableUrl() { return getApiBaseUrl() + "/api/creer-table"; }
     function getApiVerifierTableUrl() { return getApiBaseUrl() + "/api/verifier-table"; }
 
@@ -825,18 +831,18 @@
 
     async function creerTablePostgres() {
         const url = getApiCreerTableUrl();
-        afficherEtatServeur("warning", "Création ou mise à jour de la table...");
+        afficherEtatServeur("warning", "Création de la table...");
         afficherInfosServeur("Appel :\n" + url);
 
         try {
             const resultat = await appelerJson(url, { method: "GET", cache: "no-store" });
             afficherEtatServeur("ok", "Table PostgreSQL prête");
             afficherInfosServeur(JSON.stringify(resultat, null, 4));
-            alert("Table PostgreSQL créée ou mise à jour.");
+            alert("Table PostgreSQL créée ou déjà existante.");
         } catch (erreur) {
             afficherEtatServeur("error", "Erreur table PostgreSQL");
-            afficherInfosServeur("Impossible de créer ou modifier la table.\n\n" + erreur.message);
-            alert("Impossible de créer ou modifier la table PostgreSQL.");
+            afficherInfosServeur("Impossible de créer la table.\n\n" + erreur.message);
+            alert("Impossible de créer la table PostgreSQL.");
         }
     }
 
@@ -972,22 +978,18 @@
             .replace(/[\u0300-\u036f]/g, "")
             .replace(/[^a-zA-Z0-9-_]/g, "-")
             .replace(/-+/g, "-")
-            .replace(/^-|-$/g, "")
-            .toUpperCase();
+            .replace(/^-|-$/g, "");
     }
 
     function genererTimestampFichier() {
         const maintenant = new Date();
-
         const annee = maintenant.getFullYear();
         const mois = String(maintenant.getMonth() + 1).padStart(2, "0");
         const jour = String(maintenant.getDate()).padStart(2, "0");
         const heure = String(maintenant.getHours()).padStart(2, "0");
         const minute = String(maintenant.getMinutes()).padStart(2, "0");
         const seconde = String(maintenant.getSeconds()).padStart(2, "0");
-        const milliseconde = String(maintenant.getMilliseconds()).padStart(3, "0");
-
-        return annee + mois + jour + "-" + heure + minute + seconde + milliseconde;
+        return annee + mois + jour + "-" + heure + minute + seconde;
     }
 
     function genererNomCapturePostgres(configuration) {
@@ -995,6 +997,13 @@
         const indicateur = nettoyerNomFichier(configuration.graphique.indicateur);
         const timestamp = genererTimestampFichier();
 
+        /*
+            Format demandé :
+            ACTIF-INDICATEUR-TIMESTAMP
+
+            Exemple :
+            BINANCE-BTCUSDT-RSI-20260510-154233
+        */
         return actif + "-" + indicateur + "-" + timestamp;
     }
 
@@ -1025,10 +1034,21 @@
                 actif: configurationActuelle.graphique.actif || "NON_RENSEIGNE",
                 indicateur: configurationActuelle.graphique.indicateur || null,
                 intervalle: configurationActuelle.graphique.intervalle || null,
-                nom_fichier: nomCapture,
-                nom_capture: nomCapture,
+
+                /*
+                    On garde nom_fichier pour compatibilité avec ton ancien code.
+                    On ajoute nom_capture pour la nouvelle colonne.
+                */
+                nom_fichier: nomCapture || ("capture-" + new Date().toISOString()),
+                nom_capture: nomCapture || ("capture-" + new Date().toISOString()),
+
                 configuration_json: configurationActuelle,
-                screenshot_base64: screenshotBase64 || null
+
+                /*
+                    Je garde ton choix actuel :
+                    screenshot désactivé pour éviter les erreurs de taille ou de capture.
+                */
+                screenshot_base64: null
             };
 
             console.log("URL PostgreSQL :", urlCaptures);
@@ -1112,7 +1132,11 @@
     }
 
     async function chargerListeCapturesPostgres(afficherAlerte = true) {
-        const urlCaptures = getApiCapturesUrl();
+        /*
+            On garde l'ancienne URL fixe qui fonctionnait hier.
+        */
+        const urlCaptures = "https://trading-g8ie.onrender.com/api/captures";
+
         const select = document.getElementById("liste-captures-postgres");
         if (!select) return;
 
@@ -1132,6 +1156,10 @@
                 resultat.captures.forEach(function(capture) {
                     const option = document.createElement("option");
 
+                    /*
+                        Important :
+                        La valeur reste l'id, car la route de chargement est /api/captures/:id.
+                    */
                     option.value = capture.id;
 
                     const dateCapture = capture.date_capture
@@ -1149,10 +1177,16 @@
                             dateCapture
                         );
 
+                    /*
+                        Affichage demandé :
+                        on affiche le nom_capture dans la liste déroulante.
+                    */
                     option.textContent =
-                        "ID " + capture.id +
-                        " — " + nomCapture +
-                        " — " + dateCapture;
+                        capture.id +
+                        " - " +
+                        nomCapture +
+                        " - " +
+                        dateCapture;
 
                     select.appendChild(option);
                 });
@@ -1188,12 +1222,14 @@
         }
 
         const urlCapture = getApiCapturesUrl() + "/" + encodeURIComponent(select.value);
+
         afficherStatus("Chargement de la capture PostgreSQL...");
         afficherEtatServeur("warning", "Lecture capture PostgreSQL...");
 
         try {
             const resultat = await appelerJson(urlCapture, { method: "GET", cache: "no-store" });
             const capture = resultat.capture;
+
             configurationActuelle = capture.configuration_json || null;
 
             if (!configurationActuelle) {
@@ -1319,8 +1355,10 @@
             } catch (erreur) {
                 alert("Import impossible. Fichier JSON invalide.\n\n" + erreur.message);
             }
+
             event.target.value = "";
         };
+
         lecteur.readAsText(fichier);
     }
 
@@ -1334,6 +1372,7 @@
         if (selectCategorie) {
             selectCategorie.addEventListener("change", function () {
                 actualiserDescriptionCategorie();
+
                 if (configurationActuelle) {
                     configurationActuelle.analyseIA.categorie = getCategorieAnalyseBTC();
                     configurationActuelle.analyseIA.categorieLibelle = getLibelleCategorieAnalyseBTC();

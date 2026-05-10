@@ -143,7 +143,7 @@ function genererTimestampCapture() {
     return annee + mois + jour + "-" + heure + minute + seconde + milliseconde;
 }
 
-function genererNomCaptureUnique(actif, indicateur) {
+function genererNomCapture(actif, indicateur) {
     const actifNettoye = nettoyerNomCapture(actif);
     const indicateurNettoye = nettoyerNomCapture(indicateur || "INDICATEUR");
     const timestamp = genererTimestampCapture();
@@ -275,11 +275,11 @@ app.get("/api/creer-table", async (req, res) => {
             ok: true,
             statut: "ok",
             table: "trading_capture",
-            message: "La table trading_capture existe ou vient d'être créée. La colonne nom_capture et son index unique sont présents.",
+            message: "La table trading_capture existe ou vient d'être créée. La colonne nom_capture est disponible.",
             date: new Date().toISOString()
         });
     } catch (erreur) {
-        return reponseErreur(res, 500, "Impossible de créer ou modifier la table trading_capture.", erreur);
+        return reponseErreur(res, 500, "Impossible de créer la table trading_capture.", erreur);
     }
 });
 
@@ -296,7 +296,7 @@ app.get("/api/verifier-table", async (req, res) => {
             AND table_name = 'trading_capture';
         `);
 
-        const resultatColonne = await db.query(`
+        const resultatNomCapture = await db.query(`
             SELECT column_name
             FROM information_schema.columns
             WHERE table_schema = 'public'
@@ -304,17 +304,8 @@ app.get("/api/verifier-table", async (req, res) => {
             AND column_name = 'nom_capture';
         `);
 
-        const resultatIndex = await db.query(`
-            SELECT indexname
-            FROM pg_indexes
-            WHERE schemaname = 'public'
-            AND tablename = 'trading_capture'
-            AND indexname = 'idx_trading_capture_nom_capture_unique';
-        `);
-
         const tableExiste = resultatTable.rows.length > 0;
-        const nomCaptureExiste = resultatColonne.rows.length > 0;
-        const indexUniqueExiste = resultatIndex.rows.length > 0;
+        const nomCaptureExiste = resultatNomCapture.rows.length > 0;
 
         res.json({
             ok: true,
@@ -322,7 +313,6 @@ app.get("/api/verifier-table", async (req, res) => {
             table: "trading_capture",
             tableExiste,
             nomCaptureExiste,
-            indexUniqueExiste,
             message: tableExiste
                 ? "La table trading_capture existe bien."
                 : "La table trading_capture n'existe pas. Ouvrir /api/creer-table pour la créer."
@@ -364,7 +354,7 @@ app.get("/api/structure-table", async (req, res) => {
 
         const db = obtenirPool();
 
-        const resultatColonnes = await db.query(`
+        const resultat = await db.query(`
             SELECT
                 column_name AS colonne,
                 data_type AS type,
@@ -376,22 +366,11 @@ app.get("/api/structure-table", async (req, res) => {
             ORDER BY ordinal_position;
         `);
 
-        const resultatIndex = await db.query(`
-            SELECT
-                indexname AS index,
-                indexdef AS definition
-            FROM pg_indexes
-            WHERE schemaname = 'public'
-            AND tablename = 'trading_capture'
-            ORDER BY indexname;
-        `);
-
         res.json({
             ok: true,
             statut: "ok",
             table: "trading_capture",
-            colonnes: resultatColonnes.rows,
-            index: resultatIndex.rows
+            colonnes: resultat.rows
         });
     } catch (erreur) {
         return reponseErreur(res, 500, "Impossible de lire la structure de la table.", erreur);
@@ -487,13 +466,13 @@ app.post("/api/captures", async (req, res) => {
 
         const actifFinal = actif || symbole || "NON_RENSEIGNE";
         const indicateurFinal = indicateur || null;
-        const intervalleFinal = intervalle || null;
         const configurationFinale = configuration_json || configuration || req.body || {};
         const screenshotFinal = screenshot_base64 || screenshot || image || null;
 
         const nomCaptureFinal =
             nom_capture ||
-            genererNomCaptureUnique(actifFinal, indicateurFinal || "INDICATEUR");
+            nom_fichier ||
+            genererNomCapture(actifFinal, indicateurFinal);
 
         const resultat = await db.query(
             `
@@ -520,8 +499,8 @@ app.post("/api/captures", async (req, res) => {
             [
                 actifFinal,
                 indicateurFinal,
-                intervalleFinal,
-                nom_fichier || null,
+                intervalle || null,
+                nom_fichier || nomCaptureFinal,
                 nomCaptureFinal,
                 configurationFinale,
                 screenshotFinal
