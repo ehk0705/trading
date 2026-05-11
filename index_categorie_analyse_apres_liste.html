@@ -56,10 +56,10 @@
         .capture-selector-top {
             display: flex;
             align-items: center;
-            gap: 8px;
-            flex: 1 1 820px;
+            gap: 6px;
+            flex: 1 1 620px;
             min-width: 520px;
-            max-width: 1040px;
+            max-width: 900px;
         }
 
         .capture-selector-top label {
@@ -69,17 +69,16 @@
         #liste-captures-postgres {
             width: 100%;
             min-width: 520px;
-            max-width: 860px;
+            max-width: 900px;
         }
 
         .analysis-category-top {
             display: flex;
             align-items: center;
             gap: 6px;
-            flex: 0 0 300px;
-            min-width: 260px;
-            max-width: 320px;
-            margin-left: 22px;
+            flex: 1 1 520px;
+            min-width: 420px;
+            max-width: 760px;
         }
 
         .analysis-category-top label {
@@ -87,14 +86,8 @@
         }
 
         .analysis-category-top select {
-            width: 155px;
-            min-width: 145px;
-        }
-
-        .category-description-top {
-            display: none;
-        }
-            max-width: 190px;
+            width: 100%;
+            min-width: 260px;
         }
 
         .category-description-top {
@@ -410,7 +403,6 @@
                 min-width: 0;
                 max-width: none;
                 width: 100%;
-                margin-left: 0;
             }
 
             .analysis-category-top select {
@@ -506,7 +498,7 @@
         </div>
 
         <div class="analysis-category-top">
-            <label for="categorie-analyse-btc">Type d'analyse :</label>
+            <label for="categorie-analyse-btc">Choisir une catégorie d'analyse :</label>
             <select id="categorie-analyse-btc">
                 <option value="macroeconomie">Macroéconomie</option>
                 <option value="monnaie_bitcoin">Monnaie Bitcoin</option>

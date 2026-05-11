@@ -56,10 +56,10 @@
         .capture-selector-top {
             display: flex;
             align-items: center;
-            gap: 6px;
-            flex: 1 1 620px;
+            gap: 8px;
+            flex: 1 1 820px;
             min-width: 520px;
-            max-width: 900px;
+            max-width: 1040px;
         }
 
         .capture-selector-top label {
@@ -69,7 +69,38 @@
         #liste-captures-postgres {
             width: 100%;
             min-width: 520px;
-            max-width: 900px;
+            max-width: 860px;
+        }
+
+        .analysis-category-top {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex: 0 0 300px;
+            min-width: 260px;
+            max-width: 320px;
+            margin-left: 22px;
+        }
+
+        .analysis-category-top label {
+            white-space: nowrap;
+        }
+
+        .analysis-category-top select {
+            width: 155px;
+            min-width: 145px;
+        }
+
+        .category-description-top {
+            display: none;
+        }
+            max-width: 190px;
+        }
+
+        .category-description-top {
+            flex: 1 1 100%;
+            margin-top: 0;
+            display: none;
         }
 
         label {
@@ -289,6 +320,13 @@
             padding: 14px;
         }
 
+        .side-panel > section:first-child { margin-top: 0; }
+
+        .risk-box h3 {
+            margin-top: 0;
+            margin-bottom: 12px;
+        }
+
         .analysis-category-box select { width: 100%; }
 
         .category-description, .note {
@@ -357,6 +395,7 @@
             header { padding: 12px; }
             .top-bar { flex-direction: column; align-items: stretch; }
             .control-group { flex-direction: column; align-items: stretch; }
+
             .capture-selector-top {
                 flex-direction: column;
                 align-items: stretch;
@@ -364,11 +403,27 @@
                 max-width: none;
                 width: 100%;
             }
+
+            .analysis-category-top {
+                flex-direction: column;
+                align-items: stretch;
+                min-width: 0;
+                max-width: none;
+                width: 100%;
+                margin-left: 0;
+            }
+
+            .analysis-category-top select {
+                min-width: 0;
+                width: 100%;
+            }
+
             #liste-captures-postgres {
                 min-width: 0;
                 max-width: none;
                 width: 100%;
             }
+
             button { width: 100%; }
             .button-zone button { flex: 1 1 100%; }
             .logo { text-align: center; margin-right: 0; }
@@ -444,11 +499,31 @@
         <button class="btn-decision" onclick="ouvrirPageDecision()">Analyser le snapshot</button>
 
         <div class="capture-selector-top">
-            <label for="liste-captures-postgres">Configurations enregistrées :</label>
+            <label for="liste-captures-postgres">Liste des configurations enregistrées :</label>
             <select id="liste-captures-postgres" onchange="chargerCapturePostgresSelectionnee()">
                 <option value="">Aucune configuration chargée</option>
             </select>
         </div>
+
+        <div class="analysis-category-top">
+            <label for="categorie-analyse-btc">Type d'analyse :</label>
+            <select id="categorie-analyse-btc">
+                <option value="macroeconomie">Macroéconomie</option>
+                <option value="monnaie_bitcoin">Monnaie Bitcoin</option>
+                <option value="donnees_on_chain">Données on-chain</option>
+                <option value="minage">Minage</option>
+                <option value="analyse_technique" selected>Analyse technique</option>
+                <option value="derives">Dérivés</option>
+                <option value="liquidite_marche">Liquidité de marché</option>
+                <option value="institutionnel">Institutionnel</option>
+                <option value="sentiment">Sentiment</option>
+                <option value="reglementation_risques">Réglementation et risques</option>
+            </select>
+            <div id="description-categorie-analyse" class="category-description category-description-top">
+                Analyse technique : graphiques, tendances, supports, résistances, RSI et moyennes mobiles.
+            </div>
+        </div>
+
 <!--
         <div class="header-images">
             <img src="img/bitcoin.jfif" alt="Bitcoin">
@@ -471,6 +546,9 @@
         <div id="tradingview_chart"></div>
         <input type="file" id="fichier-import-json" accept="application/json,.json" style="display:none;" onchange="importerJSONDepuisFichier(event)">
 
+    </section>
+
+    <aside class="side-panel">
         <section class="risk-box">
             <h3>Paramètres de risque</h3>
             <div class="form-block">
@@ -523,52 +601,11 @@
                 <label for="snapshot-url">URL éventuelle du snapshot</label>
                 <input id="snapshot-url" type="text" placeholder="Lien optionnel vers une image ou un snapshot">
             </div>
-            <div class="form-block">
-                <label for="notes-analyse">Notes</label>
-                <textarea id="notes-analyse" rows="4" placeholder="Notes libres pour l'analyse"></textarea>
-            </div>
-        </section>
 
-        <section class="ai-section">
-            <h3>Résultats de l’analyse IA</h3>
-            <div id="resultat-analyse-ia" class="ai-result-box">Aucune analyse IA lancée.</div>
-        </section>
-
-        <div class="note">
-            Cette page capture les paramètres contrôlés par l'interface : actif, intervalle, indicateur,
-            catégorie d'analyse, paramètres de risque et notes. Le bouton Enregistrer envoie la configuration
-            vers /api/captures pour stockage dans PostgreSQL.
-        </div>
-    </section>
-
-    <aside class="side-panel">
-        <section class="analysis-category-box">
-            <h2>Catégorie d’analyse</h2>
-            <label for="categorie-analyse-btc">Choisir une catégorie</label>
-            <select id="categorie-analyse-btc">
-                <option value="macroeconomie">Macroéconomie</option>
-                <option value="monnaie_bitcoin">Monnaie Bitcoin</option>
-                <option value="donnees_on_chain">Données on-chain</option>
-                <option value="minage">Minage</option>
-                <option value="analyse_technique" selected>Analyse technique</option>
-                <option value="derives">Dérivés</option>
-                <option value="liquidite_marche">Liquidité de marché</option>
-                <option value="institutionnel">Institutionnel</option>
-                <option value="sentiment">Sentiment</option>
-                <option value="reglementation_risques">Réglementation et risques</option>
-            </select>
-            <div id="description-categorie-analyse" class="category-description">
-                Analyse technique : graphiques, tendances, supports, résistances, RSI et moyennes mobiles.
-            </div>
         </section>
 
         <h3>Configuration capturée</h3>
         <pre id="resultat-configuration">Aucune configuration capturée.</pre>
-
-        <div class="screenshot-preview">
-            <h3>Screenshot chargé depuis PostgreSQL</h3>
-            <img id="image-capture-postgres" alt="Screenshot de la capture PostgreSQL">
-        </div>
 
         <div id="status" class="status">En attente de capture.</div>
     </aside>
@@ -1023,16 +1060,25 @@
     function genererNomCapturePostgres(configuration) {
         const actif = nettoyerNomFichier(configuration.graphique.actif);
         const indicateur = nettoyerNomFichier(configuration.graphique.indicateur);
+
+        const categorieAnalyse =
+            configuration?.analyseIA?.categorieLibelle ||
+            configuration?.analyseIA?.categorie ||
+            configuration?.snapshot?.categorieAnalyseLibelle ||
+            configuration?.snapshot?.categorieAnalyse ||
+            "Liquidité de marché";
+
+        const categorie = nettoyerNomFichier(categorieAnalyse);
         const timestamp = genererTimestampFichier();
 
         /*
             Format demandé :
-            ACTIF-INDICATEUR-TIMESTAMP
+            ACTIF-INDICATEUR-CATEGORIE_ANALYSE-TIMESTAMP
 
             Exemple :
-            BINANCE-BTCUSDT-RSI-20260510-154233
+            BINANCE-BTCUSDT-RSI-ANALYSE-TECHNIQUE-20260510-154233
         */
-        return actif + "-" + indicateur + "-" + timestamp;
+        return actif + "-" + indicateur + "-" + categorie + "-" + timestamp;
     }
 
     function obtenirScreenshotBase64DepuisConfiguration() {
@@ -1060,6 +1106,13 @@
 
             configurationActuelle.nomCapture = nomCapture;
 
+            const categorieAnalyse =
+                configurationActuelle?.analyseIA?.categorieLibelle ||
+                configurationActuelle?.analyseIA?.categorie ||
+                configurationActuelle?.snapshot?.categorieAnalyseLibelle ||
+                configurationActuelle?.snapshot?.categorieAnalyse ||
+                "Liquidité de marché";
+
             const donneesAEnregistrer = {
                 actif: configurationActuelle.graphique.actif || "NON_RENSEIGNE",
                 indicateur: configurationActuelle.graphique.indicateur || null,
@@ -1068,9 +1121,12 @@
                 /*
                     On garde nom_fichier pour compatibilité avec ton ancien code.
                     On ajoute nom_capture pour la nouvelle colonne.
+                    On ajoute aussi categorie_analyse pour server.js.
                 */
                 nom_fichier: nomCapture || ("capture-" + new Date().toISOString()),
                 nom_capture: nomCapture || ("capture-" + new Date().toISOString()),
+                categorie_analyse: categorieAnalyse,
+                categorieAnalyse: categorieAnalyse,
 
                 configuration_json: configurationActuelle,
 
@@ -1145,7 +1201,10 @@
             await chargerListeCapturesPostgres(false);
 
             if (afficherAlerte) {
-                alert("Configuration capturée et enregistrée dans la base de données.");
+                alert(
+                    "Configuration enregistrée dans la base de données.\n\n" +
+                    "Nom de la capture : " + donneesAEnregistrer.nom_capture
+                );
             }
 
         } catch (erreur) {
