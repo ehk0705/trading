@@ -1021,20 +1021,30 @@
     }
 
     function genererNomCapturePostgres(configuration) {
-        const actif = nettoyerNomFichier(configuration.graphique.actif);
-        const indicateur = nettoyerNomFichier(configuration.graphique.indicateur);
-        const timestamp = genererTimestampFichier();
+    const actif = nettoyerNomFichier(configuration.graphique.actif);
+    const indicateur = nettoyerNomFichier(configuration.graphique.indicateur);
 
-        /*
-            Format demandé :
-            ACTIF-INDICATEUR-TIMESTAMP
+    /*
+        Catégorie d'analyse :
+        si elle est absente, on prend par défaut "Liquidité de marché".
+    */
+    const categorieAnalyse =
+        configuration.analyseIA && configuration.analyseIA.categorieLibelle
+            ? configuration.analyseIA.categorieLibelle
+            : "Liquidité de marché";
 
-            Exemple :
-            BINANCE-BTCUSDT-RSI-20260510-154233
-        */
-        return actif + "-" + indicateur + "-" + timestamp;
-    }
+    const categorie = nettoyerNomFichier(categorieAnalyse);
+    const timestamp = genererTimestampFichier();
 
+    /*
+        Nouveau format :
+        ACTIF-INDICATEUR-CATEGORIE_ANALYSE-TIMESTAMP
+
+        Exemple :
+        BINANCE-BTCUSDT-RSI-Analyse-technique-20260510-154233
+    */
+    return actif + "-" + indicateur + "-" + categorie + "-" + timestamp;
+}
     function obtenirScreenshotBase64DepuisConfiguration() {
         if (!configurationActuelle || !configurationActuelle.snapshot) return null;
         return configurationActuelle.snapshot.screenshotBase64 || null;
