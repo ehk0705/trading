@@ -119,7 +119,53 @@ function obtenirPool() {
     return pool;
 }
 
-async function ajouterColonneNomCapture() {
+function nettoyerElementNomCapture(valeur, valeurDefaut = "NON_RENSEIGNE") {
+    return String(valeur || valeurDefaut)
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-zA-Z0-9-_]/g, "-")
+        .replace(/-+/g, "-")
+        .replace(/^-|-$/g, "")
+        .toUpperCase();
+}
+
+function genererTimestampNomCapture() {
+    const maintenant = new Date();
+
+    const annee = maintenant.getFullYear();
+    const mois = String(maintenant.getMonth() + 1).padStart(2, "0");
+    const jour = String(maintenant.getDate()).padStart(2, "0");
+    const heure = String(maintenant.getHours()).padStart(2, "0");
+    const minute = String(maintenant.getMinutes()).padStart(2, "0");
+    const seconde = String(maintenant.getSeconds()).padStart(2, "0");
+    const milliseconde = String(maintenant.getMilliseconds()).padStart(3, "0");
+
+    return annee + mois + jour + "-" + heure + minute + seconde + milliseconde;
+}
+
+function genererNomCapture(actif, indicateur, categorieAnalyse) {
+    const actifNettoye = nettoyerElementNomCapture(actif, "ACTIF");
+    const indicateurNettoye = nettoyerElementNomCapture(indicateur, "INDICATEUR");
+    const categorieNettoyee = nettoyerElementNomCapture(categorieAnalyse, "CATEGORIE");
+    const timestamp = genererTimestampNomCapture();
+
+    return actifNettoye + "-" + indicateurNettoye + "-" + categorieNettoyee + "-" + timestamp;
+}
+
+function extraireCategorieAnalyse(configurationFinale, categorieAnalyseDirecte, categorieAnalyseCamelCase) {
+    return (
+        categorieAnalyseDirecte ||
+        categorieAnalyseCamelCase ||
+        configurationFinale?.analyseIA?.categorie ||
+        configurationFinale?.analyseIA?.categorieLibelle ||
+        configurationFinale?.snapshot?.categorieAnalyse ||
+        configurationFinale?.snapshot?.categorieAnalyseLibelle ||
+        configurationFinale?.graphique?.categorieAnalyse ||
+        null
+    );
+}
+
+async function ajouterColonnesCapture() {
     const db = obtenirPool();
 
     await db.query(`
@@ -128,10 +174,19 @@ async function ajouterColonneNomCapture() {
     `);
 
     await db.query(`
+        ALTER TABLE trading_capture
+        ADD COLUMN IF NOT EXISTS categorie_analyse VARCHAR(150);
+    `);
+
+    await db.query(`
         CREATE UNIQUE INDEX IF NOT EXISTS idx_trading_capture_nom_capture_unique
         ON trading_capture (nom_capture)
         WHERE nom_capture IS NOT NULL;
     `);
+}
+
+async function ajouterColonneNomCapture() {
+    await ajouterColonnesCapture();
 }
 
 async function creerTableSiAbsente() {
@@ -144,13 +199,15 @@ async function creerTableSiAbsente() {
             indicateur VARCHAR(100),
             intervalle VARCHAR(50),
             nom_fichier VARCHAR(255),
+            nom_capture VARCHAR(255),
+            categorie_analyse VARCHAR(150),
             configuration_json JSONB NOT NULL,
             screenshot_base64 TEXT,
             date_capture TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
     `);
 
-    await ajouterColonneNomCapture();
+    await ajouterColonnesCapture();
 }
 
 function reponseErreur(res, status, message, erreur = null) {
@@ -170,7 +227,7 @@ app.get("/", (req, res) => {
     res.json({
         ok: true,
         statut: "ok",
-        message: "Serveur Trading API actif - version 2026-05-10 avec nom_capture.",
+        message: "Serveur Trading API actif - version 2026-05-10 avec nom_capture et categorie_analyse.",
         serveur: "trading",
         databaseUrlConfiguree: Boolean(process.env.DATABASE_URL),
         routes: [
@@ -178,6 +235,7 @@ app.get("/", (req, res) => {
             "GET /api/cors-test",
             "GET /api/creer-table",
             "GET /api/ajouter-nom-capture",
+            "GET /api/ajouter-colonnes-capture",
             "GET /api/verifier-db",
             "GET /api/verifier-table",
             "GET /api/verifier-captures",
@@ -249,7 +307,7 @@ app.get("/api/creer-table", async (req, res) => {
             ok: true,
             statut: "ok",
             table: "trading_capture",
-            message: "La table trading_capture existe ou vient d'être créée. La colonne nom_capture a été ajoutée si elle était absente.",
+            message: "La table trading_capture existe ou vient d'être créée. Les colonnes nom_capture et categorie_analyse ont été ajoutées si elles étaient absentes.",
             date: new Date().toISOString()
         });
     } catch (erreur) {
@@ -266,12 +324,30 @@ app.get("/api/ajouter-nom-capture", async (req, res) => {
             ok: true,
             statut: "ok",
             table: "trading_capture",
-            colonne: "nom_capture",
-            message: "La colonne nom_capture a été ajoutée ou existait déjà.",
+            colonnes: ["nom_capture", "categorie_analyse"],
+            message: "Les colonnes nom_capture et categorie_analyse ont été ajoutées ou existaient déjà.",
             date: new Date().toISOString()
         });
     } catch (erreur) {
-        return reponseErreur(res, 500, "Impossible d'ajouter la colonne nom_capture.", erreur);
+        return reponseErreur(res, 500, "Impossible d'ajouter les colonnes de capture.", erreur);
+    }
+});
+
+app.get("/api/ajouter-colonnes-capture", async (req, res) => {
+    try {
+        await creerTableSiAbsente();
+        await ajouterColonnesCapture();
+
+        res.json({
+            ok: true,
+            statut: "ok",
+            table: "trading_capture",
+            colonnes: ["nom_capture", "categorie_analyse"],
+            message: "Les colonnes nom_capture et categorie_analyse ont été ajoutées ou existaient déjà.",
+            date: new Date().toISOString()
+        });
+    } catch (erreur) {
+        return reponseErreur(res, 500, "Impossible d'ajouter les colonnes de capture.", erreur);
     }
 });
 
@@ -296,6 +372,14 @@ app.get("/api/verifier-table", async (req, res) => {
             AND column_name = 'nom_capture';
         `);
 
+        const resultatCategorieAnalyse = await db.query(`
+            SELECT column_name
+            FROM information_schema.columns
+            WHERE table_schema = 'public'
+            AND table_name = 'trading_capture'
+            AND column_name = 'categorie_analyse';
+        `);
+
         const resultatIndex = await db.query(`
             SELECT indexname
             FROM pg_indexes
@@ -306,6 +390,7 @@ app.get("/api/verifier-table", async (req, res) => {
 
         const tableExiste = resultatTable.rows.length > 0;
         const nomCaptureExiste = resultatNomCapture.rows.length > 0;
+        const categorieAnalyseExiste = resultatCategorieAnalyse.rows.length > 0;
         const indexNomCaptureExiste = resultatIndex.rows.length > 0;
 
         res.json({
@@ -314,6 +399,7 @@ app.get("/api/verifier-table", async (req, res) => {
             table: "trading_capture",
             tableExiste,
             nomCaptureExiste,
+            categorieAnalyseExiste,
             indexNomCaptureExiste,
             message: tableExiste
                 ? "La table trading_capture existe bien."
@@ -397,6 +483,7 @@ app.get("/api/contenu-table", async (req, res) => {
                 intervalle,
                 nom_fichier,
                 nom_capture,
+                categorie_analyse,
                 configuration_json,
                 CASE
                     WHEN screenshot_base64 IS NULL THEN false
@@ -459,6 +546,8 @@ app.post("/api/captures", async (req, res) => {
             intervalle,
             nom_fichier,
             nom_capture,
+            categorie_analyse,
+            categorieAnalyse,
             configuration_json,
             configuration,
             screenshot_base64,
@@ -467,10 +556,21 @@ app.post("/api/captures", async (req, res) => {
         } = req.body || {};
 
         const actifFinal = actif || symbole || "NON_RENSEIGNE";
+        const indicateurFinal = indicateur || null;
+        const intervalleFinal = intervalle || null;
         const configurationFinale = configuration_json || configuration || req.body || {};
         const screenshotFinal = screenshot_base64 || screenshot || image || null;
+        const categorieAnalyseFinale = extraireCategorieAnalyse(
+            configurationFinale,
+            categorie_analyse,
+            categorieAnalyse
+        ) || "NON_RENSEIGNE";
 
-        const nomCaptureFinal = nom_capture || nom_fichier || null;
+        const nomCaptureFinal = genererNomCapture(
+            actifFinal,
+            indicateurFinal || "INDICATEUR",
+            categorieAnalyseFinale
+        );
 
         const resultat = await db.query(
             `
@@ -481,10 +581,11 @@ app.post("/api/captures", async (req, res) => {
                 intervalle,
                 nom_fichier,
                 nom_capture,
+                categorie_analyse,
                 configuration_json,
                 screenshot_base64
             )
-            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
             RETURNING
                 id,
                 actif,
@@ -492,14 +593,16 @@ app.post("/api/captures", async (req, res) => {
                 intervalle,
                 nom_fichier,
                 nom_capture,
+                categorie_analyse,
                 date_capture
             `,
             [
                 actifFinal,
-                indicateur || null,
-                intervalle || null,
-                nom_fichier || nomCaptureFinal,
+                indicateurFinal,
+                intervalleFinal,
+                nom_fichier || nom_capture || nomCaptureFinal,
                 nomCaptureFinal,
+                categorieAnalyseFinale,
                 configurationFinale,
                 screenshotFinal
             ]
@@ -538,6 +641,7 @@ app.get("/api/captures", async (req, res) => {
                 intervalle,
                 nom_fichier,
                 nom_capture,
+                categorie_analyse,
                 date_capture
             FROM trading_capture
             ORDER BY date_capture DESC

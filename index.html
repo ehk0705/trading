@@ -53,6 +53,25 @@
             gap: 6px;
         }
 
+        .capture-selector-top {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex: 1 1 620px;
+            min-width: 520px;
+            max-width: 900px;
+        }
+
+        .capture-selector-top label {
+            white-space: nowrap;
+        }
+
+        #liste-captures-postgres {
+            width: 100%;
+            min-width: 520px;
+            max-width: 900px;
+        }
+
         label {
             font-weight: bold;
             color: #00d9ff;
@@ -338,6 +357,18 @@
             header { padding: 12px; }
             .top-bar { flex-direction: column; align-items: stretch; }
             .control-group { flex-direction: column; align-items: stretch; }
+            .capture-selector-top {
+                flex-direction: column;
+                align-items: stretch;
+                min-width: 0;
+                max-width: none;
+                width: 100%;
+            }
+            #liste-captures-postgres {
+                min-width: 0;
+                max-width: none;
+                width: 100%;
+            }
             button { width: 100%; }
             .button-zone button { flex: 1 1 100%; }
             .logo { text-align: center; margin-right: 0; }
@@ -405,12 +436,19 @@
             </select>
         </div>
 
-        <button class="btn-tv" onclick="ouvrirTradingView()">Ouvrir dans TradingView</button>
+        <!--<button class="btn-tv" onclick="ouvrirTradingView()">Ouvrir dans TradingView</button>-->
         <button class="btn-capture" onclick="capturerEtEnregistrerConfiguration()">Capturer et enregistrer</button>
         <!--<button class="btn-market" onclick="enrichirConfigurationAvecDonneesMarche()">Ajouter marché</button>-->
         <button class="btn-db" style="display:none;" onclick="enregistrerCapturePostgres()">Enregistrer la configuration</button>
         <!-- <button class="btn-save" onclick="rechargerConfigurationTradingView()">Recharger</button> -->
         <button class="btn-decision" onclick="ouvrirPageDecision()">Analyser le snapshot</button>
+
+        <div class="capture-selector-top">
+            <label for="liste-captures-postgres">Configurations enregistrées :</label>
+            <select id="liste-captures-postgres" onchange="chargerCapturePostgresSelectionnee()">
+                <option value="">Aucune configuration chargée</option>
+            </select>
+        </div>
 <!--
         <div class="header-images">
             <img src="img/bitcoin.jfif" alt="Bitcoin">
@@ -504,19 +542,8 @@
     </section>
 
     <aside class="side-panel">
-        <div class="form-block" style="margin-top:12px;">
-            <label for="liste-captures-postgres">Liste des configurations enregistrées</label>
-<select id="liste-captures-postgres" onchange="chargerCapturePostgresSelectionnee()">
-    <option value="">Aucune capture chargée</option>
-</select>
-        </div>
-
-        <div class="button-zone">
-            <button class="btn-load" onclick="chargerListeCapturesPostgres()">Charger liste</button>
-            <button class="btn-db" style="display:none;" onclick="chargerCapturePostgresSelectionnee()">Charger configuration</button>
-        </div>
-
         <section class="analysis-category-box">
+
             <label for="categorie-analyse-btc">Choisir une catégorie d'analyse</label>
             <select id="categorie-analyse-btc">
                 <option value="macroeconomie">Macroéconomie</option>
@@ -1118,7 +1145,7 @@
             await chargerListeCapturesPostgres(false);
 
             if (afficherAlerte) {
-                alert("Configuration capturée et enregistrée dans la base de données.");
+              alert("Configuration enregistrée avec succès dans la base de données.\n\n" + "Nom de la capture : " + donneesAEnregistrer.nom_capture);
             }
 
         } catch (erreur) {
@@ -1153,10 +1180,10 @@
 
             const resultat = await appelerJson(urlCaptures, { method: "GET", cache: "no-store" });
 
-            select.innerHTML = '<option value="">Choisir une capture</option>';
+            select.innerHTML = '<option value="">Choisir une configuration</option>';
 
             if (!resultat.captures || resultat.captures.length === 0) {
-                select.innerHTML = '<option value="">Aucune capture enregistrée</option>';
+                select.innerHTML = '<option value="">Aucune configuration enregistrée</option>';
             } else {
                 resultat.captures.forEach(function(capture) {
                     const option = document.createElement("option");
