@@ -659,6 +659,7 @@
             .replace(/\/api\/test\/?$/, "")
             .replace(/\/api\/marche\/?$/, "")
             .replace(/\/api\/captures\/?$/, "")
+            .replace(/\/api\/vider-captures\/?$/, "")
             .replace(/\/api\/creer-table\/?$/, "")
             .replace(/\/api\/verifier-table\/?$/, "");
 
@@ -679,6 +680,8 @@
         Ne pas remplacer par getApiBaseUrl(), car l'enregistrement fonctionnait ainsi.
     */
     function getApiCapturesUrl() { return API_BASE_URL_PAR_DEFAUT + "/api/captures"; }
+
+    function getApiViderCapturesUrl() { return API_BASE_URL_PAR_DEFAUT + "/api/vider-captures"; }
 
     function getApiCreerTableUrl() { return getApiBaseUrl() + "/api/creer-table"; }
     function getApiVerifierTableUrl() { return getApiBaseUrl() + "/api/verifier-table"; }
@@ -822,7 +825,7 @@
             return;
         }
 
-        const url = getApiCapturesUrl();
+        const url = getApiViderCapturesUrl();
 
         afficherStatus("Vidage de la table trading_capture en cours...");
         afficherEtatServeur("warning", "Suppression des captures...");
@@ -835,7 +838,7 @@
 
         try {
             const resultat = await appelerJson(url, {
-                method: "DELETE",
+                method: "POST",
                 headers: { "Content-Type": "application/json" },
                 cache: "no-store"
             });
@@ -978,6 +981,7 @@
                 apiTest: getApiTestUrl(),
                 apiMarche: getApiMarcheUrl(),
                 apiCaptures: getApiCapturesUrl(),
+                apiViderCaptures: getApiViderCapturesUrl(),
                 hebergeur: "Render",
                 type: "Node.js"
             },
