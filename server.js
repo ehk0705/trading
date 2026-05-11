@@ -184,7 +184,6 @@ app.get("/", (req, res) => {
             "GET /api/structure-table",
             "GET /api/contenu-table",
             "GET /api/vider-captures-test",
-            "GET /api/vider-captures",
             "POST /api/vider-captures",
             "DELETE /api/vider-captures",
             "POST /api/vider-table",
@@ -202,32 +201,27 @@ app.get("/", (req, res) => {
     });
 });
 
-async function viderTableTradingCapture() {
-    await creerTableSiAbsente();
-
-    const db = obtenirPool();
-
+async function viderTableTradingCapture(req, res) {
     try {
-        await db.query("TRUNCATE TABLE trading_capture RESTART IDENTITY CASCADE;");
-        return "TRUNCATE";
-    } catch (erreurTruncate) {
-        console.warn("TRUNCATE impossible, tentative avec DELETE :", erreurTruncate.message);
-        await db.query("DELETE FROM trading_capture;");
-        return "DELETE";
-    }
-}
+        await creerTableSiAbsente();
 
-async function routeViderCaptures(req, res) {
-    try {
-        const methodeVidage = await viderTableTradingCapture();
+        const db = obtenirPool();
+        let methodeUtilisee = "TRUNCATE";
+
+        try {
+            await db.query("TRUNCATE TABLE trading_capture RESTART IDENTITY CASCADE;");
+        } catch (erreurTruncate) {
+            methodeUtilisee = "DELETE";
+            await db.query("DELETE FROM trading_capture;");
+        }
 
         res.json({
             ok: true,
             statut: "ok",
             message: "La table trading_capture a été vidée avec succès.",
             table: "trading_capture",
-            methodeVidage,
-            route: req.path,
+            methode: methodeUtilisee,
+            route: req.originalUrl,
             methodeHttp: req.method,
             date: new Date().toISOString()
         });
@@ -246,7 +240,7 @@ app.get("/api/vider-captures-test", (req, res) => {
     res.json({
         ok: true,
         statut: "ok",
-        message: "Route de vidage disponible. Utiliser POST /api/vider-captures ou DELETE /api/vider-captures pour vider réellement la table.",
+        message: "La route de vidage existe. Utiliser POST ou DELETE /api/vider-captures pour vider la table.",
         routes: [
             "POST /api/vider-captures",
             "DELETE /api/vider-captures",
@@ -259,27 +253,15 @@ app.get("/api/vider-captures-test", (req, res) => {
     });
 });
 
-app.get("/api/vider-captures", (req, res) => {
-    res.status(405).json({
-        ok: false,
-        statut: "methode_non_autorisee",
-        message: "Cette route existe, mais GET ne vide pas la table. Utiliser POST ou DELETE.",
-        routesAutorisees: [
-            "POST /api/vider-captures",
-            "DELETE /api/vider-captures"
-        ],
-        date: new Date().toISOString()
-    });
-});
+app.post("/api/vider-captures", viderTableTradingCapture);
+app.delete("/api/vider-captures", viderTableTradingCapture);
 
-app.post("/api/vider-captures", routeViderCaptures);
-app.delete("/api/vider-captures", routeViderCaptures);
+/* Alias compatibles avec différents boutons index.html */
+app.post("/api/vider-table", viderTableTradingCapture);
+app.delete("/api/vider-table", viderTableTradingCapture);
+app.post("/api/vider-trading-capture", viderTableTradingCapture);
+app.delete("/api/vider-trading-capture", viderTableTradingCapture);
 
-/* Alias tolérés pour éviter Route introuvable si le bouton index.html utilise un ancien nom. */
-app.post("/api/vider-table", routeViderCaptures);
-app.delete("/api/vider-table", routeViderCaptures);
-app.post("/api/vider-trading-capture", routeViderCaptures);
-app.delete("/api/vider-trading-capture", routeViderCaptures);
 /* =========================
    TEST API
 ========================= */
@@ -1482,18 +1464,17 @@ app.use((req, res) => {
         ok: false,
         statut: "erreur",
         message: "Route introuvable",
-        methodeHttp: req.method,
-        routeDemandee: req.originalUrl || req.path,
-        aide: "Vérifier l'adresse appelée dans index.html et la méthode HTTP utilisée.",
-        routesUtiles: [
-            "GET /api/test",
-            "GET /api/verifier-db",
-            "GET /api/verifier-table",
-            "GET /api/captures",
-            "POST /api/captures",
+        methode: req.method,
+        routeDemandee: req.originalUrl,
+        aide: "Vérifier l'URL appelée dans index.html et redéployer server.js sur Render.",
+        routesVidageDisponibles: [
             "GET /api/vider-captures-test",
             "POST /api/vider-captures",
-            "DELETE /api/vider-captures"
+            "DELETE /api/vider-captures",
+            "POST /api/vider-table",
+            "DELETE /api/vider-table",
+            "POST /api/vider-trading-capture",
+            "DELETE /api/vider-trading-capture"
         ]
     });
 });
