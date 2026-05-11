@@ -1543,45 +1543,6 @@
         lecteur.readAsText(fichier);
     }
 
-async function viderTableCaptures() {
-    const confirmation = confirm(
-        "Attention : cette action va supprimer toutes les captures enregistrées.\n\n" +
-        "Voulez-vous vraiment vider la table trading_capture ?"
-    );
-
-    if (!confirmation) {
-        return;
-    }
-
-    try {
-        const reponse = await fetch("https://trading-g8ie.onrender.com/api/vider-captures", {
-            method: "POST",
-            mode: "cors",
-            credentials: "omit",
-            headers: {
-                "Accept": "application/json"
-            },
-            cache: "no-store"
-        });
-
-        const texte = await reponse.text();
-        const resultat = JSON.parse(texte);
-
-        if (!reponse.ok || resultat.ok !== true) {
-            throw new Error(resultat.message || "Erreur inconnue.");
-        }
-
-        alert("La table trading_capture a été vidée avec succès.");
-
-        if (typeof chargerListeCapturesPostgres === "function") {
-            chargerListeCapturesPostgres(false);
-        }
-
-    } catch (erreur) {
-        alert("Impossible de vider la table trading_capture : " + erreur.message);
-        console.error("Erreur vidage table :", erreur);
-    }
-}
     document.addEventListener("DOMContentLoaded", function () {
         const champApi = document.getElementById("api-url");
         if (champApi && !champApi.value.trim()) {
