@@ -855,9 +855,7 @@
 
 
     async function viderTableTradingCapture() {
-        const confirmation = confirm("Êtes-vous sûr de vouloir vider toute la table trading_capture ?
-
-Cette action supprimera toutes les configurations enregistrées.");
+        const confirmation = confirm("Êtes-vous sûr de vouloir vider toute la table trading_capture ?\n\nCette action supprimera toutes les configurations enregistrées.");
 
         if (!confirmation) {
             afficherStatus("Suppression annulée.");
@@ -877,12 +875,9 @@ Cette action supprimera toutes les configurations enregistrées.");
         afficherStatus("Vidage de la table trading_capture en cours...");
         afficherEtatServeur("warning", "Suppression des captures...");
         afficherInfosServeur(
-            "VIDAGE DE LA TABLE
-" +
-            "------------------
-" +
-            "Table : trading_capture
-" +
+            "VIDAGE DE LA TABLE\n" +
+            "------------------\n" +
+            "Table : trading_capture\n" +
             "Route appelée : " + url
         );
 
@@ -902,10 +897,8 @@ Cette action supprimera toutes les configurations enregistrées.");
             afficherStatus("Table trading_capture vidée.");
             afficherEtatServeur("ok", "Table vidée");
             afficherInfosServeur(
-                "VIDAGE RÉUSSI
-" +
-                "-------------
-" +
+                "VIDAGE RÉUSSI\n" +
+                "-------------\n" +
                 JSON.stringify(resultat, null, 4)
             );
 
@@ -924,19 +917,13 @@ Cette action supprimera toutes les configurations enregistrées.");
             afficherStatus("Impossible de vider la table trading_capture.");
             afficherEtatServeur("error", "Erreur vidage table");
             afficherInfosServeur(
-                "ERREUR VIDAGE TABLE
-" +
-                "-------------------
-" +
-                "Route appelée : " + url + "
-
-" +
+                "ERREUR VIDAGE TABLE\n" +
+                "-------------------\n" +
+                "Route appelée : " + url + "\n\n" +
                 "Détail : " + erreur.message
             );
 
-            alert("Impossible de vider la table trading_capture.
-
-Détail : " + erreur.message);
+            alert("Impossible de vider la table trading_capture.\n\nDétail : " + erreur.message);
         }
     }
 
@@ -1613,9 +1600,7 @@ Détail : " + erreur.message);
 
 async function viderTableCaptures() {
     const confirmation = confirm(
-        "Attention : cette action va supprimer toutes les captures enregistrées.
-
-" +
+        "Attention : cette action va supprimer toutes les captures enregistrées.\n\n" +
         "Voulez-vous vraiment vider la table trading_capture ?"
     );
 
