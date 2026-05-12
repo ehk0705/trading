@@ -1,0 +1,35 @@
+PROCÉDURE
+
+1. Décompresser le fichier ZIP.
+2. Remplacer votre ancien server.js par ce fichier.
+3. Dans Render, ouvrir le service trading.
+4. Aller dans Environment.
+5. Ajouter cette variable :
+
+   VIDER_TABLE_PASSWORD = votre mot de passe
+
+6. Vérifier aussi que DATABASE_URL existe toujours.
+7. Redéployer le service Render.
+
+IMPORTANT
+
+La route de vidage exige maintenant un mot de passe.
+
+Exemple d'appel depuis index.html :
+
+fetch("https://trading-g8ie.onrender.com/api/vider-captures", {
+    method: "POST",
+    mode: "cors",
+    credentials: "omit",
+    headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+    },
+    body: JSON.stringify({
+        motDePasse: "votre mot de passe"
+    })
+});
+
+Route de test :
+
+https://trading-g8ie.onrender.com/api/vider-captures-test

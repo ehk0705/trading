@@ -1,0 +1,17 @@
+Fichiers modifiés pour Trading Station IA
+
+Variable Render utilisée :
+ADMIN_DELETE_PASSWORD
+
+À faire :
+1. Remplacer index.html par le fichier index.html fourni.
+2. Remplacer server.js par le fichier server.js fourni.
+3. Vérifier dans Render que la variable ADMIN_DELETE_PASSWORD existe dans Environment.
+4. Vérifier que DATABASE_URL existe toujours.
+5. Redéployer le service Render.
+
+Fonctionnement :
+- Le bouton "Vider la table" demande maintenant un mot de passe.
+- index.html envoie ce mot de passe à /api/vider-captures.
+- server.js compare ce mot de passe avec process.env.ADMIN_DELETE_PASSWORD.
+- Si le mot de passe est faux ou absent, la table n'est pas vidée.

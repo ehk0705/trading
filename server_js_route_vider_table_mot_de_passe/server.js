@@ -4,6 +4,11 @@
     ------------------------------------------------------------
     Fichier : server.js
     Auteur : Hocine Korichi, Ing.
+
+    Ajout :
+    - Mot de passe obligatoire pour vider la table trading_capture.
+    - Variable Render à créer :
+      VIDER_TABLE_PASSWORD = votre mot de passe
 */
 
 const express = require("express");
@@ -13,7 +18,7 @@ const { Pool } = require("pg");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const ADMIN_DELETE_PASSWORD = process.env.ADMIN_DELETE_PASSWORD || "";
+const VIDER_TABLE_PASSWORD = process.env.VIDER_TABLE_PASSWORD || "";
 
 /* =========================
    CORS
@@ -50,7 +55,7 @@ const optionsCors = {
         "Accept",
         "Origin",
         "X-Requested-With",
-        "X-Admin-Delete-Password"
+        "X-Vider-Table-Password"
     ],
     exposedHeaders: ["Content-Type"],
     credentials: false,
@@ -72,7 +77,7 @@ app.use((req, res, next) => {
     res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
     res.header(
         "Access-Control-Allow-Headers",
-        "Content-Type, Authorization, Accept, Origin, X-Requested-With, X-Admin-Delete-Password"
+        "Content-Type, Authorization, Accept, Origin, X-Requested-With, X-Vider-Table-Password"
     );
     res.header("Access-Control-Max-Age", "86400");
 
@@ -136,6 +141,15 @@ async function ajouterColonneNomCapture() {
     `);
 }
 
+async function ajouterColonneCategorieAnalyse() {
+    const db = obtenirPool();
+
+    await db.query(`
+        ALTER TABLE trading_capture
+        ADD COLUMN IF NOT EXISTS categorie_analyse VARCHAR(255);
+    `);
+}
+
 async function creerTableSiAbsente() {
     const db = obtenirPool();
 
@@ -153,6 +167,7 @@ async function creerTableSiAbsente() {
     `);
 
     await ajouterColonneNomCapture();
+    await ajouterColonneCategorieAnalyse();
 }
 
 function reponseErreur(res, status, message, erreur = null) {
@@ -164,28 +179,27 @@ function reponseErreur(res, status, message, erreur = null) {
     });
 }
 
-
-function verifierMotDePasseSuppression(req) {
+function verifierMotDePasseVidage(req) {
     const motDePasseRecu =
-        (req.body && req.body.motDePasse) ||
-        (req.body && req.body.mot_de_passe) ||
-        (req.body && req.body.adminDeletePassword) ||
-        req.headers["x-admin-delete-password"] ||
+        req.body?.motDePasse ||
+        req.body?.mot_de_passe ||
+        req.body?.password ||
+        req.headers["x-vider-table-password"] ||
         "";
 
-    if (!ADMIN_DELETE_PASSWORD) {
+    if (!VIDER_TABLE_PASSWORD) {
         return {
             ok: false,
             status: 500,
-            message: "ADMIN_DELETE_PASSWORD n'est pas configuré dans Render."
+            message: "VIDER_TABLE_PASSWORD n'est pas configuré dans Render."
         };
     }
 
-    if (motDePasseRecu !== ADMIN_DELETE_PASSWORD) {
+    if (motDePasseRecu !== VIDER_TABLE_PASSWORD) {
         return {
             ok: false,
             status: 401,
-            message: "Mot de passe incorrect. La table trading_capture n'a pas été vidée."
+            message: "Mot de passe incorrect. La table n'a pas été vidée."
         };
     }
 
@@ -204,10 +218,10 @@ app.get("/", (req, res) => {
     res.json({
         ok: true,
         statut: "ok",
-        message: "Serveur Trading API actif - version 2026-05-10 avec nom_capture.",
+        message: "Serveur Trading API actif - version avec protection du vidage par mot de passe.",
         serveur: "trading",
         databaseUrlConfiguree: Boolean(process.env.DATABASE_URL),
-        adminDeletePasswordConfigure: Boolean(ADMIN_DELETE_PASSWORD),
+        motDePasseVidageConfigure: Boolean(VIDER_TABLE_PASSWORD),
         routes: [
             "GET /api/test",
             "GET /api/cors-test",
@@ -236,15 +250,19 @@ app.get("/", (req, res) => {
     });
 });
 
+/* =========================
+   VIDAGE PROTÉGÉ PAR MOT DE PASSE
+========================= */
+
 async function viderTableTradingCapture(req, res) {
     try {
-        const verificationMotDePasse = verifierMotDePasseSuppression(req);
+        const verification = verifierMotDePasseVidage(req);
 
-        if (!verificationMotDePasse.ok) {
-            return res.status(verificationMotDePasse.status).json({
+        if (!verification.ok) {
+            return res.status(verification.status).json({
                 ok: false,
                 statut: "erreur",
-                message: verificationMotDePasse.message,
+                message: verification.message,
                 table: "trading_capture",
                 date: new Date().toISOString()
             });
@@ -287,7 +305,8 @@ app.get("/api/vider-captures-test", (req, res) => {
     res.json({
         ok: true,
         statut: "ok",
-        message: "La route de vidage existe. Utiliser POST ou DELETE /api/vider-captures avec le mot de passe ADMIN_DELETE_PASSWORD pour vider la table.",
+        message: "La route de vidage existe. Utiliser POST ou DELETE /api/vider-captures avec le mot de passe.",
+        motDePasseConfigure: Boolean(VIDER_TABLE_PASSWORD),
         routes: [
             "POST /api/vider-captures",
             "DELETE /api/vider-captures",
@@ -296,6 +315,9 @@ app.get("/api/vider-captures-test", (req, res) => {
             "POST /api/vider-trading-capture",
             "DELETE /api/vider-trading-capture"
         ],
+        exempleBody: {
+            motDePasse: "votre mot de passe"
+        },
         date: new Date().toISOString()
     });
 });
@@ -320,7 +342,7 @@ app.get("/api/test", (req, res) => {
         message: "API accessible",
         serveur: "trading",
         databaseUrlConfiguree: Boolean(process.env.DATABASE_URL),
-        adminDeletePasswordConfigure: Boolean(ADMIN_DELETE_PASSWORD),
+        motDePasseVidageConfigure: Boolean(VIDER_TABLE_PASSWORD),
         origin: req.headers.origin || null,
         date: new Date().toISOString()
     });
@@ -365,7 +387,7 @@ app.get("/api/creer-table", async (req, res) => {
             ok: true,
             statut: "ok",
             table: "trading_capture",
-            message: "La table trading_capture existe ou vient d'être créée. La colonne nom_capture a été ajoutée si elle était absente.",
+            message: "La table trading_capture existe ou vient d'être créée. Les colonnes nom_capture et categorie_analyse ont été ajoutées si elles étaient absentes.",
             date: new Date().toISOString()
         });
     } catch (erreur) {
@@ -412,6 +434,14 @@ app.get("/api/verifier-table", async (req, res) => {
             AND column_name = 'nom_capture';
         `);
 
+        const resultatCategorieAnalyse = await db.query(`
+            SELECT column_name
+            FROM information_schema.columns
+            WHERE table_schema = 'public'
+            AND table_name = 'trading_capture'
+            AND column_name = 'categorie_analyse';
+        `);
+
         const resultatIndex = await db.query(`
             SELECT indexname
             FROM pg_indexes
@@ -422,6 +452,7 @@ app.get("/api/verifier-table", async (req, res) => {
 
         const tableExiste = resultatTable.rows.length > 0;
         const nomCaptureExiste = resultatNomCapture.rows.length > 0;
+        const categorieAnalyseExiste = resultatCategorieAnalyse.rows.length > 0;
         const indexNomCaptureExiste = resultatIndex.rows.length > 0;
 
         res.json({
@@ -430,6 +461,7 @@ app.get("/api/verifier-table", async (req, res) => {
             table: "trading_capture",
             tableExiste,
             nomCaptureExiste,
+            categorieAnalyseExiste,
             indexNomCaptureExiste,
             message: tableExiste
                 ? "La table trading_capture existe bien."
@@ -513,6 +545,7 @@ app.get("/api/contenu-table", async (req, res) => {
                 intervalle,
                 nom_fichier,
                 nom_capture,
+                categorie_analyse,
                 configuration_json,
                 CASE
                     WHEN screenshot_base64 IS NULL THEN false
@@ -575,6 +608,8 @@ app.post("/api/captures", async (req, res) => {
             intervalle,
             nom_fichier,
             nom_capture,
+            categorie_analyse,
+            categorieAnalyse,
             configuration_json,
             configuration,
             screenshot_base64,
@@ -587,6 +622,7 @@ app.post("/api/captures", async (req, res) => {
         const screenshotFinal = screenshot_base64 || screenshot || image || null;
 
         const nomCaptureFinal = nom_capture || nom_fichier || null;
+        const categorieAnalyseFinale = categorie_analyse || categorieAnalyse || null;
 
         const resultat = await db.query(
             `
@@ -597,10 +633,11 @@ app.post("/api/captures", async (req, res) => {
                 intervalle,
                 nom_fichier,
                 nom_capture,
+                categorie_analyse,
                 configuration_json,
                 screenshot_base64
             )
-            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
             RETURNING
                 id,
                 actif,
@@ -608,6 +645,7 @@ app.post("/api/captures", async (req, res) => {
                 intervalle,
                 nom_fichier,
                 nom_capture,
+                categorie_analyse,
                 date_capture
             `,
             [
@@ -616,6 +654,7 @@ app.post("/api/captures", async (req, res) => {
                 intervalle || null,
                 nom_fichier || nomCaptureFinal,
                 nomCaptureFinal,
+                categorieAnalyseFinale,
                 configurationFinale,
                 screenshotFinal
             ]
@@ -654,6 +693,7 @@ app.get("/api/captures", async (req, res) => {
                 intervalle,
                 nom_fichier,
                 nom_capture,
+                categorie_analyse,
                 date_capture
             FROM trading_capture
             ORDER BY date_capture DESC
@@ -1523,7 +1563,8 @@ app.use((req, res) => {
             "DELETE /api/vider-table",
             "POST /api/vider-trading-capture",
             "DELETE /api/vider-trading-capture"
-        ]
+        ],
+        remarque: "Les routes de vidage exigent maintenant le mot de passe."
     });
 });
 
