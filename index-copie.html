@@ -9,12 +9,12 @@
     <style>
         * { box-sizing: border-box; }
 
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: #07111f;
-            color: white;
-        }
+		body {
+			margin: 0;
+			font-family: Arial, sans-serif;
+			background: #ffffff;
+			color: #111827;
+		}
 
         header {
             background: #0f172a;
@@ -413,6 +413,57 @@
             border-top: 1px solid #263244;
         }
 
+
+        .modal-password-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.72);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            padding: 16px;
+        }
+
+        .modal-password-box {
+            width: 100%;
+            max-width: 420px;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 18px;
+            color: #ffffff;
+            box-shadow: 0 18px 45px rgba(0, 0, 0, 0.45);
+        }
+
+        .modal-password-box h3 {
+            margin-top: 0;
+            color: #facc15;
+        }
+
+        .modal-password-box p {
+            font-size: 13px;
+            line-height: 1.5;
+            color: #cbd5e1;
+        }
+
+        .modal-password-box input {
+            width: 100%;
+            margin-top: 8px;
+            margin-bottom: 14px;
+        }
+
+        .modal-password-actions {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .modal-password-actions button {
+            min-width: 110px;
+        }
+
         @media (max-width: 1200px) {
             main { grid-template-columns: minmax(0, 2fr) minmax(320px, 0.8fr); }
             #tradingview_chart { height: 650px; }
@@ -534,7 +585,7 @@
         <button class="btn-decision" onclick="ouvrirPageDecision()">Analyser le snapshot</button>
 
         <div class="capture-selector-top">
-            <label for="liste-captures-postgres">Liste des configurations enregistrées :</label>
+            <label for="liste-captures-postgres">Choisir une confihuration :</label>
             <select id="liste-captures-postgres" onchange="chargerCapturePostgresSelectionnee()">
                 <option value="">Aucune configuration chargée</option>
             </select>
@@ -648,6 +699,19 @@
     </aside>
 </main>
 
+
+<div id="modal-password-overlay" class="modal-password-overlay">
+    <div class="modal-password-box">
+        <h3>Mot de passe administrateur</h3>
+        <p>Entrer le mot de passe pour vider la table <strong>trading_capture</strong>.</p>
+        <input id="admin-delete-password-input" type="password" autocomplete="current-password" placeholder="Mot de passe">
+        <div class="modal-password-actions">
+            <button class="btn-dark" type="button" onclick="fermerFenetreMotDePasse(false)">Annuler</button>
+            <button class="btn-clear" type="button" onclick="fermerFenetreMotDePasse(true)">Confirmer</button>
+        </div>
+    </div>
+</div>
+
 <footer>
     Trading Station IA — page HTML sur GitHub Pages, API Node.js sur Render.
 </footer>
@@ -657,6 +721,63 @@
     let configurationActuelle = null;
 
     const API_BASE_URL_PAR_DEFAUT = "https://trading-g8ie.onrender.com";
+
+    let resolveMotDePasseAdmin = null;
+
+    function demanderMotDePasseAdmin() {
+        return new Promise(function(resolve) {
+            const overlay = document.getElementById("modal-password-overlay");
+            const champ = document.getElementById("admin-delete-password-input");
+
+            resolveMotDePasseAdmin = resolve;
+
+            if (!overlay || !champ) {
+                resolve("");
+                return;
+            }
+
+            champ.value = "";
+            overlay.style.display = "flex";
+
+            setTimeout(function() {
+                champ.focus();
+            }, 50);
+        });
+    }
+
+    function fermerFenetreMotDePasse(valider) {
+        const overlay = document.getElementById("modal-password-overlay");
+        const champ = document.getElementById("admin-delete-password-input");
+
+        const valeur = valider && champ ? champ.value : "";
+
+        if (overlay) {
+            overlay.style.display = "none";
+        }
+
+        if (typeof resolveMotDePasseAdmin === "function") {
+            resolveMotDePasseAdmin(valeur);
+            resolveMotDePasseAdmin = null;
+        }
+    }
+
+    document.addEventListener("keydown", function(event) {
+        const overlay = document.getElementById("modal-password-overlay");
+        const champ = document.getElementById("admin-delete-password-input");
+
+        if (!overlay || overlay.style.display !== "flex") {
+            return;
+        }
+
+        if (event.key === "Escape") {
+            fermerFenetreMotDePasse(false);
+        }
+
+        if (event.key === "Enter" && document.activeElement === champ) {
+            fermerFenetreMotDePasse(true);
+        }
+    });
+
 
     function valeurElement(id, valeurDefaut = "") {
         const element = document.getElementById(id);
@@ -862,6 +983,14 @@
             return;
         }
 
+        const motDePasse = await demanderMotDePasseAdmin();
+
+        if (!motDePasse || motDePasse.trim() === "") {
+            afficherStatus("Suppression annulée : mot de passe absent.");
+            alert("Suppression annulée : mot de passe absent.");
+            return;
+        }
+
         const url = getApiViderCapturesUrl();
 
         afficherStatus("Vidage de la table trading_capture en cours...");
@@ -876,8 +1005,13 @@
         try {
             const resultat = await appelerJson(url, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
-                cache: "no-store"
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                cache: "no-store",
+                body: JSON.stringify({
+                    motDePasse: motDePasse.trim()
+                })
             });
 
             afficherStatus("Table trading_capture vidée.");
@@ -1594,15 +1728,26 @@ async function viderTableCaptures() {
         return;
     }
 
+    const motDePasse = await demanderMotDePasseAdmin();
+
+    if (!motDePasse || motDePasse.trim() === "") {
+        alert("Suppression annulée : mot de passe absent.");
+        return;
+    }
+
     try {
         const reponse = await fetch("https://trading-g8ie.onrender.com/api/vider-captures", {
             method: "POST",
             mode: "cors",
             credentials: "omit",
             headers: {
+                "Content-Type": "application/json",
                 "Accept": "application/json"
             },
-            cache: "no-store"
+            cache: "no-store",
+            body: JSON.stringify({
+                motDePasse: motDePasse.trim()
+            })
         });
 
         const texte = await reponse.text();

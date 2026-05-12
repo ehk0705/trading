@@ -53,6 +53,10 @@
             gap: 6px;
         }
 
+        .parametres-graphiques-caches {
+            display: none !important;
+        }
+
         .capture-selector-top {
             display: flex;
             align-items: center;
@@ -530,7 +534,7 @@
             <small class="auteur-logo">Auteur : Hocine Korichi, Ing.</small>
         </div>
 
-        <div class="control-group">
+        <div class="control-group parametres-graphiques-caches">
             <label for="asset-selector">ACTIF :</label>
             <select id="asset-selector" onchange="actualiserGraphique()">
                 <option value="BINANCE:BTCUSDT">Bitcoin / USDT</option>
@@ -548,7 +552,7 @@
             </select>
         </div>
 
-        <div class="control-group">
+        <div class="control-group parametres-graphiques-caches">
             <label for="interval-selector">INTERVALLE :</label>
             <select id="interval-selector" onchange="actualiserGraphique()">
                 <option value="1">1 minute</option>
@@ -563,7 +567,7 @@
             </select>
         </div>
 
-        <div class="control-group">
+        <div class="control-group parametres-graphiques-caches">
             <label for="indicator-selector">INDICATEUR :</label>
             <select id="indicator-selector" onchange="actualiserGraphique()">
                 <option value="RSI">RSI</option>
@@ -1143,7 +1147,21 @@
         }
     }
 
+
+    function lireParametresGraphiquesMasques() {
+        return {
+            actif: valeurElement("asset-selector", "BINANCE:BTCUSDT"),
+            actifLibelle: libelleElement("asset-selector", "Bitcoin / USDT"),
+            intervalle: valeurElement("interval-selector", "D"),
+            intervalleLibelle: libelleElement("interval-selector", "1 jour"),
+            indicateur: valeurElement("indicator-selector", "RSI"),
+            indicateurLibelle: libelleElement("indicator-selector", "RSI")
+        };
+    }
+
     function capturerConfigurationTradingView(afficherAlerte = true) {
+        const parametresGraphiques = lireParametresGraphiquesMasques();
+
         configurationActuelle = {
             nom: "Configuration TradingView IA",
             dateCapture: new Date().toISOString(),
@@ -1157,15 +1175,17 @@
                 type: "Node.js"
             },
             graphique: {
-                actif: valeurElement("asset-selector", "BINANCE:BTCUSDT"),
-                actifLibelle: libelleElement("asset-selector", "Bitcoin / USDT"),
-                intervalle: valeurElement("interval-selector", "D"),
-                intervalleLibelle: libelleElement("interval-selector", "1 jour"),
-                indicateur: valeurElement("indicator-selector", "RSI"),
-                indicateurLibelle: libelleElement("indicator-selector", "RSI"),
+                actif: parametresGraphiques.actif,
+                actifLibelle: parametresGraphiques.actifLibelle,
+                intervalle: parametresGraphiques.intervalle,
+                intervalleLibelle: parametresGraphiques.intervalleLibelle,
+                indicateur: parametresGraphiques.indicateur,
+                indicateurLibelle: parametresGraphiques.indicateurLibelle,
                 typeBougie: valeurElement("type-bougie", "bougies_japonaises"),
                 typeBougieLibelle: libelleElement("type-bougie", "Bougies japonaises"),
-                source: "widget_tradingview_integre"
+                source: "champs_html_masques",
+                sourceAffichage: "widget_tradingview_integre",
+                champsMasques: true
             },
             analyseIA: {
                 categorie: getCategorieAnalyseBTC(),
@@ -1335,6 +1355,17 @@
                 throw new Error("configurationActuelle.graphique est vide ou non défini.");
             }
 
+            const parametresGraphiques = lireParametresGraphiquesMasques();
+
+            configurationActuelle.graphique.actif = parametresGraphiques.actif;
+            configurationActuelle.graphique.actifLibelle = parametresGraphiques.actifLibelle;
+            configurationActuelle.graphique.intervalle = parametresGraphiques.intervalle;
+            configurationActuelle.graphique.intervalleLibelle = parametresGraphiques.intervalleLibelle;
+            configurationActuelle.graphique.indicateur = parametresGraphiques.indicateur;
+            configurationActuelle.graphique.indicateurLibelle = parametresGraphiques.indicateurLibelle;
+            configurationActuelle.graphique.source = "champs_html_masques";
+            configurationActuelle.graphique.champsMasques = true;
+
             const urlCaptures = getApiCapturesUrl();
             const nomCapture = genererNomCapturePostgres(configurationActuelle);
             const screenshotBase64 = obtenirScreenshotBase64DepuisConfiguration();
@@ -1352,6 +1383,9 @@
                 actif: configurationActuelle.graphique.actif || "NON_RENSEIGNE",
                 indicateur: configurationActuelle.graphique.indicateur || null,
                 intervalle: configurationActuelle.graphique.intervalle || null,
+                actif_libelle: configurationActuelle.graphique.actifLibelle || null,
+                indicateur_libelle: configurationActuelle.graphique.indicateurLibelle || null,
+                intervalle_libelle: configurationActuelle.graphique.intervalleLibelle || null,
 
                 /*
                     On garde nom_fichier pour compatibilité avec ton ancien code.
