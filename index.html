@@ -657,6 +657,10 @@
     let configurationActuelle = null;
 
     const API_BASE_URL_PAR_DEFAUT = "https://trading-g8ie.onrender.com";
+	const motDePasse = prompt("Mot de passe requis pour vider la table :");
+	body: JSON.stringify({
+    motDePasse: motDePasse
+})
 
     function valeurElement(id, valeurDefaut = "") {
         const element = document.getElementById(id);
@@ -855,20 +859,10 @@
 
 
     async function viderTableTradingCapture() {
-        const confirmation = confirm("Êtes-vous sûr de vouloir vider toute la table trading_capture ?
-
-Cette action supprimera toutes les configurations enregistrées.");
+        const confirmation = confirm("Êtes-vous sûr de vouloir vider toute la table trading_capture ?\n\nCette action supprimera toutes les configurations enregistrées.");
 
         if (!confirmation) {
             afficherStatus("Suppression annulée.");
-            return;
-        }
-
-        const motDePasse = prompt("Mot de passe administrateur requis pour vider la table trading_capture :");
-
-        if (!motDePasse) {
-            afficherStatus("Suppression annulée : mot de passe absent.");
-            alert("Suppression annulée : mot de passe absent.");
             return;
         }
 
@@ -877,35 +871,24 @@ Cette action supprimera toutes les configurations enregistrées.");
         afficherStatus("Vidage de la table trading_capture en cours...");
         afficherEtatServeur("warning", "Suppression des captures...");
         afficherInfosServeur(
-            "VIDAGE DE LA TABLE
-" +
-            "------------------
-" +
-            "Table : trading_capture
-" +
+            "VIDAGE DE LA TABLE\n" +
+            "------------------\n" +
+            "Table : trading_capture\n" +
             "Route appelée : " + url
         );
 
         try {
             const resultat = await appelerJson(url, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-Admin-Delete-Password": motDePasse
-                },
-                cache: "no-store",
-                body: JSON.stringify({
-                    motDePasse: motDePasse
-                })
+                headers: { "Content-Type": "application/json" },
+                cache: "no-store"
             });
 
             afficherStatus("Table trading_capture vidée.");
             afficherEtatServeur("ok", "Table vidée");
             afficherInfosServeur(
-                "VIDAGE RÉUSSI
-" +
-                "-------------
-" +
+                "VIDAGE RÉUSSI\n" +
+                "-------------\n" +
                 JSON.stringify(resultat, null, 4)
             );
 
@@ -924,19 +907,13 @@ Cette action supprimera toutes les configurations enregistrées.");
             afficherStatus("Impossible de vider la table trading_capture.");
             afficherEtatServeur("error", "Erreur vidage table");
             afficherInfosServeur(
-                "ERREUR VIDAGE TABLE
-" +
-                "-------------------
-" +
-                "Route appelée : " + url + "
-
-" +
+                "ERREUR VIDAGE TABLE\n" +
+                "-------------------\n" +
+                "Route appelée : " + url + "\n\n" +
                 "Détail : " + erreur.message
             );
 
-            alert("Impossible de vider la table trading_capture.
-
-Détail : " + erreur.message);
+            alert("Impossible de vider la table trading_capture.\n\nDétail : " + erreur.message);
         }
     }
 

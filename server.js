@@ -13,7 +13,6 @@ const { Pool } = require("pg");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const ADMIN_DELETE_PASSWORD = process.env.ADMIN_DELETE_PASSWORD || "";
 
 /* =========================
    CORS
@@ -49,8 +48,7 @@ const optionsCors = {
         "Authorization",
         "Accept",
         "Origin",
-        "X-Requested-With",
-        "X-Admin-Delete-Password"
+        "X-Requested-With"
     ],
     exposedHeaders: ["Content-Type"],
     credentials: false,
@@ -72,7 +70,7 @@ app.use((req, res, next) => {
     res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
     res.header(
         "Access-Control-Allow-Headers",
-        "Content-Type, Authorization, Accept, Origin, X-Requested-With, X-Admin-Delete-Password"
+        "Content-Type, Authorization, Accept, Origin, X-Requested-With"
     );
     res.header("Access-Control-Max-Age", "86400");
 
@@ -164,38 +162,6 @@ function reponseErreur(res, status, message, erreur = null) {
     });
 }
 
-
-function verifierMotDePasseSuppression(req) {
-    const motDePasseRecu =
-        (req.body && req.body.motDePasse) ||
-        (req.body && req.body.mot_de_passe) ||
-        (req.body && req.body.adminDeletePassword) ||
-        req.headers["x-admin-delete-password"] ||
-        "";
-
-    if (!ADMIN_DELETE_PASSWORD) {
-        return {
-            ok: false,
-            status: 500,
-            message: "ADMIN_DELETE_PASSWORD n'est pas configuré dans Render."
-        };
-    }
-
-    if (motDePasseRecu !== ADMIN_DELETE_PASSWORD) {
-        return {
-            ok: false,
-            status: 401,
-            message: "Mot de passe incorrect. La table trading_capture n'a pas été vidée."
-        };
-    }
-
-    return {
-        ok: true,
-        status: 200,
-        message: "Mot de passe accepté."
-    };
-}
-
 /* =========================
    ROUTE RACINE
 ========================= */
@@ -207,7 +173,6 @@ app.get("/", (req, res) => {
         message: "Serveur Trading API actif - version 2026-05-10 avec nom_capture.",
         serveur: "trading",
         databaseUrlConfiguree: Boolean(process.env.DATABASE_URL),
-        adminDeletePasswordConfigure: Boolean(ADMIN_DELETE_PASSWORD),
         routes: [
             "GET /api/test",
             "GET /api/cors-test",
@@ -238,18 +203,6 @@ app.get("/", (req, res) => {
 
 async function viderTableTradingCapture(req, res) {
     try {
-        const verificationMotDePasse = verifierMotDePasseSuppression(req);
-
-        if (!verificationMotDePasse.ok) {
-            return res.status(verificationMotDePasse.status).json({
-                ok: false,
-                statut: "erreur",
-                message: verificationMotDePasse.message,
-                table: "trading_capture",
-                date: new Date().toISOString()
-            });
-        }
-
         await creerTableSiAbsente();
 
         const db = obtenirPool();
@@ -287,7 +240,7 @@ app.get("/api/vider-captures-test", (req, res) => {
     res.json({
         ok: true,
         statut: "ok",
-        message: "La route de vidage existe. Utiliser POST ou DELETE /api/vider-captures avec le mot de passe ADMIN_DELETE_PASSWORD pour vider la table.",
+        message: "La route de vidage existe. Utiliser POST ou DELETE /api/vider-captures pour vider la table.",
         routes: [
             "POST /api/vider-captures",
             "DELETE /api/vider-captures",
@@ -320,7 +273,6 @@ app.get("/api/test", (req, res) => {
         message: "API accessible",
         serveur: "trading",
         databaseUrlConfiguree: Boolean(process.env.DATABASE_URL),
-        adminDeletePasswordConfigure: Boolean(ADMIN_DELETE_PASSWORD),
         origin: req.headers.origin || null,
         date: new Date().toISOString()
     });
