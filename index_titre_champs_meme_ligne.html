@@ -183,10 +183,12 @@
         .chart-title-row {
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            gap: 10px;
+            justify-content: flex-start;
+            gap: 14px;
             margin-bottom: 10px;
             width: 100%;
+            flex-wrap: nowrap;
+            overflow-x: auto;
         }
 
         .chart-title-row h2 {
@@ -218,15 +220,32 @@
 
         .chart-inline-controls {
             display: flex;
-            align-items: flex-end;
+            align-items: center;
             gap: 12px;
-            margin: 0 0 12px 0;
-            flex-wrap: wrap;
+            margin: 0;
+            flex-wrap: nowrap;
+            flex: 0 0 auto;
         }
 
         .chart-inline-controls .form-block {
-            flex: 0 1 220px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex: 0 0 auto;
             margin-bottom: 0;
+        }
+
+        .chart-inline-controls .form-block label {
+            margin-bottom: 0;
+            white-space: nowrap;
+        }
+
+        .chart-inline-controls .form-block select {
+            width: 175px;
+        }
+
+        .chart-inline-controls .form-block input {
+            width: 105px;
         }
 
         #tradingview_chart {
@@ -442,7 +461,9 @@
             .logo { text-align: center; margin-right: 0; }
             .header-images { justify-content: center; margin-left: 0; }
             .header-images img { width: 43px; height: 43px; }
-            .chart-title-row { justify-content: space-between; flex-wrap: nowrap; }
+            .chart-title-row { justify-content: flex-start; flex-wrap: nowrap; }
+            .chart-inline-controls { flex: 0 0 auto; flex-wrap: nowrap; }
+            .chart-inline-controls .form-block { flex: 0 0 auto; }
             .chart-title-icons img { width: 30px; height: 30px; }
             #tradingview_chart { height: 460px; }
         }
@@ -550,25 +571,24 @@
     <section class="chart-panel">
         <div class="chart-title-row">
             <h2>Graphique TradingView intégré</h2>
+            <div class="chart-inline-controls">
+                <div class="form-block">
+                    <label for="type-bougie">Type de graphique</label>
+                    <select id="type-bougie" onchange="actualiserGraphique()">
+                        <option value="bougies_japonaises" selected>Bougies japonaises</option>
+                        <option value="barres">Barres</option>
+                        <option value="ligne">Ligne</option>
+                        <option value="heikin_ashi">Heikin Ashi</option>
+                    </select>
+                </div>
+                <div class="form-block">
+                    <label for="capital-input">Capital initial</label>
+                    <input id="capital-input" type="number" value="1000" min="0" step="100">
+                </div>
+            </div>
             <div class="chart-title-icons">
                 <img src="img/bitcoin.jfif" alt="Symbole du Bitcoin">
                 <img src="img/lingot-or.jfif" alt="Lingot d'or">
-            </div>
-        </div>
-
-        <div class="chart-inline-controls">
-            <div class="form-block">
-                <label for="type-bougie">Type de graphique</label>
-                <select id="type-bougie" onchange="actualiserGraphique()">
-                    <option value="bougies_japonaises" selected>Bougies japonaises</option>
-                    <option value="barres">Barres</option>
-                    <option value="ligne">Ligne</option>
-                    <option value="heikin_ashi">Heikin Ashi</option>
-                </select>
-            </div>
-            <div class="form-block">
-                <label for="capital-input">Capital initial</label>
-                <input id="capital-input" type="number" value="1000" min="0" step="100">
             </div>
         </div>
 

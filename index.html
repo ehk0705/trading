@@ -183,10 +183,12 @@
         .chart-title-row {
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            gap: 10px;
+            justify-content: flex-start;
+            gap: 14px;
             margin-bottom: 10px;
             width: 100%;
+            flex-wrap: nowrap;
+            overflow-x: auto;
         }
 
         .chart-title-row h2 {
@@ -218,15 +220,32 @@
 
         .chart-inline-controls {
             display: flex;
-            align-items: flex-end;
+            align-items: center;
             gap: 12px;
-            margin: 0 0 12px 0;
-            flex-wrap: wrap;
+            margin: 0;
+            flex-wrap: nowrap;
+            flex: 0 0 auto;
         }
 
         .chart-inline-controls .form-block {
-            flex: 0 1 220px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex: 0 0 auto;
             margin-bottom: 0;
+        }
+
+        .chart-inline-controls .form-block label {
+            margin-bottom: 0;
+            white-space: nowrap;
+        }
+
+        .chart-inline-controls .form-block select {
+            width: 175px;
+        }
+
+        .chart-inline-controls .form-block input {
+            width: 105px;
         }
 
         #tradingview_chart {
@@ -442,9 +461,9 @@
             .logo { text-align: center; margin-right: 0; }
             .header-images { justify-content: center; margin-left: 0; }
             .header-images img { width: 43px; height: 43px; }
-            .chart-title-row { justify-content: space-between; flex-wrap: wrap; }
-            .chart-inline-controls { flex: 1 1 100%; flex-wrap: wrap; }
-            .chart-inline-controls .form-block { flex: 1 1 100%; }
+            .chart-title-row { justify-content: flex-start; flex-wrap: nowrap; }
+            .chart-inline-controls { flex: 0 0 auto; flex-wrap: nowrap; }
+            .chart-inline-controls .form-block { flex: 0 0 auto; }
             .chart-title-icons img { width: 30px; height: 30px; }
             #tradingview_chart { height: 460px; }
         }
