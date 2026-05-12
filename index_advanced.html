@@ -1359,8 +1359,226 @@
         };
     }
 
+
+    function appelSecurise(description, fonction) {
+        try {
+            if (typeof fonction !== "function") return null;
+            const resultat = fonction();
+            return resultat === undefined ? null : resultat;
+        } catch (erreur) {
+            console.warn("Paramètre TradingView non accessible : " + description, erreur);
+            return null;
+        }
+    }
+
+    function valeurNonVide(valeur) {
+        if (valeur === undefined || valeur === null) return null;
+        if (typeof valeur === "string" && valeur.trim() === "") return null;
+        return valeur;
+    }
+
+    function detecterDimensionsElement(id) {
+        const element = document.getElementById(id);
+        if (!element) {
+            return {
+                existe: false,
+                largeur: null,
+                hauteur: null
+            };
+        }
+
+        const rectangle = element.getBoundingClientRect();
+
+        return {
+            existe: true,
+            largeur: Math.round(rectangle.width),
+            hauteur: Math.round(rectangle.height),
+            largeurScroll: element.scrollWidth || null,
+            hauteurScroll: element.scrollHeight || null
+        };
+    }
+
+    function obtenirEtudesConfigureesDepuisPage() {
+        const indicateur = valeurElement("indicator-selector", "RSI");
+        const etudes = choisirEtudeTradingView();
+
+        return {
+            indicateurSelectionne: indicateur,
+            indicateurLibelle: libelleElement("indicator-selector", "RSI"),
+            etudesConfigurees: etudes,
+            source: "selecteur_html_et_parametre_studies"
+        };
+    }
+
+    function lireValeursAvanceesDepuisChartingLibrary() {
+        const donnees = {
+            apiDisponible: false,
+            symbole: null,
+            intervalle: null,
+            visibleRange: null,
+            typeGraphiqueBrut: null,
+            nomGraphique: null,
+            timezone: null,
+            etudes: null,
+            dessins: null,
+            erreurs: []
+        };
+
+        if (!widgetTradingView || typeof widgetTradingView.activeChart !== "function") {
+            donnees.erreurs.push("API activeChart indisponible avec le widget actuel.");
+            return donnees;
+        }
+
+        const chart = appelSecurise("activeChart", function () {
+            return widgetTradingView.activeChart();
+        });
+
+        if (!chart) {
+            donnees.erreurs.push("Graphique actif non disponible.");
+            return donnees;
+        }
+
+        donnees.apiDisponible = true;
+
+        const symbolInterval = appelSecurise("symbolInterval", function () {
+            return typeof chart.symbolInterval === "function" ? chart.symbolInterval() : null;
+        });
+
+        if (symbolInterval) {
+            donnees.symbole = valeurNonVide(symbolInterval.symbol || symbolInterval.ticker || symbolInterval.pro_name || symbolInterval.full_name);
+            donnees.intervalle = valeurNonVide(symbolInterval.interval || symbolInterval.resolution || symbolInterval.timeframe);
+        }
+
+        donnees.symbole = donnees.symbole || valeurNonVide(appelSecurise("symbol", function () {
+            return typeof chart.symbol === "function" ? chart.symbol() : null;
+        }));
+
+        donnees.intervalle = donnees.intervalle || valeurNonVide(appelSecurise("resolution", function () {
+            return typeof chart.resolution === "function" ? chart.resolution() : null;
+        }));
+
+        donnees.visibleRange = appelSecurise("getVisibleRange", function () {
+            return typeof chart.getVisibleRange === "function" ? chart.getVisibleRange() : null;
+        });
+
+        donnees.typeGraphiqueBrut = appelSecurise("chartType", function () {
+            if (typeof chart.chartType === "function") return chart.chartType();
+            if (typeof chart.getChartType === "function") return chart.getChartType();
+            return null;
+        });
+
+        donnees.nomGraphique = appelSecurise("name", function () {
+            return typeof chart.name === "function" ? chart.name() : null;
+        });
+
+        donnees.timezone = appelSecurise("timezone", function () {
+            if (typeof chart.getTimezone === "function") return chart.getTimezone();
+            if (typeof widgetTradingView.getTimezoneApi === "function") return widgetTradingView.getTimezoneApi();
+            return null;
+        });
+
+        donnees.etudes = appelSecurise("getAllStudies", function () {
+            if (typeof chart.getAllStudies === "function") return chart.getAllStudies();
+            if (typeof chart.getAllPanes === "function") return { panesDisponibles: true, panes: chart.getAllPanes() };
+            return null;
+        });
+
+        donnees.dessins = appelSecurise("getAllShapes", function () {
+            return typeof chart.getAllShapes === "function" ? chart.getAllShapes() : null;
+        });
+
+        return donnees;
+    }
+
+    function capturerParametresAvancesTradingView(parametresGraphiques) {
+        const lectureAvancee = lireValeursAvanceesDepuisChartingLibrary();
+        const dimensionsGraphique = detecterDimensionsElement("tradingview_chart");
+        const etudesConfigurees = obtenirEtudesConfigureesDepuisPage();
+        const dateCapture = new Date();
+
+        const actifFinal =
+            lectureAvancee.symbole ||
+            parametresGraphiques.actif ||
+            valeurElement("asset-selector", "BINANCE:BTCUSDT");
+
+        const intervalleFinal =
+            lectureAvancee.intervalle ||
+            parametresGraphiques.intervalle ||
+            valeurElement("interval-selector", "D");
+
+        return {
+            versionCapture: "advanced_capture_v1",
+            dateCaptureIso: dateCapture.toISOString(),
+            sourcePrincipale: lectureAvancee.apiDisponible ? "charting_library_ou_api_avancee" : "widget_public_avec_repli_html",
+            lectureDirectePossible: lectureAvancee.apiDisponible === true,
+            valeursPrincipales: {
+                actif: actifFinal,
+                actifLibelle: parametresGraphiques.actifLibelle || actifFinal,
+                intervalle: intervalleFinal,
+                intervalleLibelle: parametresGraphiques.intervalleLibelle || intervalleFinal,
+                indicateur: parametresGraphiques.indicateur || valeurElement("indicator-selector", "RSI"),
+                indicateurLibelle: parametresGraphiques.indicateurLibelle || libelleElement("indicator-selector", "RSI"),
+                typeBougie: valeurElement("type-bougie", "bougies_japonaises"),
+                typeBougieLibelle: libelleElement("type-bougie", "Bougies japonaises"),
+                styleTradingView: obtenirStyleTradingView()
+            },
+            graphiqueTradingView: {
+                widgetPresent: !!widgetTradingView,
+                apiActiveChartDisponible: typeof widgetTradingView?.activeChart === "function",
+                apiSymbolIntervalDisponible: typeof widgetTradingView?.symbolInterval === "function",
+                allowSymbolChange: true,
+                autosize: true,
+                theme: "dark",
+                locale: "fr",
+                timezoneConfiguree: "America/Toronto",
+                toolbarBg: "#0f172a",
+                hideSideToolbar: false,
+                details: true,
+                hotlist: true,
+                calendar: false,
+                enablePublishing: false,
+                dimensions: dimensionsGraphique
+            },
+            donneesLuesDepuisApiAvancee: lectureAvancee,
+            indicateursEtEtudes: etudesConfigurees,
+            analyse: {
+                categorie: getCategorieAnalyseBTC(),
+                categorieLibelle: getLibelleCategorieAnalyseBTC(),
+                descriptionCategorie: getDescriptionCategorieAnalyseBTC(),
+                strategie: valeurElement("strategie-selector", "suivi_tendance"),
+                sens: valeurElement("sens-selector", "achat_vente")
+            },
+            risque: {
+                capitalInitial: nombreElement("capital-input", 1000),
+                risqueParPositionPourcent: nombreElement("risk-input", 1),
+                stopLossPourcent: nombreElement("stoploss-input", 2),
+                takeProfitPourcent: nombreElement("takeprofit-input", 4),
+                levier: nombreElement("levier-input", 1)
+            },
+            environnementPage: {
+                urlPage: window.location.href,
+                origine: window.location.origin,
+                chemin: window.location.pathname,
+                largeurFenetre: window.innerWidth,
+                hauteurFenetre: window.innerHeight,
+                devicePixelRatio: window.devicePixelRatio || 1,
+                langueNavigateur: navigator.language || null,
+                plateforme: navigator.platform || null,
+                userAgent: navigator.userAgent || null,
+                heureLocale: dateCapture.toLocaleString("fr-CA")
+            },
+            limites: {
+                indicateursAjoutesManuellementDansTradingView: lectureAvancee.etudes ? "lecture_tentee" : "non_accessible_avec_widget_public",
+                dessinsEtAnnotationsTradingView: lectureAvancee.dessins ? "lecture_tentee" : "non_accessible_avec_widget_public",
+                donneesOHLCVCompletes: "non_fournies_par_le_widget_public",
+                remarque: "Les valeurs réellement accessibles dépendent de l'API TradingView disponible dans la page. Avec le widget public tv.js, la capture directe reste limitée."
+            }
+        };
+    }
+
     function capturerConfigurationTradingView(afficherAlerte = true) {
         const parametresGraphiques = lireParametresGraphiquesMasques();
+        const parametresAvancesTradingView = capturerParametresAvancesTradingView(parametresGraphiques);
 
         configurationActuelle = {
             nom: "Configuration TradingView IA",
@@ -1386,8 +1604,10 @@
                 source: parametresGraphiques.source || "graphique_tradingview_api",
                 sourceAffichage: "widget_tradingview_integre",
                 lectureDirecteGraphique: parametresGraphiques.lectureDirecte === true,
-                champsMasques: true
+                champsMasques: true,
+                parametresAvances: parametresAvancesTradingView
             },
+            tradingView: parametresAvancesTradingView,
             analyseIA: {
                 categorie: getCategorieAnalyseBTC(),
                 categorieLibelle: getLibelleCategorieAnalyseBTC(),
@@ -1415,7 +1635,7 @@
             limites: {
                 captureCompleteTradingView: false,
                 dessinsInternesTradingView: false,
-                remarque: "La page capture les paramètres contrôlés par l'interface HTML."
+                remarque: "La page capture le maximum de paramètres accessibles. Avec le widget public TradingView, certaines données internes restent inaccessibles."
             }
         };
 
@@ -1568,6 +1788,10 @@
             configurationActuelle.graphique.lectureDirecteGraphique = parametresGraphiques.lectureDirecte === true;
             configurationActuelle.graphique.champsMasques = true;
 
+            const parametresAvancesTradingView = capturerParametresAvancesTradingView(parametresGraphiques);
+            configurationActuelle.tradingView = parametresAvancesTradingView;
+            configurationActuelle.graphique.parametresAvances = parametresAvancesTradingView;
+
             const urlCaptures = getApiCapturesUrl();
             const nomCapture = genererNomCapturePostgres(configurationActuelle);
             const screenshotBase64 = obtenirScreenshotBase64DepuisConfiguration();
@@ -1590,6 +1814,8 @@
                 intervalle_libelle: configurationActuelle.graphique.intervalleLibelle || null,
                 source_parametres: configurationActuelle.graphique.source || null,
                 lecture_directe_graphique: configurationActuelle.graphique.lectureDirecteGraphique === true,
+                type_bougie: configurationActuelle.graphique.typeBougie || null,
+                type_bougie_libelle: configurationActuelle.graphique.typeBougieLibelle || null,
 
                 /*
                     On garde nom_fichier pour compatibilité avec ton ancien code.
