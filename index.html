@@ -864,7 +864,7 @@
 
         const motDePasse = prompt("Mot de passe administrateur requis pour vider la table trading_capture :");
 
-        if (!motDePasse) {
+        if (!motDePasse || motDePasse.trim() === "") {
             afficherStatus("Suppression annulée : mot de passe absent.");
             alert("Suppression annulée : mot de passe absent.");
             return;
@@ -885,12 +885,11 @@
             const resultat = await appelerJson(url, {
                 method: "POST",
                 headers: {
-                    "Content-Type": "application/json",
-                    "X-Admin-Delete-Password": motDePasse
+                    "Content-Type": "application/json"
                 },
                 cache: "no-store",
                 body: JSON.stringify({
-                    motDePasse: motDePasse
+                    motDePasse: motDePasse.trim()
                 })
             });
 
@@ -1610,7 +1609,7 @@ async function viderTableCaptures() {
 
     const motDePasse = prompt("Mot de passe administrateur requis pour vider la table trading_capture :");
 
-    if (!motDePasse) {
+    if (!motDePasse || motDePasse.trim() === "") {
         alert("Suppression annulée : mot de passe absent.");
         return;
     }
@@ -1622,12 +1621,11 @@ async function viderTableCaptures() {
             credentials: "omit",
             headers: {
                 "Content-Type": "application/json",
-                "Accept": "application/json",
-                "X-Admin-Delete-Password": motDePasse
+                "Accept": "application/json"
             },
             cache: "no-store",
             body: JSON.stringify({
-                motDePasse: motDePasse
+                motDePasse: motDePasse.trim()
             })
         });
 
