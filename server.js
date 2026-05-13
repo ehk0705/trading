@@ -320,30 +320,314 @@ app.post("/api/captures", async (req, res) => {
     }
 });
 
+
+function normaliserSymboleBinance(actif) {
+    const texte = String(actif || "").trim().toUpperCase();
+    if (!texte) return null;
+    if (texte.startsWith("BINANCE:")) return texte.replace("BINANCE:", "").replace(/[^A-Z0-9]/g, "");
+    if (/^[A-Z0-9]{6,15}$/.test(texte)) return texte;
+    return null;
+}
+
+function convertirIntervalleBinance(intervalle) {
+    const valeur = String(intervalle || "D").trim();
+    const correspondances = {
+        "1": "1m",
+        "3": "3m",
+        "5": "5m",
+        "15": "15m",
+        "30": "30m",
+        "45": "30m",
+        "60": "1h",
+        "120": "2h",
+        "240": "4h",
+        "D": "1d",
+        "1D": "1d",
+        "W": "1w",
+        "1W": "1w",
+        "M": "1M",
+        "1M": "1M"
+    };
+    return correspondances[valeur] || "1d";
+}
+
+function arrondirNombre(valeur, decimales = 6) {
+    const nombre = Number(valeur);
+    if (!Number.isFinite(nombre)) return null;
+    const facteur = Math.pow(10, decimales);
+    return Math.round(nombre * facteur) / facteur;
+}
+
+function moyenneSimple(valeurs) {
+    const nombres = valeurs.filter((v) => Number.isFinite(Number(v))).map(Number);
+    if (nombres.length === 0) return null;
+    return nombres.reduce((a, b) => a + b, 0) / nombres.length;
+}
+
+function calculerEMA(valeurs, periode) {
+    const nombres = valeurs.filter((v) => Number.isFinite(Number(v))).map(Number);
+    if (nombres.length < periode) return null;
+    const multiplicateur = 2 / (periode + 1);
+    let ema = moyenneSimple(nombres.slice(0, periode));
+    for (let i = periode; i < nombres.length; i++) {
+        ema = (nombres[i] - ema) * multiplicateur + ema;
+    }
+    return ema;
+}
+
+function serieEMA(valeurs, periode) {
+    const nombres = valeurs.filter((v) => Number.isFinite(Number(v))).map(Number);
+    if (nombres.length < periode) return [];
+    const multiplicateur = 2 / (periode + 1);
+    let ema = moyenneSimple(nombres.slice(0, periode));
+    const resultat = [ema];
+    for (let i = periode; i < nombres.length; i++) {
+        ema = (nombres[i] - ema) * multiplicateur + ema;
+        resultat.push(ema);
+    }
+    return resultat;
+}
+
+function calculerRSI(closes, periode = 14) {
+    const valeurs = closes.map(Number).filter(Number.isFinite);
+    if (valeurs.length <= periode) return null;
+
+    let gains = 0;
+    let pertes = 0;
+    for (let i = 1; i <= periode; i++) {
+        const variation = valeurs[i] - valeurs[i - 1];
+        if (variation >= 0) gains += variation;
+        else pertes -= variation;
+    }
+
+    let gainMoyen = gains / periode;
+    let perteMoyenne = pertes / periode;
+
+    for (let i = periode + 1; i < valeurs.length; i++) {
+        const variation = valeurs[i] - valeurs[i - 1];
+        const gain = variation > 0 ? variation : 0;
+        const perte = variation < 0 ? -variation : 0;
+        gainMoyen = ((gainMoyen * (periode - 1)) + gain) / periode;
+        perteMoyenne = ((perteMoyenne * (periode - 1)) + perte) / periode;
+    }
+
+    if (perteMoyenne === 0) return 100;
+    const rs = gainMoyen / perteMoyenne;
+    return 100 - (100 / (1 + rs));
+}
+
+function calculerMACD(closes) {
+    const ema12Serie = serieEMA(closes, 12);
+    const ema26Serie = serieEMA(closes, 26);
+    if (ema12Serie.length === 0 || ema26Serie.length === 0) {
+        return { macd: null, signalMacd: null, histogrammeMacd: null };
+    }
+
+    const decalage = ema12Serie.length - ema26Serie.length;
+    const macdSerie = ema26Serie.map((ema26, index) => ema12Serie[index + decalage] - ema26);
+    const signalSerie = serieEMA(macdSerie, 9);
+    const macd = macdSerie[macdSerie.length - 1];
+    const signalMacd = signalSerie.length ? signalSerie[signalSerie.length - 1] : null;
+
+    return {
+        macd,
+        signalMacd,
+        histogrammeMacd: Number.isFinite(macd) && Number.isFinite(signalMacd) ? macd - signalMacd : null
+    };
+}
+
+function calculerATR(bougies, periode = 14) {
+    if (!Array.isArray(bougies) || bougies.length <= periode) return null;
+    const trueRanges = [];
+    for (let i = 1; i < bougies.length; i++) {
+        const haut = bougies[i].haut;
+        const bas = bougies[i].bas;
+        const cloturePrecedente = bougies[i - 1].cloture;
+        trueRanges.push(Math.max(
+            haut - bas,
+            Math.abs(haut - cloturePrecedente),
+            Math.abs(bas - cloturePrecedente)
+        ));
+    }
+    return moyenneSimple(trueRanges.slice(-periode));
+}
+
+function determinerTendance(prixActuel, ema20, ema50, ema200) {
+    if (![prixActuel, ema20, ema50].every((v) => Number.isFinite(Number(v)))) return "neutre";
+    if (prixActuel > ema20 && ema20 > ema50 && (!Number.isFinite(Number(ema200)) || ema50 > ema200)) return "haussiere";
+    if (prixActuel < ema20 && ema20 < ema50 && (!Number.isFinite(Number(ema200)) || ema50 < ema200)) return "baissiere";
+    return "neutre";
+}
+
+function determinerDecisionTechnique({ prixActuel, support, resistance, rsi, tendance }) {
+    if (![prixActuel, support, resistance].every((v) => Number.isFinite(Number(v)))) return "attente";
+    if (tendance === "haussiere" && Number(rsi) < 70 && prixActuel > support) return "achat_possible";
+    if (tendance === "baissiere" && Number(rsi) > 30 && prixActuel < resistance) return "vente_possible";
+    return "attente";
+}
+
+async function obtenirDonneesBinance(actif, intervalle) {
+    const symboleBinance = normaliserSymboleBinance(actif);
+    if (!symboleBinance) {
+        throw new Error("Symbole non compatible avec Binance. Utiliser par exemple BINANCE:BTCUSDT ou BINANCE:ETHUSDT.");
+    }
+
+    const intervalleBinance = convertirIntervalleBinance(intervalle);
+    const limite = 220;
+    const url = `https://api.binance.com/api/v3/klines?symbol=${encodeURIComponent(symboleBinance)}&interval=${encodeURIComponent(intervalleBinance)}&limit=${limite}`;
+
+    const reponse = await fetch(url, {
+        method: "GET",
+        headers: { "Accept": "application/json" }
+    });
+
+    const texte = await reponse.text();
+    let json;
+    try {
+        json = JSON.parse(texte);
+    } catch (erreur) {
+        throw new Error("Réponse Binance non JSON : " + texte.slice(0, 300));
+    }
+
+    if (!reponse.ok) {
+        throw new Error(json.msg || json.message || "Erreur Binance HTTP " + reponse.status);
+    }
+
+    if (!Array.isArray(json) || json.length === 0) {
+        throw new Error("Binance n'a retourné aucune bougie.");
+    }
+
+    const bougies = json.map((k) => ({
+        tempsOuverture: Number(k[0]),
+        ouverture: Number(k[1]),
+        haut: Number(k[2]),
+        bas: Number(k[3]),
+        cloture: Number(k[4]),
+        volume: Number(k[5]),
+        tempsFermeture: Number(k[6]),
+        volumeQuote: Number(k[7]),
+        nombreTransactions: Number(k[8])
+    })).filter((b) => [b.ouverture, b.haut, b.bas, b.cloture].every(Number.isFinite));
+
+    if (bougies.length < 30) {
+        throw new Error("Historique insuffisant pour calculer support, résistance et indicateurs.");
+    }
+
+    const closes = bougies.map((b) => b.cloture);
+    const volumes = bougies.map((b) => b.volume);
+    const derniereBougie = bougies[bougies.length - 1];
+    const bougiesSupportResistance = bougies.slice(-50);
+    const support = Math.min(...bougiesSupportResistance.map((b) => b.bas));
+    const resistance = Math.max(...bougiesSupportResistance.map((b) => b.haut));
+    const plusBasRecent = Math.min(...bougies.slice(-20).map((b) => b.bas));
+    const plusHautRecent = Math.max(...bougies.slice(-20).map((b) => b.haut));
+    const prixPrecedent = bougies.length >= 2 ? bougies[bougies.length - 2].cloture : null;
+    const variationPourcent = prixPrecedent ? ((derniereBougie.cloture - prixPrecedent) / prixPrecedent) * 100 : null;
+    const ema20 = calculerEMA(closes, 20);
+    const ema50 = calculerEMA(closes, 50);
+    const ema200 = calculerEMA(closes, 200);
+    const rsi = calculerRSI(closes, 14);
+    const macd = calculerMACD(closes);
+    const atr14 = calculerATR(bougies, 14);
+    const volumeMoyen20 = moyenneSimple(volumes.slice(-20));
+    const tendance = determinerTendance(derniereBougie.cloture, ema20, ema50, ema200);
+    const decisionTechniquePreliminaire = determinerDecisionTechnique({
+        prixActuel: derniereBougie.cloture,
+        support,
+        resistance,
+        rsi,
+        tendance
+    });
+
+    return {
+        source: "binance_api_publique",
+        symboleBinance,
+        intervalleBinance,
+        nombreBougies: bougies.length,
+        prixActuel: arrondirNombre(derniereBougie.cloture),
+        ouverture: arrondirNombre(derniereBougie.ouverture),
+        haut: arrondirNombre(derniereBougie.haut),
+        bas: arrondirNombre(derniereBougie.bas),
+        support: arrondirNombre(support),
+        resistance: arrondirNombre(resistance),
+        plusBasRecent: arrondirNombre(plusBasRecent),
+        plusHautRecent: arrondirNombre(plusHautRecent),
+        variationPourcent: arrondirNombre(variationPourcent, 4),
+        rsi: arrondirNombre(rsi, 2),
+        ema20: arrondirNombre(ema20),
+        ema50: arrondirNombre(ema50),
+        ema200: arrondirNombre(ema200),
+        macd: arrondirNombre(macd.macd),
+        signalMacd: arrondirNombre(macd.signalMacd),
+        histogrammeMacd: arrondirNombre(macd.histogrammeMacd),
+        atr14: arrondirNombre(atr14),
+        volume: arrondirNombre(derniereBougie.volume, 4),
+        volumeMoyen20: arrondirNombre(volumeMoyen20, 4),
+        nombreTransactions: derniereBougie.nombreTransactions,
+        tendance,
+        decisionTechniquePreliminaire,
+        methodeSupportResistance: "plus_bas_plus_haut_des_50_dernieres_bougies",
+        derniereBougie: {
+            tempsOuverture: new Date(derniereBougie.tempsOuverture).toISOString(),
+            tempsFermeture: new Date(derniereBougie.tempsFermeture).toISOString(),
+            ouverture: arrondirNombre(derniereBougie.ouverture),
+            haut: arrondirNombre(derniereBougie.haut),
+            bas: arrondirNombre(derniereBougie.bas),
+            cloture: arrondirNombre(derniereBougie.cloture),
+            volume: arrondirNombre(derniereBougie.volume, 4)
+        }
+    };
+}
+
 app.post("/api/marche", async (req, res) => {
     const actif = req.body?.actif || "NON_RENSEIGNE";
     const intervalle = req.body?.intervalle || "D";
     const indicateur = req.body?.indicateur || "RSI";
+    const categorieAnalyse = req.body?.categorieAnalyse || req.body?.categorie_analyse || null;
 
-    res.json({
-        ok: true,
-        statut: "ok",
-        message: "Données de marché simulées par le serveur. À remplacer par une vraie source de données si nécessaire.",
-        actif,
-        intervalle,
-        indicateur,
-        prixActuel: null,
-        support: null,
-        resistance: null,
-        rsi: null,
-        ema20: null,
-        ema50: null,
-        macd: null,
-        volume: "non_disponible",
-        tendance: "neutre",
-        source: "serveur_nodejs_placeholder",
-        dateMiseAJour: new Date().toISOString()
-    });
+    try {
+        const donnees = await obtenirDonneesBinance(actif, intervalle);
+
+        res.json({
+            ok: true,
+            statut: "ok",
+            message: "Données de marché calculées à partir des bougies publiques Binance.",
+            actif,
+            intervalle,
+            indicateur,
+            categorieAnalyse,
+            dateMiseAJour: new Date().toISOString(),
+            ...donnees
+        });
+    } catch (erreur) {
+        res.json({
+            ok: false,
+            statut: "donnees_insuffisantes",
+            message: "Impossible de calculer les données de marché pour cet actif avec la source actuelle.",
+            detail: erreur.message,
+            actif,
+            intervalle,
+            indicateur,
+            categorieAnalyse,
+            prixActuel: null,
+            support: null,
+            resistance: null,
+            rsi: null,
+            ema20: null,
+            ema50: null,
+            ema200: null,
+            macd: null,
+            signalMacd: null,
+            histogrammeMacd: null,
+            atr14: null,
+            volume: "non_disponible",
+            volumeMoyen20: null,
+            tendance: "neutre",
+            decisionTechniquePreliminaire: "attente",
+            source: "serveur_nodejs_source_non_disponible",
+            dateMiseAJour: new Date().toISOString()
+        });
+    }
 });
 
 app.post("/api/analyse", async (req, res) => {
