@@ -5,11 +5,12 @@
     Fichier : server.js
     Auteur : Hocine Korichi, Ing.
 
-    Version compatible avec index_advanced.html :
-    - insertion des champs principaux dans trading_capture ;
-    - conservation de tous les paramètres TradingView détaillés dans configuration_json ;
-    - compatibilité avec les anciens champs nom_fichier / nom_capture ;
-    - route protégée pour vider la table avec ADMIN_DELETE_PASSWORD.
+    Version enrichie :
+    - PostgreSQL trading_capture ;
+    - route /api/marche avec plusieurs sources de marché ;
+    - Binance pour les cryptomonnaies compatibles ;
+    - Yahoo Finance Chart pour actions, indices, or, dollar index et certains actifs non Binance ;
+    - calcul prix actuel, support, résistance, RSI, EMA, MACD, ATR, volume et tendance.
 */
 
 const express = require("express");
@@ -39,9 +40,7 @@ function obtenirPool() {
     if (!pool) {
         pool = new Pool({
             connectionString: process.env.DATABASE_URL,
-            ssl: {
-                rejectUnauthorized: false
-            }
+            ssl: { rejectUnauthorized: false }
         });
     }
 
@@ -50,7 +49,6 @@ function obtenirPool() {
 
 function reponseErreur(res, statutHttp, message, erreur = null) {
     console.error(message, erreur);
-
     return res.status(statutHttp).json({
         ok: false,
         statut: "erreur",
@@ -125,7 +123,6 @@ app.get("/api/verifier-db", async (req, res) => {
     try {
         const db = obtenirPool();
         const resultat = await db.query("SELECT NOW() AS maintenant;");
-
         res.json({
             ok: true,
             statut: "ok",
@@ -141,7 +138,6 @@ app.get("/api/verifier-db", async (req, res) => {
 app.get("/api/creer-table", async (req, res) => {
     try {
         await assurerTableTradingCapture();
-
         res.json({
             ok: true,
             statut: "ok",
@@ -157,7 +153,6 @@ app.get("/api/creer-table", async (req, res) => {
 app.get("/api/verifier-table", async (req, res) => {
     try {
         await assurerTableTradingCapture();
-
         res.json({
             ok: true,
             statut: "ok",
@@ -175,7 +170,6 @@ app.get("/api/captures", async (req, res) => {
     try {
         await assurerTableTradingCapture();
         const db = obtenirPool();
-
         const resultat = await db.query(`
             SELECT
                 id,
@@ -198,11 +192,7 @@ app.get("/api/captures", async (req, res) => {
             LIMIT 200;
         `);
 
-        res.json({
-            ok: true,
-            statut: "ok",
-            captures: resultat.rows
-        });
+        res.json({ ok: true, statut: "ok", captures: resultat.rows });
     } catch (erreur) {
         return reponseErreur(res, 500, "Impossible de lire les captures.", erreur);
     }
@@ -218,22 +208,20 @@ app.get("/api/captures/:id", async (req, res) => {
             return reponseErreur(res, 400, "ID de capture invalide.");
         }
 
-        const resultat = await db.query(
-            "SELECT * FROM trading_capture WHERE id = $1;",
-            [id]
-        );
+        const resultat = await db.query(`
+            SELECT *
+            FROM trading_capture
+            WHERE id = $1
+            LIMIT 1;
+        `, [id]);
 
         if (resultat.rows.length === 0) {
             return reponseErreur(res, 404, "Capture introuvable.");
         }
 
-        res.json({
-            ok: true,
-            statut: "ok",
-            capture: resultat.rows[0]
-        });
+        res.json({ ok: true, statut: "ok", capture: resultat.rows[0] });
     } catch (erreur) {
-        return reponseErreur(res, 500, "Impossible de lire la capture.", erreur);
+        return reponseErreur(res, 500, "Impossible de charger la capture.", erreur);
     }
 });
 
@@ -241,35 +229,23 @@ app.post("/api/captures", async (req, res) => {
     try {
         await assurerTableTradingCapture();
         const db = obtenirPool();
-        const body = req.body || {};
+        const corps = req.body || {};
 
-        const configurationJson = body.configuration_json || body.configurationJson || {};
-
-        const actif = texteOuNull(body.actif || configurationJson?.graphique?.actif) || "NON_RENSEIGNE";
-        const indicateur = texteOuNull(body.indicateur || configurationJson?.graphique?.indicateur);
-        const intervalle = texteOuNull(body.intervalle || configurationJson?.graphique?.intervalle);
-
-        const actifLibelle = texteOuNull(body.actif_libelle || configurationJson?.graphique?.actifLibelle);
-        const indicateurLibelle = texteOuNull(body.indicateur_libelle || configurationJson?.graphique?.indicateurLibelle);
-        const intervalleLibelle = texteOuNull(body.intervalle_libelle || configurationJson?.graphique?.intervalleLibelle);
-
-        const typeBougie = texteOuNull(body.type_bougie || configurationJson?.graphique?.typeBougie);
-        const typeBougieLibelle = texteOuNull(body.type_bougie_libelle || configurationJson?.graphique?.typeBougieLibelle);
-        const sourceParametres = texteOuNull(body.source_parametres || configurationJson?.graphique?.source);
-        const lectureDirecteGraphique = booleenOuFaux(body.lecture_directe_graphique || configurationJson?.graphique?.lectureDirecteGraphique);
-
-        const categorieAnalyse = texteOuNull(
-            body.categorie_analyse ||
-            body.categorieAnalyse ||
-            configurationJson?.analyseIA?.categorieLibelle ||
-            configurationJson?.analyseIA?.categorie ||
-            configurationJson?.snapshot?.categorieAnalyseLibelle ||
-            configurationJson?.snapshot?.categorieAnalyse
-        );
-
-        const nomFichier = texteOuNull(body.nom_fichier) || `capture-${Date.now()}`;
-        const nomCapture = texteOuNull(body.nom_capture) || nomFichier;
-        const screenshotBase64 = texteOuNull(body.screenshot_base64);
+        const actif = texteOuNull(corps.actif) || texteOuNull(corps?.configuration_json?.graphique?.actif) || "NON_RENSEIGNE";
+        const indicateur = texteOuNull(corps.indicateur) || texteOuNull(corps?.configuration_json?.graphique?.indicateur);
+        const intervalle = texteOuNull(corps.intervalle) || texteOuNull(corps?.configuration_json?.graphique?.intervalle);
+        const actifLibelle = texteOuNull(corps.actif_libelle) || texteOuNull(corps?.configuration_json?.graphique?.actifLibelle);
+        const indicateurLibelle = texteOuNull(corps.indicateur_libelle) || texteOuNull(corps?.configuration_json?.graphique?.indicateurLibelle);
+        const intervalleLibelle = texteOuNull(corps.intervalle_libelle) || texteOuNull(corps?.configuration_json?.graphique?.intervalleLibelle);
+        const typeBougie = texteOuNull(corps.type_bougie) || texteOuNull(corps?.configuration_json?.graphique?.typeBougie);
+        const typeBougieLibelle = texteOuNull(corps.type_bougie_libelle) || texteOuNull(corps?.configuration_json?.graphique?.typeBougieLibelle);
+        const sourceParametres = texteOuNull(corps.source_parametres) || texteOuNull(corps?.configuration_json?.graphique?.sourceParametres);
+        const lectureDirecteGraphique = booleenOuFaux(corps.lecture_directe_graphique || corps?.configuration_json?.graphique?.lectureDirecteGraphique);
+        const nomFichier = texteOuNull(corps.nom_fichier) || texteOuNull(corps.nom_capture) || "capture-" + new Date().toISOString();
+        const nomCapture = texteOuNull(corps.nom_capture) || nomFichier;
+        const categorieAnalyse = texteOuNull(corps.categorie_analyse) || texteOuNull(corps.categorieAnalyse) || texteOuNull(corps?.configuration_json?.analyseIA?.categorieLibelle);
+        const configurationJson = corps.configuration_json || corps.configurationJson || corps;
+        const screenshotBase64 = texteOuNull(corps.screenshot_base64) || texteOuNull(corps.screenshotBase64);
 
         const resultat = await db.query(`
             INSERT INTO trading_capture (
@@ -289,8 +265,8 @@ app.post("/api/captures", async (req, res) => {
                 configuration_json,
                 screenshot_base64
             )
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14::jsonb, $15)
-            RETURNING id, actif, indicateur, intervalle, nom_capture, categorie_analyse, date_capture;
+            VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14::jsonb,$15)
+            RETURNING id, actif, indicateur, intervalle, nom_capture, date_capture;
         `, [
             actif,
             indicateur,
@@ -319,37 +295,6 @@ app.post("/api/captures", async (req, res) => {
         return reponseErreur(res, 500, "Impossible d'enregistrer la capture.", erreur);
     }
 });
-
-
-function normaliserSymboleBinance(actif) {
-    const texte = String(actif || "").trim().toUpperCase();
-    if (!texte) return null;
-    if (texte.startsWith("BINANCE:")) return texte.replace("BINANCE:", "").replace(/[^A-Z0-9]/g, "");
-    if (/^[A-Z0-9]{6,15}$/.test(texte)) return texte;
-    return null;
-}
-
-function convertirIntervalleBinance(intervalle) {
-    const valeur = String(intervalle || "D").trim();
-    const correspondances = {
-        "1": "1m",
-        "3": "3m",
-        "5": "5m",
-        "15": "15m",
-        "30": "30m",
-        "45": "30m",
-        "60": "1h",
-        "120": "2h",
-        "240": "4h",
-        "D": "1d",
-        "1D": "1d",
-        "W": "1w",
-        "1W": "1w",
-        "M": "1M",
-        "1M": "1M"
-    };
-    return correspondances[valeur] || "1d";
-}
 
 function arrondirNombre(valeur, decimales = 6) {
     const nombre = Number(valeur);
@@ -466,10 +411,170 @@ function determinerDecisionTechnique({ prixActuel, support, resistance, rsi, ten
     return "attente";
 }
 
+function normaliserSymboleBinance(actif) {
+    const texte = String(actif || "").trim().toUpperCase();
+    if (!texte) return null;
+    if (texte.startsWith("BINANCE:")) return texte.replace("BINANCE:", "").replace(/[^A-Z0-9]/g, "");
+    if (/^[A-Z0-9]{6,15}$/.test(texte)) return texte;
+    return null;
+}
+
+function convertirIntervalleBinance(intervalle) {
+    const valeur = String(intervalle || "D").trim();
+    const correspondances = {
+        "1": "1m",
+        "3": "3m",
+        "5": "5m",
+        "15": "15m",
+        "30": "30m",
+        "45": "30m",
+        "60": "1h",
+        "120": "2h",
+        "240": "4h",
+        "D": "1d",
+        "1D": "1d",
+        "W": "1w",
+        "1W": "1w",
+        "M": "1M",
+        "1M": "1M"
+    };
+    return correspondances[valeur] || "1d";
+}
+
+function convertirIntervalleYahoo(intervalle) {
+    const valeur = String(intervalle || "D").trim();
+    const correspondances = {
+        "1": { interval: "1m", range: "5d" },
+        "2": { interval: "2m", range: "5d" },
+        "5": { interval: "5m", range: "1mo" },
+        "15": { interval: "15m", range: "1mo" },
+        "30": { interval: "30m", range: "1mo" },
+        "60": { interval: "60m", range: "3mo" },
+        "120": { interval: "60m", range: "3mo" },
+        "240": { interval: "60m", range: "6mo" },
+        "D": { interval: "1d", range: "1y" },
+        "1D": { interval: "1d", range: "1y" },
+        "W": { interval: "1wk", range: "5y" },
+        "1W": { interval: "1wk", range: "5y" },
+        "M": { interval: "1mo", range: "10y" },
+        "1M": { interval: "1mo", range: "10y" }
+    };
+    return correspondances[valeur] || { interval: "1d", range: "1y" };
+}
+
+function symbolesYahooPossibles(actif) {
+    const texteOriginal = String(actif || "").trim();
+    const texte = texteOriginal.toUpperCase();
+
+    const table = {
+        "NASDAQ:AAPL": ["AAPL"],
+        "NASDAQ:TSLA": ["TSLA"],
+        "NASDAQ:NVDA": ["NVDA"],
+        "NASDAQ:MSFT": ["MSFT"],
+        "NASDAQ:AMZN": ["AMZN"],
+        "NASDAQ:GOOGL": ["GOOGL"],
+        "SP:SPX": ["^GSPC"],
+        "TVC:DXY": ["DX-Y.NYB"],
+        "OANDA:XAUUSD": ["GC=F", "XAUUSD=X"],
+        "COINBASE:BTCUSD": ["BTC-USD"],
+        "BINANCE:BTCUSDT": ["BTC-USD"],
+        "BINANCE:ETHUSDT": ["ETH-USD"]
+    };
+
+    if (table[texte]) return table[texte];
+
+    if (texte.startsWith("NASDAQ:")) return [texteOriginal.split(":")[1]];
+    if (texte.startsWith("NYSE:")) return [texteOriginal.split(":")[1]];
+    if (texte.startsWith("AMEX:")) return [texteOriginal.split(":")[1]];
+    if (texte.startsWith("COINBASE:BTCUSD")) return ["BTC-USD"];
+    if (texte.startsWith("COINBASE:ETHUSD")) return ["ETH-USD"];
+
+    return [];
+}
+
+function construireReponseMarche({ actif, intervalle, indicateur, categorieAnalyse, source, symboleSource, intervalleSource, bougies }) {
+    if (!Array.isArray(bougies) || bougies.length < 30) {
+        throw new Error("Historique insuffisant pour calculer support, résistance et indicateurs.");
+    }
+
+    const closes = bougies.map((b) => b.cloture);
+    const volumes = bougies.map((b) => b.volume).filter((v) => Number.isFinite(Number(v)));
+    const derniereBougie = bougies[bougies.length - 1];
+    const avantDerniereBougie = bougies.length >= 2 ? bougies[bougies.length - 2] : null;
+    const bougiesSupportResistance = bougies.slice(-50);
+    const support = Math.min(...bougiesSupportResistance.map((b) => b.bas));
+    const resistance = Math.max(...bougiesSupportResistance.map((b) => b.haut));
+    const plusBasRecent = Math.min(...bougies.slice(-20).map((b) => b.bas));
+    const plusHautRecent = Math.max(...bougies.slice(-20).map((b) => b.haut));
+    const prixPrecedent = avantDerniereBougie ? avantDerniereBougie.cloture : null;
+    const variationPourcent = prixPrecedent ? ((derniereBougie.cloture - prixPrecedent) / prixPrecedent) * 100 : null;
+    const ema20 = calculerEMA(closes, 20);
+    const ema50 = calculerEMA(closes, 50);
+    const ema200 = calculerEMA(closes, 200);
+    const rsi = calculerRSI(closes, 14);
+    const macd = calculerMACD(closes);
+    const atr14 = calculerATR(bougies, 14);
+    const volumeMoyen20 = moyenneSimple(volumes.slice(-20));
+    const tendance = determinerTendance(derniereBougie.cloture, ema20, ema50, ema200);
+    const decisionTechniquePreliminaire = determinerDecisionTechnique({
+        prixActuel: derniereBougie.cloture,
+        support,
+        resistance,
+        rsi,
+        tendance
+    });
+
+    return {
+        ok: true,
+        statut: "ok",
+        message: "Données de marché calculées.",
+        actif,
+        intervalle,
+        indicateur,
+        categorieAnalyse,
+        dateMiseAJour: new Date().toISOString(),
+        source,
+        symboleSource,
+        intervalleSource,
+        nombreBougies: bougies.length,
+        prixActuel: arrondirNombre(derniereBougie.cloture),
+        ouverture: arrondirNombre(derniereBougie.ouverture),
+        haut: arrondirNombre(derniereBougie.haut),
+        bas: arrondirNombre(derniereBougie.bas),
+        support: arrondirNombre(support),
+        resistance: arrondirNombre(resistance),
+        plusBasRecent: arrondirNombre(plusBasRecent),
+        plusHautRecent: arrondirNombre(plusHautRecent),
+        variationPourcent: arrondirNombre(variationPourcent, 4),
+        rsi: arrondirNombre(rsi, 2),
+        ema20: arrondirNombre(ema20),
+        ema50: arrondirNombre(ema50),
+        ema200: arrondirNombre(ema200),
+        macd: arrondirNombre(macd.macd),
+        signalMacd: arrondirNombre(macd.signalMacd),
+        histogrammeMacd: arrondirNombre(macd.histogrammeMacd),
+        atr14: arrondirNombre(atr14),
+        volume: arrondirNombre(derniereBougie.volume, 4),
+        volumeMoyen20: arrondirNombre(volumeMoyen20, 4),
+        tendance,
+        decisionTechniquePreliminaire,
+        methodeSupportResistance: "plus_bas_plus_haut_des_50_dernieres_bougies",
+        derniereBougie: {
+            tempsOuverture: derniereBougie.tempsOuverture ? new Date(derniereBougie.tempsOuverture).toISOString() : null,
+            tempsFermeture: derniereBougie.tempsFermeture ? new Date(derniereBougie.tempsFermeture).toISOString() : null,
+            ouverture: arrondirNombre(derniereBougie.ouverture),
+            haut: arrondirNombre(derniereBougie.haut),
+            bas: arrondirNombre(derniereBougie.bas),
+            cloture: arrondirNombre(derniereBougie.cloture),
+            volume: arrondirNombre(derniereBougie.volume, 4)
+        }
+    };
+}
+
 async function obtenirDonneesBinance(actif, intervalle) {
     const symboleBinance = normaliserSymboleBinance(actif);
     if (!symboleBinance) {
-        throw new Error("Symbole non compatible avec Binance. Utiliser par exemple BINANCE:BTCUSDT ou BINANCE:ETHUSDT.");
+        throw new Error("Symbole non compatible avec Binance.");
     }
 
     const intervalleBinance = convertirIntervalleBinance(intervalle);
@@ -509,74 +614,111 @@ async function obtenirDonneesBinance(actif, intervalle) {
         nombreTransactions: Number(k[8])
     })).filter((b) => [b.ouverture, b.haut, b.bas, b.cloture].every(Number.isFinite));
 
-    if (bougies.length < 30) {
-        throw new Error("Historique insuffisant pour calculer support, résistance et indicateurs.");
-    }
-
-    const closes = bougies.map((b) => b.cloture);
-    const volumes = bougies.map((b) => b.volume);
-    const derniereBougie = bougies[bougies.length - 1];
-    const bougiesSupportResistance = bougies.slice(-50);
-    const support = Math.min(...bougiesSupportResistance.map((b) => b.bas));
-    const resistance = Math.max(...bougiesSupportResistance.map((b) => b.haut));
-    const plusBasRecent = Math.min(...bougies.slice(-20).map((b) => b.bas));
-    const plusHautRecent = Math.max(...bougies.slice(-20).map((b) => b.haut));
-    const prixPrecedent = bougies.length >= 2 ? bougies[bougies.length - 2].cloture : null;
-    const variationPourcent = prixPrecedent ? ((derniereBougie.cloture - prixPrecedent) / prixPrecedent) * 100 : null;
-    const ema20 = calculerEMA(closes, 20);
-    const ema50 = calculerEMA(closes, 50);
-    const ema200 = calculerEMA(closes, 200);
-    const rsi = calculerRSI(closes, 14);
-    const macd = calculerMACD(closes);
-    const atr14 = calculerATR(bougies, 14);
-    const volumeMoyen20 = moyenneSimple(volumes.slice(-20));
-    const tendance = determinerTendance(derniereBougie.cloture, ema20, ema50, ema200);
-    const decisionTechniquePreliminaire = determinerDecisionTechnique({
-        prixActuel: derniereBougie.cloture,
-        support,
-        resistance,
-        rsi,
-        tendance
-    });
-
     return {
         source: "binance_api_publique",
-        symboleBinance,
-        intervalleBinance,
-        nombreBougies: bougies.length,
-        prixActuel: arrondirNombre(derniereBougie.cloture),
-        ouverture: arrondirNombre(derniereBougie.ouverture),
-        haut: arrondirNombre(derniereBougie.haut),
-        bas: arrondirNombre(derniereBougie.bas),
-        support: arrondirNombre(support),
-        resistance: arrondirNombre(resistance),
-        plusBasRecent: arrondirNombre(plusBasRecent),
-        plusHautRecent: arrondirNombre(plusHautRecent),
-        variationPourcent: arrondirNombre(variationPourcent, 4),
-        rsi: arrondirNombre(rsi, 2),
-        ema20: arrondirNombre(ema20),
-        ema50: arrondirNombre(ema50),
-        ema200: arrondirNombre(ema200),
-        macd: arrondirNombre(macd.macd),
-        signalMacd: arrondirNombre(macd.signalMacd),
-        histogrammeMacd: arrondirNombre(macd.histogrammeMacd),
-        atr14: arrondirNombre(atr14),
-        volume: arrondirNombre(derniereBougie.volume, 4),
-        volumeMoyen20: arrondirNombre(volumeMoyen20, 4),
-        nombreTransactions: derniereBougie.nombreTransactions,
-        tendance,
-        decisionTechniquePreliminaire,
-        methodeSupportResistance: "plus_bas_plus_haut_des_50_dernieres_bougies",
-        derniereBougie: {
-            tempsOuverture: new Date(derniereBougie.tempsOuverture).toISOString(),
-            tempsFermeture: new Date(derniereBougie.tempsFermeture).toISOString(),
-            ouverture: arrondirNombre(derniereBougie.ouverture),
-            haut: arrondirNombre(derniereBougie.haut),
-            bas: arrondirNombre(derniereBougie.bas),
-            cloture: arrondirNombre(derniereBougie.cloture),
-            volume: arrondirNombre(derniereBougie.volume, 4)
-        }
+        symboleSource: symboleBinance,
+        intervalleSource: intervalleBinance,
+        bougies
     };
+}
+
+async function obtenirDonneesYahoo(actif, intervalle) {
+    const symboles = symbolesYahooPossibles(actif);
+    if (!symboles.length) {
+        throw new Error("Symbole non compatible avec Yahoo Finance Chart.");
+    }
+
+    const parametres = convertirIntervalleYahoo(intervalle);
+    let derniereErreur = null;
+
+    for (const symboleYahoo of symboles) {
+        const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symboleYahoo)}?range=${encodeURIComponent(parametres.range)}&interval=${encodeURIComponent(parametres.interval)}&includePrePost=false&events=history`;
+
+        try {
+            const reponse = await fetch(url, {
+                method: "GET",
+                headers: {
+                    "Accept": "application/json",
+                    "User-Agent": "Mozilla/5.0 TradingStationIA/1.0"
+                }
+            });
+
+            const texte = await reponse.text();
+            let json;
+            try {
+                json = JSON.parse(texte);
+            } catch (erreur) {
+                throw new Error("Réponse Yahoo non JSON : " + texte.slice(0, 300));
+            }
+
+            if (!reponse.ok) {
+                throw new Error("Erreur Yahoo HTTP " + reponse.status + " : " + texte.slice(0, 300));
+            }
+
+            const resultat = json?.chart?.result?.[0];
+            const erreurYahoo = json?.chart?.error;
+
+            if (erreurYahoo) {
+                throw new Error(erreurYahoo.description || erreurYahoo.code || "Erreur Yahoo Finance.");
+            }
+
+            if (!resultat || !Array.isArray(resultat.timestamp)) {
+                throw new Error("Yahoo Finance n'a retourné aucune série temporelle.");
+            }
+
+            const quote = resultat?.indicators?.quote?.[0];
+            if (!quote) {
+                throw new Error("Yahoo Finance n'a pas retourné de bloc quote.");
+            }
+
+            const bougies = resultat.timestamp.map((temps, index) => ({
+                tempsOuverture: Number(temps) * 1000,
+                tempsFermeture: Number(temps) * 1000,
+                ouverture: Number(quote.open?.[index]),
+                haut: Number(quote.high?.[index]),
+                bas: Number(quote.low?.[index]),
+                cloture: Number(quote.close?.[index]),
+                volume: Number(quote.volume?.[index] ?? 0)
+            })).filter((b) => [b.ouverture, b.haut, b.bas, b.cloture].every(Number.isFinite));
+
+            if (bougies.length < 30) {
+                throw new Error("Yahoo Finance a retourné un historique insuffisant.");
+            }
+
+            return {
+                source: "yahoo_finance_chart",
+                symboleSource: symboleYahoo,
+                intervalleSource: parametres.interval,
+                rangeSource: parametres.range,
+                bougies
+            };
+        } catch (erreur) {
+            derniereErreur = erreur;
+        }
+    }
+
+    throw derniereErreur || new Error("Aucune donnée Yahoo Finance disponible.");
+}
+
+async function obtenirDonneesMarcheMultiSource(actif, intervalle) {
+    const erreurs = [];
+    const sources = [];
+
+    if (normaliserSymboleBinance(actif)) {
+        sources.push(obtenirDonneesBinance);
+    }
+
+    sources.push(obtenirDonneesYahoo);
+
+    for (const source of sources) {
+        try {
+            return await source(actif, intervalle);
+        } catch (erreur) {
+            erreurs.push(erreur.message);
+        }
+    }
+
+    throw new Error(erreurs.join(" | "));
 }
 
 app.post("/api/marche", async (req, res) => {
@@ -586,24 +728,25 @@ app.post("/api/marche", async (req, res) => {
     const categorieAnalyse = req.body?.categorieAnalyse || req.body?.categorie_analyse || null;
 
     try {
-        const donnees = await obtenirDonneesBinance(actif, intervalle);
-
-        res.json({
-            ok: true,
-            statut: "ok",
-            message: "Données de marché calculées à partir des bougies publiques Binance.",
+        const donneesSource = await obtenirDonneesMarcheMultiSource(actif, intervalle);
+        const resultat = construireReponseMarche({
             actif,
             intervalle,
             indicateur,
             categorieAnalyse,
-            dateMiseAJour: new Date().toISOString(),
-            ...donnees
+            source: donneesSource.source,
+            symboleSource: donneesSource.symboleSource,
+            intervalleSource: donneesSource.intervalleSource,
+            bougies: donneesSource.bougies
         });
+
+        if (donneesSource.rangeSource) resultat.rangeSource = donneesSource.rangeSource;
+        res.json(resultat);
     } catch (erreur) {
         res.json({
             ok: false,
             statut: "donnees_insuffisantes",
-            message: "Impossible de calculer les données de marché pour cet actif avec la source actuelle.",
+            message: "Impossible de calculer les données de marché avec les sources disponibles.",
             detail: erreur.message,
             actif,
             intervalle,
@@ -624,7 +767,8 @@ app.post("/api/marche", async (req, res) => {
             volumeMoyen20: null,
             tendance: "neutre",
             decisionTechniquePreliminaire: "attente",
-            source: "serveur_nodejs_source_non_disponible",
+            source: "serveur_nodejs_sources_non_disponibles",
+            sourcesTentees: ["binance_api_publique", "yahoo_finance_chart"],
             dateMiseAJour: new Date().toISOString()
         });
     }

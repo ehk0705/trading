@@ -259,6 +259,14 @@
                     title="Relit les champs modifiés et relance l’analyse.">
                 Analyser de nouveau
             </button>
+
+            <button id="btn-rafraichir-marche"
+                    type="button"
+                    class="btn-local btn-analyse-top"
+                    onclick="rafraichirDonneesMarcheDecision(true)"
+                    title="Récupère automatiquement le prix actuel, le support, la résistance et les indicateurs depuis le serveur.">
+                Actualiser marché
+            </button>
         </div>
 
         <h1>Décision IA Trading</h1>
@@ -520,6 +528,59 @@
         return null;
     }
 
+    function estNombreValide(valeur) {
+        const nombre = Number(valeur);
+        return Number.isFinite(nombre) && nombre !== 0;
+    }
+
+    function donneesMarcheSuffisantes(config) {
+        if (!config || !config.marche) {
+            return false;
+        }
+
+        return (
+            estNombreValide(config.marche.prixActuel) &&
+            estNombreValide(config.marche.support) &&
+            estNombreValide(config.marche.resistance)
+        );
+    }
+
+    function normaliserVolumeMarche(volume, volumeMoyen20) {
+        const texte = String(volume || "").toLowerCase();
+
+        if (["neutre", "hausse", "baisse", "fort", "faible"].includes(texte)) {
+            return texte;
+        }
+
+        const valeurVolume = Number(volume);
+        const valeurMoyenne = Number(volumeMoyen20);
+
+        if (Number.isFinite(valeurVolume) && Number.isFinite(valeurMoyenne) && valeurMoyenne > 0) {
+            const ratio = valeurVolume / valeurMoyenne;
+
+            if (ratio >= 1.5) return "fort";
+            if (ratio >= 1.1) return "hausse";
+            if (ratio <= 0.6) return "faible";
+            if (ratio <= 0.9) return "baisse";
+        }
+
+        return "neutre";
+    }
+
+    function normaliserTendanceMarche(tendance) {
+        const texte = String(tendance || "").toLowerCase();
+
+        if (["haussiere", "baissiere", "range", "neutre"].includes(texte)) {
+            return texte;
+        }
+
+        if (texte.includes("haus")) return "haussiere";
+        if (texte.includes("bais")) return "baissiere";
+        if (texte.includes("lat") || texte.includes("range")) return "range";
+
+        return "neutre";
+    }
+
     function convertirSensEnTypePosition(sens) {
         if (sens === "achat") return "long";
         if (sens === "vente") return "short";
@@ -679,13 +740,26 @@
 
             remplirChampsConfigurationPrincipale(configuration);
             remplirChampsMarcheDepuisConfiguration(configuration);
-            ajouterMarcheDansConfiguration();
             afficherConfiguration(configuration);
 
             document.getElementById("fichier-selectionne").textContent =
                 "Configuration chargée automatiquement depuis la sauvegarde locale.";
 
             afficherDecision("Configuration chargée automatiquement", "attente");
+
+            if (!donneesMarcheSuffisantes(configuration)) {
+                afficherResultatAnalyse(
+                    "Configuration locale chargée automatiquement.\n" +
+                    "Les données de marché sont absentes ou incomplètes.\n\n" +
+                    "Actualisation automatique via /api/marche en cours..."
+                );
+
+                await rafraichirDonneesMarcheDecision(true);
+                return;
+            }
+
+            ajouterMarcheDansConfiguration();
+            afficherConfiguration(configuration);
 
             afficherResultatAnalyse(
                 "Configuration locale chargée automatiquement.\n" +
@@ -733,7 +807,7 @@
         return apiAnalyse.replace(/\/api\/analyse\/?$/, "/api/marche");
     }
 
-    async function rafraichirDonneesMarcheDecision() {
+    async function rafraichirDonneesMarcheDecision(analyserApresActualisation = false) {
         if (!configuration || !configuration.graphique) {
             afficherDecision("Aucune configuration valide", "erreur");
             afficherResultatAnalyse("Aucune configuration valide à actualiser.");
@@ -780,16 +854,40 @@
                 throw new Error("Réponse HTTP " + reponse.status + " : " + JSON.stringify(donneesMarche));
             }
 
+            if (donneesMarche.ok === false) {
+                throw new Error(donneesMarche.message || donneesMarche.detail || "Données de marché insuffisantes.");
+            }
+
+            const volumeEtat = normaliserVolumeMarche(
+                donneesMarche.volume ?? configuration.marche?.volume,
+                donneesMarche.volumeMoyen20 ?? configuration.marche?.volumeMoyen20
+            );
+
             configuration.marche = {
+                ...(configuration.marche || {}),
                 prixActuel: donneesMarche.prixActuel ?? configuration.marche?.prixActuel ?? null,
                 support: donneesMarche.support ?? configuration.marche?.support ?? null,
                 resistance: donneesMarche.resistance ?? configuration.marche?.resistance ?? null,
                 rsi: donneesMarche.rsi ?? configuration.marche?.rsi ?? null,
-                volume: donneesMarche.volume ?? configuration.marche?.volume ?? "neutre",
-                tendance: donneesMarche.tendance ?? configuration.marche?.tendance ?? "neutre",
+                volume: volumeEtat,
+                volumeEtat: volumeEtat,
+                volumeBrut: donneesMarche.volume ?? configuration.marche?.volumeBrut ?? null,
+                volumeMoyen20: donneesMarche.volumeMoyen20 ?? configuration.marche?.volumeMoyen20 ?? null,
+                tendance: normaliserTendanceMarche(donneesMarche.tendance ?? configuration.marche?.tendance ?? "neutre"),
+                ema20: donneesMarche.ema20 ?? configuration.marche?.ema20 ?? null,
+                ema50: donneesMarche.ema50 ?? configuration.marche?.ema50 ?? null,
+                ema200: donneesMarche.ema200 ?? configuration.marche?.ema200 ?? null,
+                macd: donneesMarche.macd ?? configuration.marche?.macd ?? null,
+                signalMacd: donneesMarche.signalMacd ?? configuration.marche?.signalMacd ?? null,
+                histogrammeMacd: donneesMarche.histogrammeMacd ?? configuration.marche?.histogrammeMacd ?? null,
+                atr14: donneesMarche.atr14 ?? configuration.marche?.atr14 ?? null,
+                plusBasRecent: donneesMarche.plusBasRecent ?? configuration.marche?.plusBasRecent ?? null,
+                plusHautRecent: donneesMarche.plusHautRecent ?? configuration.marche?.plusHautRecent ?? null,
                 source: donneesMarche.source ?? "serveur_nodejs",
+                symboleSource: donneesMarche.symboleSource ?? configuration.marche?.symboleSource ?? null,
+                intervalleSource: donneesMarche.intervalleSource ?? configuration.marche?.intervalleSource ?? null,
                 api: apiMarche,
-                dateMiseAJour: new Date().toISOString()
+                dateMiseAJour: donneesMarche.dateMiseAJour || new Date().toISOString()
             };
 
             localStorage.setItem("configurationTradingViewIA", JSON.stringify(configuration));
@@ -811,6 +909,10 @@
                 "Volume : " + configuration.marche.volume + "\n" +
                 "Tendance : " + configuration.marche.tendance
             );
+
+            if (analyserApresActualisation) {
+                analyserDecision();
+            }
 
         } catch (erreur) {
             remplirChampsConfigurationPrincipale(configuration);
@@ -881,12 +983,18 @@
         const typePosition = premiereValeurValide(risque.typePosition, convertirSensEnTypePosition(risque.sens), "spot");
         const profilRisque = premiereValeurValide(risque.profilRisque, "normal");
 
+        const volumeNormalise = normaliserVolumeMarche(
+            premiereValeurValide(marche.volumeEtat, marche.volume),
+            marche.volumeMoyen20
+        );
+        const tendanceNormalisee = normaliserTendanceMarche(marche.tendance);
+
         definirValeurChamp("prix-actuel", marche.prixActuel);
         definirValeurChamp("support", marche.support);
         definirValeurChamp("resistance", marche.resistance);
         definirValeurChamp("rsi", marche.rsi);
-        definirValeurChamp("volume", marche.volume || "neutre");
-        definirValeurChamp("tendance", marche.tendance || "neutre");
+        definirValeurChamp("volume", volumeNormalise);
+        definirValeurChamp("tendance", tendanceNormalisee);
 
         definirValeurChamp("capital-compte", capitalCompte);
         definirValeurChamp("risque-position", risquePourcent);
@@ -907,13 +1015,18 @@
         const marcheExistante = configuration.marche || {};
         const risqueExistant = configuration.risque || {};
 
+        const volumeFormulaire = normaliserVolumeMarche(valeurChamp("volume", "neutre"), marcheExistante.volumeMoyen20);
+        const tendanceFormulaire = normaliserTendanceMarche(valeurChamp("tendance", "neutre"));
+
         configuration.marche = {
+            ...marcheExistante,
             prixActuel: nombreChamp("prix-actuel"),
             support: nombreChamp("support"),
             resistance: nombreChamp("resistance"),
             rsi: nombreChamp("rsi"),
-            volume: valeurChamp("volume", "neutre"),
-            tendance: valeurChamp("tendance", "neutre"),
+            volume: volumeFormulaire,
+            volumeEtat: volumeFormulaire,
+            tendance: tendanceFormulaire,
             source: marcheExistante.source || "saisie_page_decision",
             api: marcheExistante.api || obtenirApiMarcheDepuisConfiguration(),
             dateMiseAJour: marcheExistante.dateMiseAJour || new Date().toISOString(),
@@ -967,9 +1080,16 @@
         afficherConfiguration(configuration);
     }
 
-function analyserDecisionDepuisBouton() {
+async function analyserDecisionDepuisBouton() {
     if (!configuration) {
-        chargerConfigurationLocale(false);
+        await chargerConfigurationLocale(false);
+    }
+
+    if (!configuration) {
+        afficherDecision("Aucune configuration", "erreur");
+        afficherResultatAnalyse("Aucune configuration valide n’est disponible pour l’analyse.");
+        alert("Analyse effectuée sans succès. Aucune configuration valide.");
+        return;
     }
 
     afficherDecision("Analyse en cours...", "attente");
@@ -978,32 +1098,37 @@ function analyserDecisionDepuisBouton() {
         "Les champs modifiés sont relus avant le calcul."
     );
 
-    setTimeout(function () {
-        try {
-            const analyseReussie = analyserDecision();
+    try {
+        ajouterConfigurationPrincipaleDansJSON();
+        ajouterMarcheDansConfiguration();
 
-            if (analyseReussie === true) {
-                alert("Analyse effectuée avec succès.");
-            } else {
-                alert(
-                    "Analyse effectuée sans succès.\n\n" +
-                    "Vérifie les champs obligatoires : prix actuel, support principal et résistance principale."
-                );
-            }
-
-        } catch (erreur) {
-            console.error("Erreur pendant l'analyse :", erreur);
-
-            afficherDecision("Erreur d'analyse", "erreur");
-
-            afficherResultatAnalyse(
-                "L'analyse n'a pas pu être effectuée.\n\n" +
-                "Détail technique : " + erreur.message
-            );
-
-            alert("Analyse effectuée sans succès.\n\nDétail : " + erreur.message);
+        if (!donneesMarcheSuffisantes(configuration)) {
+            await rafraichirDonneesMarcheDecision(false);
         }
-    }, 50);
+
+        const analyseReussie = analyserDecision();
+
+        if (analyseReussie === true) {
+            alert("Analyse effectuée avec succès.");
+        } else {
+            alert(
+                "Analyse effectuée sans succès.\n\n" +
+                "Vérifie les champs obligatoires : prix actuel, support principal et résistance principale."
+            );
+        }
+
+    } catch (erreur) {
+        console.error("Erreur pendant l'analyse :", erreur);
+
+        afficherDecision("Erreur d'analyse", "erreur");
+
+        afficherResultatAnalyse(
+            "L'analyse n'a pas pu être effectuée.\n\n" +
+            "Détail technique : " + erreur.message
+        );
+
+        alert("Analyse effectuée sans succès.\n\nDétail : " + erreur.message);
+    }
 }
 
     function analyserDecision() {
