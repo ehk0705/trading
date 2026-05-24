@@ -200,6 +200,133 @@
             margin-top: 4px;
         }
 
+
+
+        /* ============================================================
+           Panneau enrichi : assistant d'aide à la décision
+           Inspiré de analyse.html du site expert-trading.
+        ============================================================ */
+        .decision-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(150px, 1fr));
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .summary-item,
+        .advisor-item {
+            background: #020617;
+            border: 1px solid #334155;
+            border-radius: 10px;
+            padding: 10px;
+        }
+
+        .summary-item b,
+        .advisor-item b {
+            display: block;
+            color: #94a3b8;
+            font-size: 10px;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .summary-item span,
+        .advisor-item span {
+            color: #ffffff;
+            font-size: 15px;
+            font-weight: bold;
+        }
+
+        .advisor-panel {
+            background: #0b1220;
+            border: 1px solid #334155;
+            border-left: 5px solid #38bdf8;
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 10px;
+        }
+
+        .advisor-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+
+        .advisor-header h2 {
+            margin: 0;
+        }
+
+        .advisor-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .btn-advisor {
+            background: #0f766e;
+            color: #ffffff;
+        }
+
+        .btn-copy-plan {
+            background: #6366f1;
+            color: #ffffff;
+        }
+
+        .advisor-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(150px, 1fr));
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .advisor-plan-box {
+            background: #020617;
+            border: 1px solid #334155;
+            border-left: 5px solid #0f766e;
+            border-radius: 10px;
+            padding: 12px;
+        }
+
+        .advisor-plan-box label {
+            color: #5eead4;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        #advisor-plan-text {
+            width: 100%;
+            min-height: 220px;
+            background: transparent;
+            color: #a7f3d0;
+            border: none;
+            outline: none;
+            resize: vertical;
+            font-family: Consolas, monospace;
+            font-size: 13px;
+            line-height: 1.55;
+        }
+
+        .advisor-warning {
+            margin-top: 10px;
+            color: #fde68a;
+            background: #713f12;
+            border: 1px solid #92400e;
+            border-radius: 8px;
+            padding: 10px;
+            font-size: 12px;
+            line-height: 1.45;
+        }
+
+        .mini-note {
+            color: #cbd5e1;
+            font-size: 12px;
+            line-height: 1.45;
+            margin-top: 8px;
+        }
+
         @media (max-width: 800px) {
             .grid {
                 grid-template-columns: 1fr;
@@ -235,6 +362,17 @@
 
             .decision {
                 font-size: 22px;
+            }
+
+            .decision-summary-grid,
+            .advisor-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .advisor-header,
+            .advisor-actions {
+                flex-direction: column;
+                align-items: stretch;
             }
         }
     </style>
@@ -413,6 +551,96 @@
         Aucune décision
     </div>
 
+    <section class="card" id="decision-summary-card">
+        <h2>Synthèse opérationnelle</h2>
+        <div class="decision-summary-grid">
+            <div class="summary-item">
+                <b>Signal</b>
+                <span id="resume-signal">--</span>
+            </div>
+            <div class="summary-item">
+                <b>Confiance</b>
+                <span id="resume-confiance">0 %</span>
+            </div>
+            <div class="summary-item">
+                <b>Source marché</b>
+                <span id="resume-source-marche">--</span>
+            </div>
+            <div class="summary-item">
+                <b>Risque réel</b>
+                <span id="resume-risque-reel">--</span>
+            </div>
+        </div>
+        <p class="mini-note">
+            Cette synthèse reprend les champs de la page, les données de marché et les paramètres de risque avant de générer un plan technique.
+        </p>
+    </section>
+
+    <section class="advisor-panel" id="advisor-panel">
+        <div class="advisor-header">
+            <h2>Assistant d'aide à la décision</h2>
+            <div class="advisor-actions">
+                <button type="button"
+                        class="btn-advisor"
+                        id="btn-generer-conseil"
+                        onclick="genererConseilTrading()"
+                        title="Générer un plan de trading technique avec secours local si l'API n'existe pas encore.">
+                    Générer le conseil
+                </button>
+                <button type="button"
+                        class="btn-copy-plan"
+                        onclick="copierPlanTrading()"
+                        title="Copier le plan de trading affiché ci-dessous.">
+                    Copier le plan
+                </button>
+            </div>
+        </div>
+
+        <div class="advisor-grid">
+            <div class="advisor-item">
+                <b>Décision</b>
+                <span id="advisor-decision">--</span>
+            </div>
+            <div class="advisor-item">
+                <b>Confiance</b>
+                <span id="advisor-confidence">0 %</span>
+            </div>
+            <div class="advisor-item">
+                <b>Entrée proposée</b>
+                <span id="advisor-entry">--</span>
+            </div>
+            <div class="advisor-item">
+                <b>Stop-loss</b>
+                <span id="advisor-stop-loss">--</span>
+            </div>
+            <div class="advisor-item">
+                <b>Take-profit</b>
+                <span id="advisor-take-profit">--</span>
+            </div>
+            <div class="advisor-item">
+                <b>Ratio risque/rendement</b>
+                <span id="advisor-risk-reward">--</span>
+            </div>
+            <div class="advisor-item">
+                <b>Valeur de position</b>
+                <span id="advisor-position-value">--</span>
+            </div>
+            <div class="advisor-item">
+                <b>Niveau d'invalidation</b>
+                <span id="advisor-invalidation">--</span>
+            </div>
+        </div>
+
+        <div class="advisor-plan-box">
+            <label for="advisor-plan-text">Plan de trading technique copiable</label>
+            <textarea id="advisor-plan-text" spellcheck="false">Charge une configuration, actualise le marché, puis clique sur Générer le conseil.</textarea>
+        </div>
+
+        <div class="advisor-warning">
+            Ce module produit une aide technique à la décision. Il ne constitue pas un conseil financier personnalisé.
+        </div>
+    </section>
+
     <div class="card">
  
 
@@ -430,6 +658,12 @@
         -->
         <!-- Bouton Retour déplacé dans l’en-tête et renommé Accueil. -->
         <!-- Bouton « Analyser de nouveau » déplacé dans l’en-tête, juste après « Accueil ». -->
+        <button type="button"
+                class="btn-local"
+                onclick="chargerConfiguration()"
+                title="Charger manuellement une configuration JSON exportée ou sauvegardée.">
+            Charger configuration JSON
+        </button>
         <input
             type="file"
             id="fichier-json"
@@ -463,6 +697,9 @@
 
 <script>
     let configuration = null;
+    let derniereAnalyseDecision = null;
+
+    const API_BASE_URL_PRINCIPAL = "https://expert-trading.onrender.com";
 
     function afficherDecision(decision, classe) {
         const box = document.getElementById("decision-box");
@@ -483,6 +720,311 @@
 
     function afficherResultatAnalyse(texte) {
         document.getElementById("resultat-analyse").textContent = texte;
+    }
+
+
+    function afficherResumeDecision(signal, confiance) {
+        const marche = configuration && configuration.marche ? configuration.marche : {};
+        const risque = configuration && configuration.risque ? configuration.risque : {};
+        const capital = Number(premiereValeurValide(risque.capitalCompte, risque.capitalInitial, 0));
+        const montantRisque = Number(premiereValeurValide(risque.montantRisque, 0));
+        const risqueReel = capital > 0 && montantRisque > 0 ? ((montantRisque / capital) * 100).toFixed(2) + " %" : "--";
+
+        definirTexte("resume-signal", signal || "--");
+        definirTexte("resume-confiance", (confiance || 0) + " %");
+        definirTexte("resume-source-marche", marche.source || "saisie locale");
+        definirTexte("resume-risque-reel", risqueReel);
+    }
+
+    function definirTexte(id, valeur) {
+        const element = document.getElementById(id);
+        if (element) element.textContent = valeur;
+    }
+
+    async function lireReponseJson(response) {
+        const texte = await response.text();
+        let data;
+
+        try {
+            data = JSON.parse(texte);
+        } catch (erreur) {
+            throw new Error("Le serveur n'a pas retourné du JSON valide. Réponse brute : " + texte);
+        }
+
+        if (!response.ok || data.ok === false) {
+            throw new Error(data.message || data.error || data.detail || ("Réponse HTTP " + response.status));
+        }
+
+        return data;
+    }
+
+    function getAuthToken() {
+        return (
+            localStorage.getItem("expert_trading_auth_token") ||
+            localStorage.getItem("expertTradingToken") ||
+            localStorage.getItem("expertTradingJwt") ||
+            localStorage.getItem("authToken") ||
+            sessionStorage.getItem("expert_trading_auth_token") ||
+            sessionStorage.getItem("expertTradingToken") ||
+            sessionStorage.getItem("expertTradingJwt") ||
+            sessionStorage.getItem("authToken") ||
+            ""
+        );
+    }
+
+    function getAuthHeaders(headers = {}) {
+        const token = getAuthToken();
+        const authHeaders = { ...headers };
+        if (token) authHeaders.Authorization = "Bearer " + token;
+        return authHeaders;
+    }
+
+    function obtenirApiConseillerDepuisConfiguration() {
+        const apiAnalyse = obtenirApiAnalyseDepuisConfiguration();
+        return apiAnalyse.replace(/\/api\/analyse\/?$/, "/api/conseiller-trading");
+    }
+
+    function formaterPrixDecision(valeur) {
+        const nombre = Number(valeur);
+        if (!Number.isFinite(nombre)) return "--";
+        if (Math.abs(nombre) >= 1000) return nombre.toFixed(2);
+        if (Math.abs(nombre) >= 1) return nombre.toFixed(4).replace(/0+$/, "").replace(/\.$/, "");
+        return nombre.toFixed(8).replace(/0+$/, "").replace(/\.$/, "");
+    }
+
+    function formaterMontantDecision(valeur) {
+        const nombre = Number(valeur);
+        if (!Number.isFinite(nombre)) return "--";
+        return nombre.toFixed(2) + " $";
+    }
+
+    function normaliserSignalDecision(signal) {
+        const texte = String(signal || "ATTENDRE").toUpperCase();
+        if (texte.includes("ACH")) return "ACHETER";
+        if (texte.includes("VEN") || texte.includes("SHORT")) return "VENDRE";
+        return "ATTENDRE";
+    }
+
+    function extraireConfianceDecision(analyse) {
+        return Math.max(0, Math.min(100, Number(analyse?.confiance ?? analyse?.confidence ?? 0) || 0));
+    }
+
+    function construireConseilTradingLocalDecision(contexte = {}) {
+        if (!configuration) {
+            configuration = { graphique: {}, analyseIA: {}, marche: {}, risque: {} };
+        }
+
+        ajouterConfigurationPrincipaleDansJSON();
+        ajouterMarcheDansConfiguration();
+
+        const analyse = contexte.analyse || derniereAnalyseDecision || {};
+        const graphique = configuration.graphique || {};
+        const marche = configuration.marche || {};
+        const risque = configuration.risque || {};
+
+        const decision = normaliserSignalDecision(analyse.decision || analyse.signal || "ATTENDRE");
+        const confiance = extraireConfianceDecision(analyse);
+
+        const prixActuel = Number(marche.prixActuel || 0);
+        const support = Number(marche.support || 0);
+        const resistance = Number(marche.resistance || 0);
+        const stopLossManuel = Number(risque.stopLossManuel || 0);
+        const takeProfit1Manuel = Number(risque.takeProfit1Manuel || 0);
+        const takeProfit2Manuel = Number(risque.takeProfit2Manuel || 0);
+        const capital = Number(premiereValeurValide(risque.capitalCompte, risque.capitalInitial, 0));
+        const risquePourcent = Number(risque.risqueParPositionPourcent || 1);
+        const montantRisque = Number(premiereValeurValide(risque.montantRisque, capital * risquePourcent / 100));
+        const levier = Math.max(1, Number(risque.levier || 1));
+
+        let entree = "Attendre une confirmation claire";
+        let stopLoss = "À définir sur le graphique";
+        let takeProfit = "À définir sur le graphique";
+        let invalidation = "Clôture contre le scénario";
+        let ratio = "--";
+
+        if (decision === "ACHETER") {
+            entree = formaterPrixDecision(resistance || prixActuel);
+            stopLoss = formaterPrixDecision(stopLossManuel || support || (prixActuel * 0.98));
+            takeProfit = formaterPrixDecision(takeProfit1Manuel || (resistance + Math.abs(resistance - support)) || (prixActuel * 1.04));
+            invalidation = "Clôture sous " + stopLoss;
+        } else if (decision === "VENDRE") {
+            entree = formaterPrixDecision(support || prixActuel);
+            stopLoss = formaterPrixDecision(stopLossManuel || resistance || (prixActuel * 1.02));
+            takeProfit = formaterPrixDecision(takeProfit1Manuel || (support - Math.abs(resistance - support)) || (prixActuel * 0.96));
+            invalidation = "Clôture au-dessus de " + stopLoss;
+        } else {
+            entree = "Achat au-dessus de " + formaterPrixDecision(resistance) + " / vente sous " + formaterPrixDecision(support);
+            stopLoss = "Après confirmation seulement";
+            takeProfit = "Prochaine zone technique confirmée";
+            invalidation = "Prix bloqué entre support et résistance";
+        }
+
+        const entreeNombre = Number(String(entree).replace(/[^0-9.\-]/g, ""));
+        const stopNombre = Number(String(stopLoss).replace(/[^0-9.\-]/g, ""));
+        const tpNombre = Number(String(takeProfit).replace(/[^0-9.\-]/g, ""));
+        const risqueUnitaire = Math.abs(entreeNombre - stopNombre);
+        const gainUnitaire = Math.abs(tpNombre - entreeNombre);
+        if (risqueUnitaire > 0 && gainUnitaire > 0) {
+            ratio = "1:" + (gainUnitaire / risqueUnitaire).toFixed(2);
+        }
+
+        const valeurPosition = risqueUnitaire > 0 ? (montantRisque / risqueUnitaire) * entreeNombre : capital * levier;
+        const plan = [
+            "PLAN DE TRADING TECHNIQUE",
+            "=========================",
+            "",
+            "Actif : " + (graphique.actifLibelle || graphique.actif || "Non défini"),
+            "Code actif : " + (graphique.actif || "Non défini"),
+            "Intervalle : " + (graphique.intervalleLibelle || graphique.intervalle || "Non défini"),
+            "Indicateur : " + (graphique.indicateur || "Non défini"),
+            "Décision : " + decision,
+            "Confiance : " + confiance + " %",
+            "",
+            "NIVEAUX",
+            "------",
+            "Entrée proposée : " + entree,
+            "Stop-loss : " + stopLoss,
+            "Take-profit : " + takeProfit,
+            takeProfit2Manuel > 0 ? "Take-profit 2 : " + formaterPrixDecision(takeProfit2Manuel) : "Take-profit 2 : non défini",
+            "Ratio risque/rendement : " + ratio,
+            "Niveau d'invalidation : " + invalidation,
+            "",
+            "GESTION DU RISQUE",
+            "-----------------",
+            "Capital du compte : " + formaterMontantDecision(capital),
+            "Risque par position : " + risquePourcent + " %",
+            "Montant risqué : " + formaterMontantDecision(montantRisque),
+            "Valeur de position indicative : " + formaterMontantDecision(valeurPosition),
+            "Effet de levier : " + levier,
+            "Profil de risque : " + (risque.profilRisque || "normal"),
+            "",
+            "CONDUITE À TENIR",
+            "----------------",
+            decision === "ACHETER"
+                ? "Attendre une clôture au-dessus de la résistance avec confirmation du volume. Ne pas entrer sur une simple mèche."
+                : (decision === "VENDRE"
+                    ? "Attendre une clôture sous le support avec confirmation du volume. Ne pas vendre sur une simple mèche."
+                    : "Rester en attente. Préparer les deux scénarios et n'agir qu'après sortie claire de la zone neutre."),
+            "",
+            "CONTRÔLES AVANT EXÉCUTION",
+            "-------------------------",
+            "1. Le stop-loss est-il fixé avant l'entrée ?",
+            "2. Le risque maximal est-il respecté ?",
+            "3. Le ratio risque/rendement est-il acceptable ?",
+            "4. Le scénario est-il invalidé clairement ?",
+            "",
+            "Avertissement : aide technique à la décision, pas conseil financier personnalisé."
+        ].join("\n");
+
+        return {
+            ok: true,
+            source: "secours_local_decisions_html",
+            decision: decision,
+            confiance: confiance,
+            entree: entree,
+            stop_loss: stopLoss,
+            take_profit: takeProfit,
+            ratio_risque_rendement: ratio,
+            valeur_position: formaterMontantDecision(valeurPosition),
+            niveau_invalidation: invalidation,
+            plan: plan
+        };
+    }
+
+    async function appelerConseillerTradingDecision(contexte) {
+        const apiConseiller = obtenirApiConseillerDepuisConfiguration();
+        const payload = {
+            mode: "conseiller_trading_technique",
+            origine: "decisions.html",
+            analyse: contexte.analyse,
+            configuration: configuration,
+            risque: configuration ? configuration.risque || {} : {},
+            marche: configuration ? configuration.marche || {} : {}
+        };
+
+        try {
+            const reponse = await fetch(apiConseiller, {
+                method: "POST",
+                headers: getAuthHeaders({
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                }),
+                cache: "no-store",
+                body: JSON.stringify(payload)
+            });
+
+            const data = await lireReponseJson(reponse);
+            return { ...data, source: data.source || "api_conseiller_trading" };
+        } catch (erreur) {
+            console.warn("Route /api/conseiller-trading indisponible. Secours local activé.", erreur);
+            return construireConseilTradingLocalDecision(contexte);
+        }
+    }
+
+    function afficherConseilTradingDecision(conseil) {
+        definirTexte("advisor-decision", conseil.decision || conseil.signal || "--");
+        definirTexte("advisor-confidence", (conseil.confiance ?? conseil.confidence ?? 0) + " %");
+        definirTexte("advisor-entry", conseil.entree || conseil.entree_proposee || conseil.entry || "--");
+        definirTexte("advisor-stop-loss", conseil.stop_loss || conseil.stopLoss || "--");
+        definirTexte("advisor-take-profit", conseil.take_profit || conseil.takeProfit || conseil.take_profit_1 || "--");
+        definirTexte("advisor-risk-reward", conseil.ratio_risque_rendement || conseil.ratio_rr || conseil.risk_reward || "--");
+        definirTexte("advisor-position-value", conseil.valeur_position || conseil.valeur_position_correcte || conseil.position_value || "--");
+        definirTexte("advisor-invalidation", conseil.niveau_invalidation || conseil.invalidation || "--");
+
+        const plan = document.getElementById("advisor-plan-text");
+        if (plan) plan.value = conseil.plan || conseil.plan_trading || "Aucun plan retourné.";
+    }
+
+    async function genererConseilTrading() {
+        if (!configuration) {
+            await chargerConfigurationLocale(false);
+        }
+
+        if (!configuration) {
+            afficherDecision("Aucune configuration", "erreur");
+            afficherResultatAnalyse("Aucune configuration valide pour générer le conseil.");
+            return;
+        }
+
+        ajouterConfigurationPrincipaleDansJSON();
+        ajouterMarcheDansConfiguration();
+
+        const analyse = derniereAnalyseDecision || {
+            decision: "ATTENDRE",
+            confiance: 0,
+            reasoning: "Aucune analyse préalable. Conseil généré avec les champs disponibles."
+        };
+
+        const bouton = document.getElementById("btn-generer-conseil");
+        if (bouton) bouton.disabled = true;
+
+        try {
+            const conseil = await appelerConseillerTradingDecision({ analyse });
+            afficherConseilTradingDecision(conseil);
+
+            const sourceTexte = conseil.source === "secours_local_decisions_html"
+                ? "Conseil généré localement : la route /api/conseiller-trading n'est pas disponible."
+                : "Conseil généré par /api/conseiller-trading.";
+
+            afficherResultatAnalyse((document.getElementById("resultat-analyse").textContent || "") + "\n\n" + sourceTexte);
+        } finally {
+            if (bouton) bouton.disabled = false;
+        }
+    }
+
+    async function copierPlanTrading() {
+        const plan = document.getElementById("advisor-plan-text");
+        if (!plan) return;
+
+        try {
+            await navigator.clipboard.writeText(plan.value || "");
+            alert("Plan de trading copié.");
+        } catch (erreur) {
+            plan.focus();
+            plan.select();
+            document.execCommand("copy");
+            alert("Plan de trading copié.");
+        }
     }
 
     function nombreChamp(id) {
@@ -795,7 +1337,7 @@
             return configuration.serveur.apiAnalyse;
         }
 
-        return "https://trading-g8ie.onrender.com/api/analyse";
+        return "https://expert-trading.onrender.com/api/analyse";
     }
 
     function obtenirApiMarcheDepuisConfiguration() {
@@ -1332,7 +1874,30 @@ async function analyserDecisionDepuisBouton() {
 
         const confiance = calculerConfiance(scoreAchat, scoreVente, scoreAttente);
 
+        derniereAnalyseDecision = {
+            decision: decision,
+            signal: decision,
+            confiance: confiance,
+            confidence: confiance,
+            scoreAchat: scoreAchat,
+            scoreVente: scoreVente,
+            scoreAttente: scoreAttente,
+            prixActuel: prixActuel,
+            support: support,
+            resistance: resistance,
+            rsi: isNaN(rsi) ? null : rsi,
+            volume: volume,
+            tendance: tendance,
+            reasoning: commentaires.join("
+")
+        };
+
+        afficherResumeDecision(decision, confiance);
         afficherDecision(symbole + " " + decision, classe);
+
+        afficherConseilTradingDecision(construireConseilTradingLocalDecision({
+            analyse: derniereAnalyseDecision
+        }));
 
         afficherResultatAnalyse(
             "DÉCISION IA CONCRÈTE\n" +
@@ -1485,6 +2050,8 @@ async function analyserDecisionDepuisBouton() {
     window.analyserDecision = analyserDecision;
     window.analyserDecisionDepuisBouton = analyserDecisionDepuisBouton;
     window.rafraichirDonneesMarcheDecision = rafraichirDonneesMarcheDecision;
+    window.genererConseilTrading = genererConseilTrading;
+    window.copierPlanTrading = copierPlanTrading;
     window.retour = retour;
 
     document.addEventListener("DOMContentLoaded", function () {
