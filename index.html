@@ -394,6 +394,10 @@
             margin-bottom: 12px;
         }
 
+        .risk-box-cachee {
+            display: none !important;
+        }
+
         .analysis-category-box select { width: 100%; }
 
         .category-description, .note {
@@ -882,8 +886,8 @@
     </section>
 
     <aside class="side-panel">
-        <section class="risk-box">
-            <h3>Paramètres de risque</h3>
+        <section class="risk-box risk-box-cachee" aria-hidden="true">
+            <h3>Paramètres techniques masqués</h3>
             <div class="form-block">
                 <label for="risk-input">Risque par position en pourcentage</label>
                 <input id="risk-input" type="number" value="1" min="0" step="0.1">
@@ -928,6 +932,10 @@
         <pre id="resultat-configuration">Aucune configuration capturée.</pre>
 
         <div id="status" class="status">En attente de capture.</div>
+
+        <div class="note">
+            Gestion du risque : le capital peut être fourni comme contexte. Le risque par position, le stop-loss, les take-profit, le levier, la valeur de position et l’invalidation sont proposés par l’IA dans Advisor.
+        </div>
 
 
         <section class="help-inline-box">
@@ -985,8 +993,8 @@
                 <p>Change le style affiché dans TradingView : bougies japonaises, barres, ligne ou Heikin Ashi.</p>
             </div>
             <div class="help-card">
-                <p><strong>Paramètres de risque</strong></p>
-                <p>Définissent le capital, le risque par position, le stop-loss, le take-profit, le levier, le sens et la stratégie de trading.</p>
+                <p><strong>Gestion du risque par l’IA</strong></p>
+                <p>Le capital sert de contexte. Le risque par position, le stop-loss, le take-profit, le levier et le niveau d’invalidation sont proposés par l’IA dans Advisor.</p>
             </div>
         </div>
 
@@ -1001,8 +1009,8 @@
         <h3>Analyse IA</h3>
         <ol>
             <li>Choisir l’actif, l’intervalle, le type de graphique et le type d’analyse.</li>
-            <li>Régler les paramètres de risque.</li>
-            <li>Cliquer sur <strong>Screenshot</strong> pour enregistrer la configuration.</li>
+            <li>Renseigner seulement le capital si nécessaire.</li>
+            <li>Cliquer sur <strong>Screenshot</strong> pour enregistrer la configuration. L’IA proposera ensuite la gestion du risque dans Advisor.</li>
             <li>Ouvrir <strong>Advisor</strong> pour générer une aide à la décision à partir des données disponibles.</li>
         </ol>
         <p>
@@ -1846,11 +1854,10 @@
                 sens: valeurElement("sens-selector", "achat_vente")
             },
             risque: {
+                mode: "gere_par_ia",
+                source: "advisor_decisions_html",
                 capitalInitial: nombreElement("capital-input", 1000),
-                risqueParPositionPourcent: nombreElement("risk-input", 1),
-                stopLossPourcent: nombreElement("stoploss-input", 2),
-                takeProfitPourcent: nombreElement("takeprofit-input", 4),
-                levier: nombreElement("levier-input", 1)
+                remarque: "Les paramètres de risque détaillés ne sont pas choisis dans index.html. Ils doivent être proposés par l’IA dans Advisor : risque par position, stop-loss, take-profit, levier, valeur de position et niveau d’invalidation."
             },
             environnementPage: {
                 urlPage: window.location.href,
@@ -1913,12 +1920,10 @@
                 statut: "pret_pour_analyse"
             },
             risque: {
+                mode: "gere_par_ia",
+                source: "advisor_decisions_html",
                 capitalInitial: nombreElement("capital-input", 1000),
-                risqueParPositionPourcent: nombreElement("risk-input", 1),
-                stopLossPourcent: nombreElement("stoploss-input", 2),
-                takeProfitPourcent: nombreElement("takeprofit-input", 4),
-                levier: nombreElement("levier-input", 1),
-                sens: valeurElement("sens-selector", "achat_vente")
+                remarque: "Les paramètres de risque détaillés ne sont pas choisis dans index.html. Ils doivent être proposés par l’IA dans Advisor : risque par position, stop-loss, take-profit, levier, valeur de position et niveau d’invalidation."
             },
             snapshot: {
                 url: valeurElement("snapshot-url", ""),
@@ -2399,11 +2404,6 @@
 
         if (configuration.risque) {
             definirValeur("capital-input", configuration.risque.capitalInitial);
-            definirValeur("risk-input", configuration.risque.risqueParPositionPourcent);
-            definirValeur("stoploss-input", configuration.risque.stopLossPourcent);
-            definirValeur("takeprofit-input", configuration.risque.takeProfitPourcent);
-            definirValeur("levier-input", configuration.risque.levier);
-            definirValeur("sens-selector", configuration.risque.sens);
         }
 
         if (configuration.snapshot) definirValeur("snapshot-url", configuration.snapshot.url);
