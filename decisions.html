@@ -1912,8 +1912,7 @@ async function analyserDecisionDepuisBouton() {
             rsi: isNaN(rsi) ? null : rsi,
             volume: volume,
             tendance: tendance,
-            reasoning: commentaires.join("
-")
+            reasoning: commentaires.join("\n")
         };
 
         afficherResumeDecision(decision, confiance);
