@@ -957,6 +957,19 @@
     }
 
     async function appelerConseillerTradingDecision(contexte) {
+        /*
+            La route /api/conseiller-trading n'existe pas encore sur Render.
+            Pour éviter une erreur 404 visible dans la console, decisions.html
+            utilise directement le conseiller local.
+
+            Quand la route serveur sera réellement ajoutée, mettre cette valeur à true.
+        */
+        const UTILISER_API_CONSEILLER_TRADING = false;
+
+        if (!UTILISER_API_CONSEILLER_TRADING) {
+            return construireConseilTradingLocalDecision(contexte);
+        }
+
         const apiConseiller = obtenirApiConseillerDepuisConfiguration();
         const payload = {
             mode: "conseiller_trading_technique",
