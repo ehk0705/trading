@@ -155,6 +155,11 @@
             color: #1a1300;
         }
 
+        .btn-sequence {
+            background: #7c3aed;
+            color: #ffffff;
+        }
+
         .decision {
             font-size: 28px;
             font-weight: bold;
@@ -405,6 +410,14 @@
                     title="Récupère automatiquement le prix actuel, le support, la résistance et les indicateurs depuis le serveur.">
                 Actualiser marché
             </button>
+
+            <button id="btn-flux-complet"
+                    type="button"
+                    class="btn-sequence btn-analyse-top"
+                    onclick="executerFluxCompletConseil()"
+                    title="Charge la configuration disponible, actualise le marché, analyse, puis génère le conseil.">
+                Charger + marché + conseil
+            </button>
         </div>
 
         <h1>Décision IA Trading</h1>
@@ -588,6 +601,13 @@
                     Générer le conseil
                 </button>
                 <button type="button"
+                        class="btn-sequence"
+                        id="btn-generer-flux-complet"
+                        onclick="executerFluxCompletConseil()"
+                        title="Exécute la séquence complète : configuration, marché, analyse et conseil.">
+                    Tout lancer
+                </button>
+                <button type="button"
                         class="btn-copy-plan"
                         onclick="copierPlanTrading()"
                         title="Copier le plan de trading affiché ci-dessous.">
@@ -633,7 +653,7 @@
 
         <div class="advisor-plan-box">
             <label for="advisor-plan-text">Plan de trading technique copiable</label>
-            <textarea id="advisor-plan-text" spellcheck="false">Charge une configuration, actualise le marché, puis clique sur Générer le conseil.</textarea>
+            <textarea id="advisor-plan-text" spellcheck="false">Clique sur « Tout lancer » pour charger la configuration disponible, actualiser le marché, analyser les données, puis générer le conseil. Tu peux aussi le faire manuellement : charger une configuration, actualiser le marché, puis cliquer sur Générer le conseil.</textarea>
         </div>
 
         <div class="advisor-warning">
@@ -674,6 +694,10 @@
 
         <div id="fichier-selectionne" class="file-info">
             Aucun fichier JSON chargé.
+        </div>
+
+        <div class="file-info">
+            Séquence recommandée : charger une configuration, actualiser le marché, puis générer le conseil. Le bouton « Tout lancer » automatise cette séquence lorsque la configuration est déjà disponible localement.
         </div>
 
     </div>
@@ -2040,6 +2064,103 @@ async function analyserDecisionDepuisBouton() {
         return Math.round((scoreMax / total) * 100);
     }
 
+    function definirEtatBoutonsFluxComplet(actif) {
+        const ids = [
+            "btn-flux-complet",
+            "btn-generer-flux-complet",
+            "btn-generer-conseil",
+            "btn-analyser",
+            "btn-rafraichir-marche"
+        ];
+
+        ids.forEach(function(id) {
+            const bouton = document.getElementById(id);
+            if (bouton) bouton.disabled = actif;
+        });
+    }
+
+    async function chargerConfigurationDisponiblePourConseil() {
+        if (configuration && configuration.graphique) {
+            return true;
+        }
+
+        await chargerConfigurationLocale(false);
+
+        if (configuration && configuration.graphique) {
+            return true;
+        }
+
+        afficherDecision("Configuration requise", "erreur");
+        afficherResultatAnalyse(
+            "Aucune configuration locale valide n’est disponible.\n\n" +
+            "Choisis un fichier JSON avec le bouton « Charger configuration JSON », " +
+            "puis clique de nouveau sur « Tout lancer »."
+        );
+
+        const plan = document.getElementById("advisor-plan-text");
+        if (plan) {
+            plan.value =
+                "Configuration requise.\n\n" +
+                "1. Clique sur « Charger configuration JSON ».\n" +
+                "2. Choisis une configuration valide.\n" +
+                "3. Clique ensuite sur « Tout lancer » ou sur « Générer le conseil ».";
+        }
+
+        ouvrirChoixFichierJSON();
+        return false;
+    }
+
+    async function executerFluxCompletConseil() {
+        definirEtatBoutonsFluxComplet(true);
+
+        try {
+            afficherDecision("Séquence en cours...", "attente");
+            afficherResultatAnalyse(
+                "Séquence complète lancée :\n" +
+                "1. Chargement de la configuration disponible.\n" +
+                "2. Actualisation des données de marché.\n" +
+                "3. Analyse de la décision.\n" +
+                "4. Génération du conseil technique."
+            );
+
+            const configurationDisponible = await chargerConfigurationDisponiblePourConseil();
+            if (!configurationDisponible) {
+                return;
+            }
+
+            ajouterConfigurationPrincipaleDansJSON();
+            remplirChampsMarcheDepuisConfiguration(configuration);
+            afficherConfiguration(configuration);
+
+            await rafraichirDonneesMarcheDecision(false);
+
+            if (donneesMarcheSuffisantes(configuration)) {
+                analyserDecision();
+            } else {
+                afficherResultatAnalyse(
+                    (document.getElementById("resultat-analyse").textContent || "") +
+                    "\n\nLes données de marché restent incomplètes. Le conseil sera généré avec les données disponibles."
+                );
+            }
+
+            await genererConseilTrading();
+
+            afficherResultatAnalyse(
+                (document.getElementById("resultat-analyse").textContent || "") +
+                "\n\nSéquence terminée : configuration chargée, marché actualisé, conseil généré."
+            );
+        } catch (erreur) {
+            console.error("Erreur pendant la séquence complète :", erreur);
+            afficherDecision("Erreur séquence", "erreur");
+            afficherResultatAnalyse(
+                "La séquence complète n’a pas pu être terminée.\n\n" +
+                "Détail technique : " + erreur.message
+            );
+        } finally {
+            definirEtatBoutonsFluxComplet(false);
+        }
+    }
+
     function retour() {
         window.location.href = "index.html";
     }
@@ -2051,6 +2172,7 @@ async function analyserDecisionDepuisBouton() {
     window.analyserDecisionDepuisBouton = analyserDecisionDepuisBouton;
     window.rafraichirDonneesMarcheDecision = rafraichirDonneesMarcheDecision;
     window.genererConseilTrading = genererConseilTrading;
+    window.executerFluxCompletConseil = executerFluxCompletConseil;
     window.copierPlanTrading = copierPlanTrading;
     window.retour = retour;
 
