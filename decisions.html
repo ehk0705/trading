@@ -25,27 +25,40 @@
         }
 
         .header-bar {
-            position: relative;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
+            gap: 10px;
             min-height: 40px;
         }
 
-        .header-actions {
-            position: absolute;
-            left: 0;
-            top: 0;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+        .header-title {
+            text-align: center;
+            line-height: 1.15;
         }
 
-        h1 {
+        .header-title h1 {
             color: #00d9ff;
             margin: 0;
-            font-size: 22px;
+            font-size: 24px;
             text-align: center;
+            letter-spacing: 0.4px;
+        }
+
+        .header-author {
+            display: block;
+            color: #cbd5e1;
+            font-size: 13px;
+            margin-top: 3px;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            flex-wrap: wrap;
         }
 
         .btn-accueil {
@@ -350,8 +363,15 @@
                 gap: 8px;
             }
 
+            .header-title h1 {
+                font-size: 20px;
+            }
+
+            .header-author {
+                font-size: 12px;
+            }
+
             .header-actions {
-                position: static;
                 width: 100%;
                 flex-direction: column;
                 gap: 8px;
@@ -360,10 +380,6 @@
             .btn-accueil,
             .btn-analyse-top {
                 width: 100%;
-            }
-
-            h1 {
-                font-size: 20px;
             }
 
             .decision {
@@ -388,6 +404,11 @@
 
 <header>
     <div class="header-bar">
+        <div class="header-title">
+            <h1>TRADING STATION IA</h1>
+            <span class="header-author">Auteur : Hocine Korichi, Ing.</span>
+        </div>
+
         <div class="header-actions">
             <button id="btn-retour"
                     type="button"
@@ -420,8 +441,6 @@
                 Charger + marché + conseil
             </button>
         </div>
-
-        <h1>Décision IA Trading</h1>
     </div>
 </header>
 
