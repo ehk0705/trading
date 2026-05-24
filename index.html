@@ -66,7 +66,7 @@
         }
 
         .source-parametres-graphique {
-            display: inline-block;
+            display: none !important;
             margin-left: 8px;
             padding: 6px 9px;
             border-radius: 7px;
@@ -854,7 +854,7 @@
     <section class="chart-panel">
         <div class="chart-title-row">
             <h2>Graphique TradingView intégré</h2>
-            <span id="source-parametres-graphique" class="source-parametres-graphique">Lecture directe non confirmée</span>
+            <span id="source-parametres-graphique" class="source-parametres-graphique" aria-hidden="true"></span>
             <div class="chart-inline-controls">
                 <div class="form-block">
                     <label for="type-bougie">Type de graphique</label>
