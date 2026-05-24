@@ -178,6 +178,7 @@
         .btn-decision { background: #eab308; color: #1a1300; }
         .btn-clear { background: #ef4444; color: white; }
         .btn-dark { background: #334155; color: white; }
+        .btn-help { background: #0ea5e9; color: #00111a; }
 
         .header-images {
             display: flex;
@@ -444,6 +445,99 @@
             font-size: 12px;
             padding: 16px;
             border-top: 1px solid #263244;
+        }
+
+
+        .help-inline-box {
+            margin-top: 14px;
+            background: #0b1220;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 14px;
+        }
+
+        .help-inline-box h3 {
+            margin-top: 0;
+        }
+
+        .help-inline-box ul {
+            margin: 8px 0 0 18px;
+            padding: 0;
+            color: #d1d5db;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .help-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.74);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9998;
+            padding: 16px;
+        }
+
+        .help-box {
+            width: 100%;
+            max-width: 920px;
+            max-height: 88vh;
+            overflow: auto;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 14px;
+            padding: 18px;
+            color: #e5e7eb;
+            box-shadow: 0 18px 45px rgba(0, 0, 0, 0.48);
+        }
+
+        .help-box h2 {
+            margin-top: 0;
+        }
+
+        .help-box h3 {
+            color: #facc15;
+            margin-top: 18px;
+        }
+
+        .help-box p,
+        .help-box li {
+            font-size: 13px;
+            line-height: 1.55;
+        }
+
+        .help-box ul,
+        .help-box ol {
+            padding-left: 20px;
+        }
+
+        .help-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .help-card {
+            background: #020617;
+            border: 1px solid #334155;
+            border-radius: 10px;
+            padding: 12px;
+        }
+
+        .help-card strong {
+            color: #93c5fd;
+        }
+
+        .help-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 16px;
+        }
+
+        @media (max-width: 700px) {
+            .help-grid { grid-template-columns: 1fr; }
+            .help-box { max-height: 92vh; }
         }
 
 
@@ -719,6 +813,7 @@
         <button class="btn-db" style="display:none;" onclick="enregistrerCapturePostgres()">Enregistrer la configuration</button>
         <!-- <button class="btn-save" onclick="rechargerConfigurationTradingView()">Recharger</button> -->
         <button class="btn-decision" onclick="ouvrirPageDecision()">Advisor</button>
+        <button class="btn-help" type="button" onclick="ouvrirAide()">Aide</button>
 
         <div class="capture-selector-top">
             <!--<label for="liste-captures-postgres">Choisir une configuration :</label>-->
@@ -833,6 +928,20 @@
         <pre id="resultat-configuration">Aucune configuration capturée.</pre>
 
         <div id="status" class="status">En attente de capture.</div>
+
+
+        <section class="help-inline-box">
+            <h3>Screenshots et analyse IA</h3>
+            <div class="note">
+                Le bouton <strong>Screenshot</strong> capture la configuration du graphique, ajoute les données de marché disponibles et enregistre l’ensemble dans PostgreSQL. La liste déroulante permet ensuite de recharger une capture enregistrée.
+                <br><br>
+                L’analyse IA s’appuie surtout sur le JSON capturé : actif, intervalle, indicateur, type d’analyse, stratégie, risque et données de marché. L’image du screenshot peut compléter l’analyse si elle est disponible côté serveur, mais elle ne remplace pas les paramètres JSON.
+            </div>
+            <div class="screenshot-preview">
+                <strong style="color:#facc15;font-size:12px;">Aperçu du screenshot chargé depuis PostgreSQL</strong>
+                <img id="image-capture-postgres" alt="Aperçu du screenshot chargé depuis PostgreSQL">
+            </div>
+        </section>
     </aside>
 </main>
 
@@ -848,6 +957,71 @@
         </div>
     </div>
 </div>
+
+<div id="help-overlay" class="help-overlay" role="dialog" aria-modal="true" aria-labelledby="titre-aide">
+    <div class="help-box">
+        <h2 id="titre-aide">Aide — boutons, screenshots et analyse IA</h2>
+
+        <h3>Rôle des principaux boutons</h3>
+        <div class="help-grid">
+            <div class="help-card">
+                <p><strong>Screenshot</strong></p>
+                <p>Capture la configuration courante du graphique, récupère les données de marché disponibles, puis enregistre la capture dans la table PostgreSQL.</p>
+            </div>
+            <div class="help-card">
+                <p><strong>Advisor</strong></p>
+                <p>Prépare la configuration actuelle, ajoute les données de marché disponibles, puis ouvre la page <strong>decisions.html</strong> pour l’aide à la décision.</p>
+            </div>
+            <div class="help-card">
+                <p><strong>Liste des configurations</strong></p>
+                <p>Recharge une capture déjà enregistrée dans PostgreSQL. Elle restaure les paramètres du graphique, du risque, de la stratégie et du type d’analyse.</p>
+            </div>
+            <div class="help-card">
+                <p><strong>Type d’analyse</strong></p>
+                <p>Définit l’angle d’analyse : macroéconomie, Bitcoin, données on-chain, analyse technique, dérivés, liquidité, institutionnel, sentiment ou réglementation.</p>
+            </div>
+            <div class="help-card">
+                <p><strong>Type de graphique</strong></p>
+                <p>Change le style affiché dans TradingView : bougies japonaises, barres, ligne ou Heikin Ashi.</p>
+            </div>
+            <div class="help-card">
+                <p><strong>Paramètres de risque</strong></p>
+                <p>Définissent le capital, le risque par position, le stop-loss, le take-profit, le levier, le sens et la stratégie de trading.</p>
+            </div>
+        </div>
+
+        <h3>Screenshots</h3>
+        <ul>
+            <li>Le screenshot sert à conserver une trace visuelle du contexte graphique au moment de la capture.</li>
+            <li>Le JSON reste l’élément le plus important : il contient les paramètres exploitables par le serveur et par l’analyse IA.</li>
+            <li>Si le champ <strong>screenshot_base64</strong> est vide, la capture reste exploitable grâce au bloc <strong>configuration_json</strong>.</li>
+            <li>Avec le widget public TradingView, certaines informations internes du graphique ne sont pas toujours accessibles directement.</li>
+        </ul>
+
+        <h3>Analyse IA</h3>
+        <ol>
+            <li>Choisir l’actif, l’intervalle, le type de graphique et le type d’analyse.</li>
+            <li>Régler les paramètres de risque.</li>
+            <li>Cliquer sur <strong>Screenshot</strong> pour enregistrer la configuration.</li>
+            <li>Ouvrir <strong>Advisor</strong> pour générer une aide à la décision à partir des données disponibles.</li>
+        </ol>
+        <p>
+            L’analyse IA ne doit pas être considérée comme un ordre d’achat ou de vente. Elle sert à structurer un scénario : décision possible, confiance, entrée, stop-loss, take-profit, invalidation et ratio risque/rendement.
+        </p>
+
+        <h3>Limites importantes</h3>
+        <ul>
+            <li>Si l’API de marché est indisponible, l’analyse peut être partielle.</li>
+            <li>Si TradingView ne fournit pas toutes les données internes, la page utilise les champs HTML comme solution de repli.</li>
+            <li>Une capture sans image n’est pas forcément inutilisable : le JSON peut suffire pour l’analyse.</li>
+        </ul>
+
+        <div class="help-actions">
+            <button class="btn-dark" type="button" onclick="fermerAide()">Fermer</button>
+        </div>
+    </div>
+</div>
+
 
 <footer>
     Trading Station IA — page HTML sur GitHub Pages, API Node.js sur Render.
@@ -885,6 +1059,20 @@
         });
     }
 
+
+
+    function ouvrirAide() {
+        const overlay = document.getElementById("help-overlay");
+        if (!overlay) return;
+        overlay.style.display = "flex";
+    }
+
+    function fermerAide() {
+        const overlay = document.getElementById("help-overlay");
+        if (!overlay) return;
+        overlay.style.display = "none";
+    }
+
     function fermerFenetreMotDePasse(valider) {
         const overlay = document.getElementById("modal-password-overlay");
         const champ = document.getElementById("admin-delete-password-input");
@@ -902,6 +1090,12 @@
     }
 
     document.addEventListener("keydown", function(event) {
+        const overlayAide = document.getElementById("help-overlay");
+        if (event.key === "Escape" && overlayAide && overlayAide.style.display === "flex") {
+            fermerAide();
+            return;
+        }
+
         const overlay = document.getElementById("modal-password-overlay");
         const champ = document.getElementById("admin-delete-password-input");
 
