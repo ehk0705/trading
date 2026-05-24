@@ -25,40 +25,27 @@
         }
 
         .header-bar {
+            position: relative;
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 10px;
             min-height: 40px;
         }
 
-        .header-title {
-            text-align: center;
-            line-height: 1.15;
-        }
-
-        .header-title h1 {
-            color: #00d9ff;
-            margin: 0;
-            font-size: 24px;
-            text-align: center;
-            letter-spacing: 0.4px;
-        }
-
-        .header-author {
-            display: block;
-            color: #cbd5e1;
-            font-size: 13px;
-            margin-top: 3px;
-        }
-
         .header-actions {
+            position: absolute;
+            left: 0;
+            top: 0;
             display: flex;
             align-items: center;
-            justify-content: center;
             gap: 8px;
-            flex-wrap: wrap;
+        }
+
+        h1 {
+            color: #00d9ff;
+            margin: 0;
+            font-size: 22px;
+            text-align: center;
         }
 
         .btn-accueil {
@@ -113,6 +100,15 @@
             border-radius: 7px;
             color: white;
             font-size: 14px;
+        }
+
+        input[readonly],
+        select:disabled {
+            opacity: 0.85;
+            cursor: not-allowed;
+            background: #0f172a;
+            border-color: #475569;
+            color: #bae6fd;
         }
 
         .grid {
@@ -363,15 +359,8 @@
                 gap: 8px;
             }
 
-            .header-title h1 {
-                font-size: 20px;
-            }
-
-            .header-author {
-                font-size: 12px;
-            }
-
             .header-actions {
+                position: static;
                 width: 100%;
                 flex-direction: column;
                 gap: 8px;
@@ -380,6 +369,10 @@
             .btn-accueil,
             .btn-analyse-top {
                 width: 100%;
+            }
+
+            h1 {
+                font-size: 20px;
             }
 
             .decision {
@@ -404,11 +397,6 @@
 
 <header>
     <div class="header-bar">
-        <div class="header-title">
-            <h1>TRADING STATION IA</h1>
-            <span class="header-author">Auteur : Hocine Korichi, Ing.</span>
-        </div>
-
         <div class="header-actions">
             <button id="btn-retour"
                     type="button"
@@ -441,6 +429,8 @@
                 Charger + marché + conseil
             </button>
         </div>
+
+        <h1>Décision IA Trading</h1>
     </div>
 </header>
 
@@ -521,7 +511,7 @@
     </section>
 
     <section class="card">
-        <h2>Gestion du risque</h2>
+        <h2>Gestion du risque proposée par l’IA</h2>
 
         <div class="grid">
             <div class="field">
@@ -530,38 +520,38 @@
             </div>
 
             <div class="field">
-                <label for="risque-position">Risque par position (%)</label>
-                <input type="number" id="risque-position" placeholder="Exemple : 1" min="0" max="100" step="0.1">
+                <label for="risque-position">Risque par position proposé par l’IA (%)</label>
+                <input type="number" id="risque-position" readonly placeholder="Exemple : 1" min="0" max="100" step="0.1">
             </div>
 
             <div class="field">
-                <label for="montant-risque">Montant risqué</label>
-                <input type="number" id="montant-risque" placeholder="Exemple : 10" step="0.01">
+                <label for="montant-risque">Montant risqué proposé par l’IA</label>
+                <input type="number" id="montant-risque" readonly placeholder="Exemple : 10" step="0.01">
             </div>
 
             <div class="field">
-                <label for="stop-loss">Stop loss manuel</label>
-                <input type="number" id="stop-loss" placeholder="Exemple : 102800" step="0.01">
+                <label for="stop-loss">Stop-loss proposé par l’IA</label>
+                <input type="number" id="stop-loss" readonly placeholder="Exemple : 102800" step="0.01">
             </div>
 
             <div class="field">
-                <label for="take-profit-1">Take profit 1 manuel</label>
-                <input type="number" id="take-profit-1" placeholder="Exemple : 106500" step="0.01">
+                <label for="take-profit-1">Take-profit 1 proposé par l’IA</label>
+                <input type="number" id="take-profit-1" readonly placeholder="Exemple : 106500" step="0.01">
             </div>
 
             <div class="field">
-                <label for="take-profit-2">Take profit 2 manuel</label>
-                <input type="number" id="take-profit-2" placeholder="Exemple : 108000" step="0.01">
+                <label for="take-profit-2">Take-profit 2 proposé par l’IA</label>
+                <input type="number" id="take-profit-2" readonly placeholder="Exemple : 108000" step="0.01">
             </div>
 
             <div class="field">
-                <label for="levier">Effet de levier</label>
-                <input type="number" id="levier" placeholder="Exemple : 1" min="1" step="1">
+                <label for="levier">Effet de levier proposé par l’IA</label>
+                <input type="number" id="levier" readonly placeholder="Exemple : 1" min="1" step="1">
             </div>
 
             <div class="field">
-                <label for="type-position">Type de position</label>
-                <select id="type-position">
+                <label for="type-position">Type de position proposé par l’IA</label>
+                <select id="type-position" disabled>
                     <option value="spot">Spot</option>
                     <option value="long">Long</option>
                     <option value="short">Short</option>
@@ -570,14 +560,18 @@
             </div>
 
             <div class="field">
-                <label for="profil-risque">Profil de risque</label>
-                <select id="profil-risque">
+                <label for="profil-risque">Profil de risque proposé par l’IA</label>
+                <select id="profil-risque" disabled>
                     <option value="prudent">Prudent</option>
                     <option value="normal" selected>Normal</option>
                     <option value="agressif">Agressif</option>
                 </select>
             </div>
         </div>
+
+        <p class="mini-note">
+            Les paramètres de risque ci-dessus sont calculés par l’IA à partir du prix, du support, de la résistance, de la tendance, du RSI, du volume et du niveau de confiance. Ils ne sont pas saisis manuellement, sauf le capital du compte qui sert de contexte de calcul.
+        </p>
     </section>
 
     <div id="decision-box" class="decision attente">
@@ -853,6 +847,155 @@
         return Math.max(0, Math.min(100, Number(analyse?.confiance ?? analyse?.confidence ?? 0) || 0));
     }
 
+
+    function determinerRisquePourcentIA(decision, confiance, marche) {
+        const signal = normaliserSignalDecision(decision);
+        let risquePourcent = 0;
+
+        if (signal === "ATTENDRE" || confiance < 50) {
+            return 0;
+        }
+
+        if (confiance < 60) {
+            risquePourcent = 0.5;
+        } else if (confiance < 75) {
+            risquePourcent = 1;
+        } else if (confiance < 85) {
+            risquePourcent = 1.25;
+        } else {
+            risquePourcent = 1.5;
+        }
+
+        const volume = String(marche?.volume || marche?.volumeEtat || "neutre").toLowerCase();
+        const tendance = String(marche?.tendance || "neutre").toLowerCase();
+        const rsi = Number(marche?.rsi);
+
+        if (volume === "faible" || volume === "baisse") {
+            risquePourcent -= 0.25;
+        }
+
+        if (tendance === "range" || tendance === "neutre") {
+            risquePourcent -= 0.25;
+        }
+
+        if (Number.isFinite(rsi) && (rsi > 75 || rsi < 25)) {
+            risquePourcent -= 0.25;
+        }
+
+        return Math.max(0.25, Math.min(2, Number(risquePourcent.toFixed(2))));
+    }
+
+    function calculerParametresRisqueIA(decision, confiance, marche, risqueExistant = {}) {
+        const signal = normaliserSignalDecision(decision);
+        const prixActuel = Number(marche?.prixActuel || 0);
+        const support = Number(marche?.support || 0);
+        const resistance = Number(marche?.resistance || 0);
+        const capital = Number(premiereValeurValide(
+            risqueExistant.capitalCompte,
+            risqueExistant.capitalInitial,
+            nombreChamp("capital-compte"),
+            1000
+        ));
+
+        const risquePourcent = determinerRisquePourcentIA(signal, confiance, marche);
+        const montantRisque = capital > 0 ? (capital * risquePourcent) / 100 : 0;
+        const amplitude = support > 0 && resistance > 0 ? Math.abs(resistance - support) : 0;
+
+        let entree = prixActuel || 0;
+        let stopLoss = 0;
+        let takeProfit1 = 0;
+        let takeProfit2 = 0;
+        let typePosition = "spot";
+        let profilRisque = "prudent";
+        let levier = 1;
+        let niveauInvalidation = "Aucune position tant que le signal reste insuffisant.";
+
+        if (signal === "ACHETER") {
+            entree = resistance > 0 ? resistance : prixActuel;
+            stopLoss = support > 0 ? support : entree * 0.98;
+            const risqueUnitaire = Math.max(Math.abs(entree - stopLoss), entree * 0.005);
+            takeProfit1 = entree + risqueUnitaire * 2;
+            takeProfit2 = entree + risqueUnitaire * 3;
+            typePosition = "long";
+            niveauInvalidation = "Clôture sous " + formaterPrixDecision(stopLoss);
+        } else if (signal === "VENDRE") {
+            entree = support > 0 ? support : prixActuel;
+            stopLoss = resistance > 0 ? resistance : entree * 1.02;
+            const risqueUnitaire = Math.max(Math.abs(stopLoss - entree), entree * 0.005);
+            takeProfit1 = entree - risqueUnitaire * 2;
+            takeProfit2 = entree - risqueUnitaire * 3;
+            typePosition = "short";
+            niveauInvalidation = "Clôture au-dessus de " + formaterPrixDecision(stopLoss);
+        }
+
+        if (signal === "ATTENDRE" || risquePourcent === 0) {
+            entree = 0;
+            stopLoss = 0;
+            takeProfit1 = 0;
+            takeProfit2 = 0;
+            typePosition = "spot";
+            profilRisque = "prudent";
+            levier = 1;
+        } else if (confiance >= 75 && amplitude > 0) {
+            profilRisque = "normal";
+            levier = 1;
+        }
+
+        return {
+            source: "ia_decision_locale",
+            capitalCompte: capital,
+            capitalInitial: capital,
+            risqueParPositionPourcent: risquePourcent,
+            montantRisque: montantRisque,
+            entreeProposee: entree,
+            stopLossManuel: stopLoss,
+            takeProfit1Manuel: takeProfit1,
+            takeProfit2Manuel: takeProfit2,
+            levier: levier,
+            typePosition: typePosition,
+            profilRisque: profilRisque,
+            niveauInvalidation: niveauInvalidation,
+            dateCalculIA: new Date().toISOString()
+        };
+    }
+
+    function appliquerParametresRisqueIA(parametresIA) {
+        if (!configuration || !parametresIA) {
+            return;
+        }
+
+        configuration.risque = {
+            ...(configuration.risque || {}),
+            ...parametresIA,
+            calculeParIA: true
+        };
+
+        definirValeurChamp("capital-compte", parametresIA.capitalCompte);
+        definirValeurChamp("risque-position", parametresIA.risqueParPositionPourcent);
+        definirValeurChamp("montant-risque", Number(parametresIA.montantRisque || 0).toFixed(2));
+        definirValeurChamp("stop-loss", parametresIA.stopLossManuel || "");
+        definirValeurChamp("take-profit-1", parametresIA.takeProfit1Manuel || "");
+        definirValeurChamp("take-profit-2", parametresIA.takeProfit2Manuel || "");
+        definirValeurChamp("levier", parametresIA.levier || 1);
+        definirValeurChamp("type-position", parametresIA.typePosition || "spot");
+        definirValeurChamp("profil-risque", parametresIA.profilRisque || "prudent");
+
+        localStorage.setItem("configurationTradingViewIA", JSON.stringify(configuration));
+        afficherConfiguration(configuration);
+    }
+
+    function verrouillerChampsRisqueIA() {
+        ["risque-position", "montant-risque", "stop-loss", "take-profit-1", "take-profit-2", "levier"].forEach(function(id) {
+            const element = document.getElementById(id);
+            if (element) element.readOnly = true;
+        });
+
+        ["type-position", "profil-risque"].forEach(function(id) {
+            const element = document.getElementById(id);
+            if (element) element.disabled = true;
+        });
+    }
+
     function construireConseilTradingLocalDecision(contexte = {}) {
         if (!configuration) {
             configuration = { graphique: {}, analyseIA: {}, marche: {}, risque: {} };
@@ -864,10 +1007,13 @@
         const analyse = contexte.analyse || derniereAnalyseDecision || {};
         const graphique = configuration.graphique || {};
         const marche = configuration.marche || {};
-        const risque = configuration.risque || {};
+        let risque = configuration.risque || {};
 
         const decision = normaliserSignalDecision(analyse.decision || analyse.signal || "ATTENDRE");
         const confiance = extraireConfianceDecision(analyse);
+        const parametresRisqueIA = calculerParametresRisqueIA(decision, confiance, marche, risque);
+        appliquerParametresRisqueIA(parametresRisqueIA);
+        risque = configuration.risque || {};
 
         const prixActuel = Number(marche.prixActuel || 0);
         const support = Number(marche.support || 0);
@@ -933,12 +1079,12 @@
             "Ratio risque/rendement : " + ratio,
             "Niveau d'invalidation : " + invalidation,
             "",
-            "GESTION DU RISQUE",
-            "-----------------",
+            "GESTION DU RISQUE PROPOSÉE PAR L’IA",
+            "-----------------------------------",
             "Capital du compte : " + formaterMontantDecision(capital),
-            "Risque par position : " + risquePourcent + " %",
+            "Risque par position proposé : " + risquePourcent + " %",
             "Montant risqué : " + formaterMontantDecision(montantRisque),
-            "Valeur de position indicative : " + formaterMontantDecision(valeurPosition),
+            "Valeur de position proposée : " + formaterMontantDecision(valeurPosition),
             "Effet de levier : " + levier,
             "Profil de risque : " + (risque.profilRisque || "normal"),
             "",
@@ -993,6 +1139,7 @@
         const payload = {
             mode: "conseiller_trading_technique",
             origine: "decisions.html",
+            consigneRisque: "L'IA doit proposer elle-même les paramètres de risque : risque par position, stop-loss, take-profit, valeur de position, levier prudent et niveau d'invalidation. L'utilisateur ne choisit pas ces paramètres, sauf le capital du compte utilisé comme contexte.",
             analyse: contexte.analyse,
             configuration: configuration,
             risque: configuration ? configuration.risque || {} : {},
@@ -1918,17 +2065,24 @@ async function analyserDecisionDepuisBouton() {
             symbole = "🔴";
         }
 
+        const confiance = calculerConfiance(scoreAchat, scoreVente, scoreAttente);
+        const parametresRisqueIA = calculerParametresRisqueIA(
+            decision,
+            confiance,
+            marche,
+            risque
+        );
+        appliquerParametresRisqueIA(parametresRisqueIA);
+
         const plan = calculerPlanTrading(
             decision,
             prixActuel,
             support,
             resistance,
-            stopLossManuel,
-            takeProfit1Manuel,
-            takeProfit2Manuel
+            parametresRisqueIA.stopLossManuel,
+            parametresRisqueIA.takeProfit1Manuel,
+            parametresRisqueIA.takeProfit2Manuel
         );
-
-        const confiance = calculerConfiance(scoreAchat, scoreVente, scoreAttente);
 
         derniereAnalyseDecision = {
             decision: decision,
@@ -2214,6 +2368,7 @@ async function analyserDecisionDepuisBouton() {
             Chargement automatique de la dernière configuration locale.
             Le bouton manuel « Charger sauvegarde locale » est maintenant commenté dans le HTML.
         */
+        verrouillerChampsRisqueIA();
         chargerConfigurationLocale(false);
     });
 </script>
