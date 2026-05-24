@@ -611,14 +611,14 @@
         </div>
 
         <button class="btn-clear" onclick="viderTableTradingCapture()">Vider la table</button>
-        <button class="btn-capture" onclick="capturerEtEnregistrerConfiguration()">Capturer et enregistrer</button>
+        <button class="btn-capture" onclick="capturerEtEnregistrerConfiguration()">Screenshot</button>
         <!--<button class="btn-market" onclick="enrichirConfigurationAvecDonneesMarche()">Ajouter marché</button>-->
         <button class="btn-db" style="display:none;" onclick="enregistrerCapturePostgres()">Enregistrer la configuration</button>
         <!-- <button class="btn-save" onclick="rechargerConfigurationTradingView()">Recharger</button> -->
         <button class="btn-decision" onclick="ouvrirPageDecision()">Analyser le snapshot</button>
 
         <div class="capture-selector-top">
-            <label for="liste-captures-postgres">Choisir une confihuration :</label>
+            <!--<label for="liste-captures-postgres">Choisir une configuration :</label>-->
             <select id="liste-captures-postgres" onchange="chargerCapturePostgresSelectionnee()">
                 <option value="">Aucune configuration chargée</option>
             </select>
