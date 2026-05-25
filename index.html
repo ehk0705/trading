@@ -13,7 +13,52 @@
           un repli vers les champs HTML masqués afin de ne pas casser l'enregistrement.
     -->
     <script src="https://s3.tradingview.com/tv.js"></script>
+       <div class="control-group parametres-graphiques-caches">
+            <label for="asset-selector">ACTIF :</label>
+            <select id="asset-selector" onchange="actualiserGraphique()">
+                <option value="BINANCE:BTCUSDT">Bitcoin / USDT</option>
+                <option value="COINBASE:BTCUSD">Bitcoin / USD</option>
+                <option value="BINANCE:ETHUSDT">Ethereum / USDT</option>
+                <option value="OANDA:XAUUSD">Or / Dollar - XAUUSD</option>
+                <option value="NASDAQ:AAPL">Apple - AAPL</option>
+                <option value="NASDAQ:TSLA">Tesla - TSLA</option>
+                <option value="NASDAQ:NVDA">Nvidia - NVDA</option>
+                <option value="NASDAQ:MSFT">Microsoft - MSFT</option>
+                <option value="NASDAQ:AMZN">Amazon - AMZN</option>
+                <option value="NASDAQ:GOOGL">Google - GOOGL</option>
+                <option value="SP:SPX">S&amp;P 500</option>
+                <option value="TVC:DXY">Dollar Index - DXY</option>
+            </select>
+        </div>
 
+        <div class="control-group parametres-graphiques-caches">
+            <label for="interval-selector">INTERVALLE :</label>
+            <select id="interval-selector" onchange="actualiserGraphique()">
+                <option value="1">1 minute</option>
+                <option value="5">5 minutes</option>
+                <option value="15">15 minutes</option>
+                <option value="30">30 minutes</option>
+                <option value="60">1 heure</option>
+                <option value="240">4 heures</option>
+                <option value="D" selected>1 jour</option>
+                <option value="W">1 semaine</option>
+                <option value="M">1 mois</option>
+            </select>
+        </div>
+
+        <div class="control-group parametres-graphiques-caches">
+            <label for="indicator-selector">INDICATEUR :</label>
+            <select id="indicator-selector" onchange="actualiserGraphique()">
+                <option value="RSI">RSI</option>
+                <option value="MACD">MACD</option>
+                <option value="EMA">EMA</option>
+                <option value="SUPERTREND">Supertrend</option>
+                <option value="BOLLINGER">Bandes de Bollinger</option>
+                <option value="ATR">ATR</option>
+                <option value="VOLUME">Volume</option>
+                <option value="LIQUIDITY_ZONE">Zones de liquidité</option>
+            </select>
+        </div>
     <style>
         * { box-sizing: border-box; }
 
