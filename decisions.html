@@ -390,6 +390,27 @@
                 align-items: stretch;
             }
         }
+		.zone-bouton-marche {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 12px 0 18px 0;
+    clear: both;
+}
+
+#btn-flux-complet {
+    position: relative;
+    z-index: 2;
+    max-width: 100%;
+    white-space: normal;
+    line-height: 1.25;
+}
+
+.titre-decision-ia {
+    margin-top: 18px;
+    clear: both;
+    text-align: center;
+}
     </style>
 </head>
 
@@ -421,16 +442,17 @@
                 Actualiser marché
             </button>
 
-            <button id="btn-flux-complet"
-                    type="button"
-                    class="btn-sequence btn-analyse-top"
-                    onclick="executerFluxCompletConseil()"
-                    title="Charge la configuration disponible, actualise le marché, analyse, puis génère le conseil.">
-                Charger + marché + conseil
-            </button>
-        </div>
+  <div class="zone-bouton-marche">
+    <button id="btn-flux-complet"
+            type="button"
+            class="btn-sequence btn-analyse-top"
+            onclick="executerFluxCompletConseil()"
+            title="Charge la configuration disponible, actualise le marché, analyse, puis génère le conseil.">
+        Rafraîchir les données du marché
+    </button>
+</div>
 
-        <h1>Décision IA Trading</h1>
+<h1 class="titre-decision-ia">Décision IA Trading</h1>
     </div>
 </header>
 
