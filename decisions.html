@@ -159,6 +159,59 @@
             opacity: 0.85;
         }
 
+
+        button[data-hint] {
+            position: relative;
+        }
+
+        button[data-hint]::after {
+            content: attr(data-hint);
+            position: absolute;
+            left: 50%;
+            bottom: calc(100% + 10px);
+            transform: translateX(-50%);
+            min-width: 220px;
+            max-width: 320px;
+            padding: 8px 10px;
+            border-radius: 8px;
+            background: #020617;
+            color: #e5e7eb;
+            border: 1px solid #38bdf8;
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45);
+            font-size: 12px;
+            font-weight: normal;
+            line-height: 1.35;
+            white-space: normal;
+            text-align: left;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        button[data-hint]::before {
+            content: "";
+            position: absolute;
+            left: 50%;
+            bottom: calc(100% + 4px);
+            transform: translateX(-50%);
+            border-width: 6px 6px 0 6px;
+            border-style: solid;
+            border-color: #38bdf8 transparent transparent transparent;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        button[data-hint]:hover::after,
+        button[data-hint]:focus-visible::after,
+        button[data-hint]:hover::before,
+        button[data-hint]:focus-visible::before {
+            opacity: 1;
+            visibility: visible;
+        }
+
         .btn-retour {
             background: #334155;
             color: white;
@@ -361,6 +414,22 @@
                 margin-right: 0;
             }
 
+
+            button[data-hint]::after {
+                left: 0;
+                right: 0;
+                bottom: calc(100% + 8px);
+                transform: none;
+                min-width: 0;
+                max-width: none;
+                width: 100%;
+            }
+
+            button[data-hint]::before {
+                left: 24px;
+                transform: none;
+            }
+
             .header-bar {
                 align-items: stretch;
                 justify-content: flex-start;
@@ -431,7 +500,10 @@
             <button id="btn-retour"
                     type="button"
                     class="btn-retour btn-accueil"
-                    onclick="retour()">
+                    onclick="retour()"
+                    title="Retourner à la page principale sans modifier les données."
+                    aria-label="Retourner à la page principale"
+                    data-hint="Retourne à la page principale. Les données déjà enregistrées dans le navigateur ne sont pas supprimées.">
                 Accueil
             </button>
 
@@ -439,7 +511,9 @@
                     type="button"
                     class="btn-analyse btn-analyse-top"
                     onclick="analyserDecisionDepuisBouton()"
-                    title="Relit les champs modifiés et relance l’analyse.">
+                    title="Relit les champs modifiés et relance l’analyse."
+                    aria-label="Analyser de nouveau les données affichées"
+                    data-hint="Relit les champs visibles, met à jour le JSON local, puis relance l’analyse de décision.">
                 Analyser de nouveau
             </button>
 <!--
@@ -447,7 +521,9 @@
                     type="button"
                     class="btn-local btn-analyse-top"
                     onclick="rafraichirDonneesMarcheDecision(true)"
-                    title="Récupère automatiquement le prix actuel, le support, la résistance et les indicateurs depuis le serveur.">
+                    title="Récupère automatiquement le prix actuel, le support, la résistance et les indicateurs depuis le serveur."
+                    aria-label="Actualiser les données de marché"
+                    data-hint="Récupère les données de marché depuis l’API : prix, support, résistance, RSI, volume et tendance.">
                 Actualiser marché
             </button>
 -->
@@ -456,7 +532,9 @@
                         type="button"
                         class="btn-sequence btn-analyse-top"
                         onclick="executerFluxCompletConseil()"
-                        title="Charge la configuration disponible, actualise le marché, analyse, puis génère le conseil.">
+                        title="Charge la configuration disponible, actualise le marché, analyse, puis génère le conseil."
+                        aria-label="Rafraîchir les données du marché et générer le flux complet"
+                        data-hint="Exécute le flux complet : charge la configuration, actualise le marché, relance l’analyse, puis prépare le conseil.">
                     Rafraîchir les données du marché
                 </button>
             </div>
@@ -653,20 +731,26 @@
                         class="btn-advisor"
                         id="btn-generer-conseil"
                         onclick="genererConseilTrading()"
-                        title="Générer un plan de trading technique avec secours local si l'API n'existe pas encore.">
+                        title="Générer un plan de trading technique avec secours local si l'API n'existe pas encore."
+                        aria-label="Générer le conseil de trading"
+                        data-hint="Génère le plan de trading et la gestion du risque proposée par l’IA à partir des données affichées.">
                     Générer le conseil
                 </button>
                 <button type="button"
                         class="btn-sequence"
                         id="btn-generer-flux-complet"
                         onclick="executerFluxCompletConseil()"
-                        title="Exécute la séquence complète : configuration, marché, analyse et conseil.">
+                        title="Exécute la séquence complète : configuration, marché, analyse et conseil."
+                        aria-label="Tout lancer"
+                        data-hint="Lance toute la séquence : chargement local, données de marché, analyse, calcul du risque et conseil final.">
                     Tout lancer
                 </button>
                 <button type="button"
                         class="btn-copy-plan"
                         onclick="copierPlanTrading()"
-                        title="Copier le plan de trading affiché ci-dessous.">
+                        title="Copier le plan de trading affiché ci-dessous."
+                        aria-label="Copier le plan de trading"
+                        data-hint="Copie dans le presse-papiers le plan de trading affiché dans la zone de texte.">
                     Copier le plan
                 </button>
             </div>
@@ -728,7 +812,9 @@
                 type="button"
                 class="btn-local"
                 onclick="chargerConfigurationLocale()"
-                title="Charge la dernière configuration sauvegardée dans le navigateur.">
+                title="Charge la dernière configuration sauvegardée dans le navigateur."
+                aria-label="Charger la sauvegarde locale"
+                data-hint="Recharge la dernière configuration sauvegardée dans le navigateur, sans choisir de fichier.">
             Charger sauvegarde locale
         </button>
         -->
@@ -737,7 +823,9 @@
         <button type="button"
                 class="btn-local"
                 onclick="chargerConfiguration()"
-                title="Charger manuellement une configuration JSON exportée ou sauvegardée.">
+                title="Charger manuellement une configuration JSON exportée ou sauvegardée."
+                aria-label="Charger une configuration JSON"
+                data-hint="Ouvre le sélecteur de fichier pour importer une configuration JSON sauvegardée.">
             Charger configuration JSON
         </button>
         <input
