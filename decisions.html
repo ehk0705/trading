@@ -21,31 +21,40 @@
         header {
             background: #0f172a;
             border-bottom: 2px solid #00d9ff;
-            padding: 8px 12px;
+            padding: 8px 12px 6px;
         }
 
         .header-bar {
-            position: relative;
             display: flex;
             align-items: center;
-            justify-content: center;
-            min-height: 40px;
+            justify-content: flex-start;
+            gap: 10px;
+            min-height: 42px;
+            width: 100%;
+            flex-wrap: nowrap;
         }
 
         .header-actions {
-            position: absolute;
-            left: 0;
-            top: 0;
             display: flex;
             align-items: center;
             gap: 8px;
+            flex: 0 0 auto;
+            flex-wrap: nowrap;
         }
 
         h1 {
             color: #00d9ff;
-            margin: 0;
+            margin: 0 0 0 0;
             font-size: 22px;
+            line-height: 1;
             text-align: center;
+        }
+
+        .titre-decision-ia {
+            flex: 1 1 auto;
+            white-space: nowrap;
+            align-self: center;
+            padding: 0;
         }
 
         .btn-accueil {
@@ -360,19 +369,25 @@
             }
 
             .header-actions {
-                position: static;
                 width: 100%;
                 flex-direction: column;
                 gap: 8px;
             }
 
-            .btn-accueil,
-            .btn-analyse-top {
+            .zone-bouton-marche {
                 width: 100%;
+            }
+
+            .btn-accueil,
+            .btn-analyse-top,
+            #btn-flux-complet {
+                width: 100%;
+                white-space: normal;
             }
 
             h1 {
                 font-size: 20px;
+                line-height: 1.15;
             }
 
             .decision {
@@ -394,22 +409,16 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    margin: 12px 0 18px 0;
-    clear: both;
+    margin: 0;
+    clear: none;
 }
 
 #btn-flux-complet {
     position: relative;
     z-index: 2;
     max-width: 100%;
-    white-space: normal;
+    white-space: nowrap;
     line-height: 1.25;
-}
-
-.titre-decision-ia {
-    margin-top: 18px;
-    clear: both;
-    text-align: center;
 }
     </style>
 </head>
@@ -442,17 +451,18 @@
                 Actualiser marché
             </button>
 
-  <div class="zone-bouton-marche">
-    <button id="btn-flux-complet"
-            type="button"
-            class="btn-sequence btn-analyse-top"
-            onclick="executerFluxCompletConseil()"
-            title="Charge la configuration disponible, actualise le marché, analyse, puis génère le conseil.">
-        Rafraîchir les données du marché
-    </button>
-</div>
+            <div class="zone-bouton-marche">
+                <button id="btn-flux-complet"
+                        type="button"
+                        class="btn-sequence btn-analyse-top"
+                        onclick="executerFluxCompletConseil()"
+                        title="Charge la configuration disponible, actualise le marché, analyse, puis génère le conseil.">
+                    Rafraîchir les données du marché
+                </button>
+            </div>
+        </div>
 
-<h1 class="titre-decision-ia">Décision IA Trading</h1>
+        <h1 class="titre-decision-ia">Analyse IA</h1>
     </div>
 </header>
 
