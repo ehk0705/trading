@@ -1254,12 +1254,66 @@
 
     function choisirEtudeTradingView() {
         const indicateur = valeurElement("indicator-selector", "RSI");
-        if (indicateur === "RSI") return ["RSI@tv-basicstudies"];
-        if (indicateur === "MACD") return ["MACD@tv-basicstudies"];
-        if (indicateur === "EMA") return ["MASimple@tv-basicstudies"];
-        if (indicateur === "BOLLINGER") return ["BB@tv-basicstudies"];
-        if (indicateur === "VOLUME") return ["Volume@tv-basicstudies"];
-        return [];
+
+        /*
+            Le widget public TradingView accepte seulement certaines études
+            via le paramètre studies. Les indicateurs non supportés sont
+            conservés dans le JSON, mais ne sont pas injectés au graphique.
+        */
+        const etudesTradingView = {
+            EMA: ["MAExp@tv-basicstudies"],
+            EMA20: ["MAExp@tv-basicstudies"],
+            EMA50: ["MAExp@tv-basicstudies"],
+            EMA100: ["MAExp@tv-basicstudies"],
+            EMA200: ["MAExp@tv-basicstudies"],
+            SMA: ["MASimple@tv-basicstudies"],
+            SMA20: ["MASimple@tv-basicstudies"],
+            SMA50: ["MASimple@tv-basicstudies"],
+            SMA100: ["MASimple@tv-basicstudies"],
+            SMA200: ["MASimple@tv-basicstudies"],
+            RSI: ["RSI@tv-basicstudies"],
+            MACD: ["MACD@tv-basicstudies"],
+            BOLLINGER: ["BB@tv-basicstudies"],
+            VOLUME: ["Volume@tv-basicstudies"],
+            VWAP: ["VWAP@tv-basicstudies"],
+            ATR: ["ATR@tv-basicstudies"],
+            STOCH: ["Stochastic@tv-basicstudies"],
+            CCI: ["CCI@tv-basicstudies"],
+            ADX: ["ADX@tv-basicstudies"],
+            PSAR: ["PSAR@tv-basicstudies"],
+            ICHIMOKU: ["IchimokuCloud@tv-basicstudies"]
+        };
+
+        return etudesTradingView[indicateur] || [];
+    }
+
+    function appliquerValeursChampsAuGraphique() {
+        const symbole = valeurElement("asset-selector", "BINANCE:BTCUSDT");
+        const indicateur = valeurElement("indicator-selector", "RSI");
+        const etudes = choisirEtudeTradingView();
+
+        derniersParametresGraphiqueDirect = {
+            actif: symbole,
+            actifLibelle: libelleElement("asset-selector", symbole),
+            intervalle: valeurElement("interval-selector", "D"),
+            intervalleLibelle: libelleElement("interval-selector", "1 jour"),
+            indicateur: indicateur,
+            indicateurLibelle: libelleElement("indicator-selector", indicateur),
+            source: "champs_html_visibles",
+            lectureDirecte: false
+        };
+
+        creerWidgetTradingView();
+
+        if (etudes.length > 0) {
+            afficherStatus("Graphique actualisé avec l'actif et l'indicateur sélectionnés.");
+        } else {
+            afficherStatus("Graphique actualisé avec l'actif sélectionné. L'indicateur choisi n'est pas injectable dans le widget public TradingView, mais il reste enregistré dans la configuration.");
+        }
+    }
+
+    function changerIndicateur() {
+        appliquerValeursChampsAuGraphique();
     }
 
     function mettreAJourBadgeLectureGraphique(type, message) {
@@ -1460,8 +1514,7 @@
     }
 
     function actualiserGraphique() {
-        creerWidgetTradingView();
-        afficherStatus("Graphique actualisé.");
+        appliquerValeursChampsAuGraphique();
     }
 
     function ouvrirTradingView() {
